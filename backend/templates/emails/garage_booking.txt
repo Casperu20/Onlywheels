@@ -1,0 +1,13 @@
+{% autoescape off %}Programare nouă de montaj – comanda {{ order.number }}
+
+Service: {{ appointment.garage.name }}
+Data și ora: {{ appointment.slot_start|date:"d.m.Y H:i" }} – {{ appointment.slot_end|date:"H:i" }}
+Client: {{ order.full_name }}, {{ order.phone }}
+
+Produse:
+{% for item in items %}- {{ item.quantity }} × {{ item.product_name }} ({{ item.description }})
+{% endfor %}
+Confirmă programarea în panoul de administrare OnlyWheels (Appointments).
+
+— OnlyWheels
+{% endautoescape %}

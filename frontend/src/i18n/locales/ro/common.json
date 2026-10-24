@@ -1,0 +1,379 @@
+{
+  "common": {
+    "loading": "Se încarcă…"
+  },
+  "nav": {
+    "main": "Navigare principală",
+    "mobile": "Navigare mobilă",
+    "home": "Acasă",
+    "catalog": "Catalog",
+    "showroom": "Showroom 3D",
+    "showroomShort": "Showroom",
+    "aiStudio": "AI Studio",
+    "fitting": "Montaj partener",
+    "cart": "Coș",
+    "cartWithCount": "Coș de cumpărături ({{count}} produse)",
+    "account": "Contul meu",
+    "garage": "Garajul meu",
+    "explore": "EXPLORE"
+  },
+  "announcement": {
+    "lead": "Un nou set. O nouă perspectivă.",
+    "strong": "Descoperă experiența OnlyWheels.",
+    "region": "România / RON"
+  },
+  "header": {
+    "language": "Limbă"
+  },
+  "footer": {
+    "tagline": "Conceput pentru pasiunea ta. © {{year}} OnlyWheels"
+  },
+  "home": {
+    "eyebrow": "Pentru cei care simt diferența",
+    "title1": "Un nou look.",
+    "title2": "Aceeași",
+    "titleAccent": "pasiune.",
+    "lead": "Jantele potrivite schimbă totul. Găsește-ți stilul, vezi-l pe mașina ta și transformă fiecare drum.",
+    "ctaCatalog": "Descoperă colecția",
+    "ctaShowroom": "Intră în showroom",
+    "benefits": {
+      "fit": { "title": "Alegerea potrivită", "text": "Căutare după mașina ta" },
+      "preview": { "title": "Vezi înainte să alegi", "text": "Showroom 3D & AI Studio" },
+      "payment": { "title": "Plata, în ritmul tău", "text": "Card online, în siguranță" },
+      "fitting": { "title": "Pregătit de drum", "text": "Montaj la service-uri partenere" }
+    },
+    "categoriesTitle": "Orice drum. Stilul tău.",
+    "categoriesText": "Tot ce ai nevoie, de la jante până la ultimul detaliu.",
+    "categories": {
+      "wheel": "Design care se remarcă",
+      "tire": "Aderență. Fără compromis.",
+      "set": "Gata de următorul drum",
+      "accessory": "Detaliile fac diferența"
+    },
+    "featuredTitle": "Următorul tău upgrade.",
+    "featuredText": "O selecție pentru cei care nu aleg la întâmplare.",
+    "viewAll": "Vezi tot catalogul"
+  },
+  "comingSoon": {
+    "badge": "În curând",
+    "back": "Înapoi acasă"
+  },
+  "pages": {
+    "catalog": {
+      "eyebrow": "Catalog",
+      "title": "Următorul tău upgrade.",
+      "description": "Jante, anvelope, roți complete și accesorii, filtrate după mașina ta."
+    },
+    "showroom": {
+      "eyebrow": "Showroom 3D",
+      "title": "Nu doar îți imaginezi. Îți vezi stilul.",
+      "description": "Explorează finisaje și dimensiuni direct pe mașină, înainte să faci următorul pas."
+    },
+    "aiStudio": {
+      "eyebrow": "AI Photo Studio",
+      "title": "Mașina ta. Într-o altă lumină.",
+      "description": "O fotografie. Jantele alese. O nouă perspectivă, cu ajutorul AI."
+    },
+    "fitting": {
+      "eyebrow": "Montaj partener",
+      "title": "Tu alegi jantele. De montaj ne ocupăm împreună.",
+      "description": "Alege un service partener și programează montajul direct la checkout."
+    },
+    "cart": {
+      "eyebrow": "Coș",
+      "title": "Coșul tău",
+      "description": "Seturi de 4, montaj opțional și plata online."
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Parolă",
+    "firstName": "Prenume",
+    "lastName": "Nume",
+    "confirmPassword": "Confirmă parola",
+    "newPassword": "Parola nouă",
+    "loginTitle": "Bine ai revenit",
+    "loginSubtitle": "Intră în cont pentru comenzi, garajul tău și favorite.",
+    "registerTitle": "Creează un cont",
+    "registerSubtitle": "Salvează-ți mașinile, favoritele și urmărește comenzile.",
+    "submitLogin": "Intră în cont",
+    "submitRegister": "Creează contul",
+    "noAccount": "Nu ai cont?",
+    "registerLink": "Înregistrează-te",
+    "haveAccount": "Ai deja cont?",
+    "loginLink": "Autentifică-te",
+    "forgotPassword": "Ai uitat parola?",
+    "forgotTitle": "Resetează parola",
+    "forgotSubtitle": "Îți trimitem un link pentru a alege o parolă nouă.",
+    "forgotSubmit": "Trimite linkul",
+    "forgotSent": "Dacă există un cont cu acest email, vei primi în curând un link de resetare.",
+    "backToLogin": "Înapoi la autentificare",
+    "resetTitle": "Alege o parolă nouă",
+    "resetSubmit": "Salvează parola",
+    "resetDone": "Parola a fost schimbată. Te poți autentifica.",
+    "resetInvalidLink": "Linkul de resetare este invalid sau a expirat.",
+    "or": "sau",
+    "genericError": "A apărut o eroare. Încearcă din nou.",
+    "googleError": "Autentificarea cu Google a eșuat."
+  },
+  "validation": {
+    "required": "Câmp obligatoriu.",
+    "email": "Introdu o adresă de email validă.",
+    "passwordMin": "Parola trebuie să aibă cel puțin 8 caractere.",
+    "passwordMatch": "Parolele nu coincid.",
+    "phone": "Introdu un număr de telefon valid.",
+    "postalCode": "Codul poștal are 6 cifre.",
+    "acceptTerms": "Trebuie să accepți termenii și condițiile."
+  },
+  "account": {
+    "eyebrow": "Contul meu",
+    "greeting": "Salut, {{name}}!",
+    "memberSince": "Membru din",
+    "logout": "Ieși din cont"
+  },
+  "notFound": {
+    "title": "Pagina nu există",
+    "text": "Linkul poate fi greșit sau pagina a fost mutată.",
+    "back": "Înapoi acasă"
+  },
+  "vehicle": {
+    "panelTitle": "Totul începe cu mașina ta.",
+    "make": "Marca",
+    "model": "Modelul",
+    "generation": "Generația",
+    "chooseMake": "Alege marca",
+    "chooseModel": "Alege modelul",
+    "chooseGeneration": "Alege generația",
+    "present": "prezent",
+    "findWheels": "Găsește jantele",
+    "activeHint": "Mașina activă: {{vehicle}}.",
+    "demoHint": "Compatibilitatea se verifică după PCD, alezaj, ET și dimensiuni (date demonstrative).",
+    "filteringFor": "Produse compatibile cu",
+    "removeFilter": "Arată tot",
+    "notFiltered": "Rezultatele nu sunt filtrate după mașină.",
+    "showFitting": "Doar ce se potrivește pe {{vehicle}}"
+  },
+  "garage": {
+    "subtitle": "Mașinile tale salvate, pentru căutări rapide.",
+    "add": "Adaugă o mașină",
+    "save": "Salvează în garaj",
+    "saved": "Mașina a fost salvată în garaj.",
+    "empty": "Nu ai nicio mașină salvată încă.",
+    "noFitment": "Nu avem încă date de compatibilitate pentru această mașină.",
+    "shopFor": "Caută jante",
+    "remove": "Șterge"
+  },
+  "catalog": {
+    "type": "Tip produs",
+    "all": "Toate",
+    "types": {
+      "wheel": "Jante",
+      "tire": "Anvelope",
+      "set": "Roți complete",
+      "accessory": "Accesorii"
+    },
+    "search": "Caută",
+    "searchPlaceholder": "Caută un brand, un model sau un cod…",
+    "filters": "Filtre",
+    "brand": "Brand",
+    "diameter": "Diametru",
+    "finish": "Finisaj",
+    "finishes": {
+      "silver": "Argintiu",
+      "black": "Negru",
+      "bronze": "Bronz",
+      "gunmetal": "Gunmetal",
+      "chrome": "Crom",
+      "white": "Alb"
+    },
+    "price": "Preț (RON)",
+    "min": "min",
+    "max": "max",
+    "priceMin": "Preț minim",
+    "priceMax": "Preț maxim",
+    "inStockOnly": "Doar produse în stoc",
+    "reset": "Resetează filtrele",
+    "sort": "Sortare",
+    "sortOptions": {
+      "recommended": "Recomandate",
+      "price": "Preț crescător",
+      "-price": "Preț descrescător",
+      "-newest": "Cele mai noi",
+      "-rating": "Cele mai apreciate"
+    },
+    "results_one": "{{count}} produs",
+    "results_few": "{{count}} produse",
+    "results_other": "{{count}} de produse",
+    "inStock": "În stoc",
+    "onOrder": "La comandă",
+    "from": "de la",
+    "unit": {
+      "wheel": "/ buc",
+      "tire": "/ buc",
+      "set": "/ set",
+      "accessory": "/ buc"
+    },
+    "emptyTitle": "Niciun produs găsit",
+    "emptyText": "Încearcă alte filtre sau elimină filtrul de mașină.",
+    "pagination": "Pagini",
+    "previous": "Înapoi",
+    "next": "Înainte",
+    "pageOf": "Pagina {{page}} din {{pages}}",
+    "demoNote": "Date demonstrative: prețurile, stocul și compatibilitățile sunt orientative."
+  },
+  "fitment": {
+    "fits": "Compatibil cu mașina ta",
+    "fitsWithRings": "Compatibil (cu inele de centrare)",
+    "doesNotFit": "Nu se potrivește",
+    "issues": {
+      "pcd_mismatch": "PCD diferit",
+      "center_bore_too_small": "alezaj prea mic",
+      "offset_out_of_range": "ET în afara limitelor",
+      "diameter_out_of_range": "diametru nepotrivit",
+      "width_out_of_range": "lățime nepotrivită",
+      "tire_size_not_oem": "dimensiune anvelopă neomologată",
+      "thread_mismatch": "filet diferit"
+    }
+  },
+  "product": {
+    "back": "Înapoi la catalog",
+    "checkedFor": "Compatibilitate verificată pentru {{vehicle}}.",
+    "chooseVariant": "Alege varianta",
+    "available_one": "{{count}} buc. disponibilă",
+    "available_few": "{{count}} buc. disponibile",
+    "available_other": "{{count}} de buc. disponibile",
+    "quantity": "Cantitate",
+    "decrease": "Scade cantitatea",
+    "increase": "Crește cantitatea",
+    "total": "Total",
+    "addToCart": "Adaugă în coș"
+  },
+  "favorites": {
+    "title": "Favorite",
+    "add": "Adaugă la favorite",
+    "remove": "Elimină din favorite",
+    "loginRequired": "Autentifică-te pentru a salva produse favorite.",
+    "emptyTitle": "Nicio favorită încă",
+    "emptyText": "Apasă pe inimă la orice produs pentru a-l salva aici."
+  },
+  "cart": {
+    "empty": "Coșul tău este gol.",
+    "shippingHint": "Livrare gratuită peste 1.000 RON. Montajul la service se alege la checkout.",
+    "checkout": "Continuă spre checkout",
+    "loginHint": "Te vei autentifica la pasul următor; coșul se păstrează.",
+    "lowStock_one": "Doar {{count}} bucată disponibilă",
+    "lowStock_few": "Doar {{count}} bucăți disponibile",
+    "lowStock_other": "Doar {{count}} de bucăți disponibile",
+    "remove": "Elimină din coș",
+    "added": "Adăugat în coș.",
+    "view": "Vezi coșul"
+  },
+  "checkout": {
+    "title": "Finalizează comanda",
+    "contact": "Date de contact",
+    "phone": "Telefon",
+    "fullName": "Nume complet",
+    "delivery": "Livrare sau montaj",
+    "methods": {
+      "courier": { "title": "Livrare prin curier", "text": "Gratuit peste 1.000 RON, altfel 25 RON." },
+      "garage_fitting": {
+        "title": "Montaj la service partener",
+        "text": "Produsele ajung la service; alegi data și ora montajului."
+      }
+    },
+    "address": "Adresa de livrare",
+    "billingAddress": "Adresa de facturare",
+    "line1": "Stradă și număr",
+    "line2": "Bloc, scară, apartament",
+    "city": "Localitate",
+    "county": "Județ",
+    "postalCode": "Cod poștal",
+    "notes": "Observații (opțional)",
+    "saveAddress": "Salvează adresa în contul meu",
+    "summary": "Sumar comandă",
+    "voucher": "Cod de reducere",
+    "apply": "Aplică",
+    "chooseGarage": "Alege un service pentru a vedea totalul.",
+    "chooseSlot": "Alege service-ul, data și ora montajului.",
+    "acceptTerms": "Accept termenii și condițiile și politica de confidențialitate.",
+    "pay": "Plătește online",
+    "payHint": "Plata se face pe pagina securizată a procesatorului. Stocul este rezervat 30 de minute.",
+    "subtotal": "Subtotal",
+    "discount": "Reducere",
+    "shipping": "Livrare",
+    "fitting": "Montaj",
+    "total": "Total",
+    "vatIncluded": "TVA inclus: {{vat}}",
+    "successTitle": "Mulțumim pentru comandă!",
+    "successText": "Plata pentru comanda {{number}} a fost confirmată. Ai primit un email cu detaliile.",
+    "waitingTitle": "Confirmăm plata…",
+    "waitingText": "Poate dura câteva secunde. Pagina se actualizează automat."
+  },
+  "garages": {
+    "perSet": "montaj + echilibrare / set",
+    "date": "Data montajului",
+    "slot": "Ora montajului",
+    "noSlots": "Nu mai sunt ore libere în această zi. Alege altă dată.",
+    "intro": "Alegi jantele online, iar montajul și echilibrarea se fac la unul dintre service-urile partenere. Programarea se face la checkout."
+  },
+  "orders": {
+    "title": "Comenzile mele",
+    "empty": "Nu ai nicio comandă încă.",
+    "pieces_one": "{{count}} bucată",
+    "pieces_few": "{{count}} bucăți",
+    "pieces_other": "{{count}} de bucăți",
+    "paymentCancelled": "Plata a fost anulată. Poți încerca din nou cât timp rezervarea este activă.",
+    "fittingAt": "Montaj la {{garage}}",
+    "appointment": {
+      "held": "rezervat (așteaptă plata)",
+      "booked": "programat",
+      "confirmed": "confirmat de service",
+      "completed": "finalizat",
+      "cancelled": "anulat"
+    },
+    "deliveryTo": "Livrare la",
+    "history": "Istoric",
+    "reservedUntil": "Produsele sunt rezervate până la {{time}}.",
+    "cancel": "Anulează comanda",
+    "viewOrder": "Vezi comanda",
+    "status": {
+      "pending_payment": "Așteaptă plata",
+      "paid": "Plătită",
+      "processing": "În procesare",
+      "shipped": "Expediată",
+      "ready_for_fitting": "Gata de montaj",
+      "completed": "Finalizată",
+      "cancelled": "Anulată"
+    }
+  },
+  "fakePay": {
+    "badge": "Mod demonstrativ",
+    "title": "Simulare plată",
+    "text": "În producție aici apare pagina Stripe/Netopia. Nu se folosește niciun card real.",
+    "success": "Simulează plata reușită",
+    "cancel": "Renunță la plată"
+  },
+  "reviews": {
+    "title": "Părerile clienților",
+    "count_one": "{{count}} recenzie",
+    "count_few": "{{count}} recenzii",
+    "count_other": "{{count}} de recenzii",
+    "verified": "Achiziție verificată",
+    "none": "Nicio recenzie încă. Fii primul care scrie una!",
+    "loginToWrite": "pentru a scrie o recenzie.",
+    "pending": "Mulțumim! Recenzia ta va fi publicată după verificare.",
+    "alreadyReviewed": "Ai scris deja o recenzie pentru acest produs.",
+    "chooseRating": "Alege un număr de stele.",
+    "write": "Scrie o recenzie",
+    "rating": "Nota",
+    "reviewTitle": "Titlu (opțional)",
+    "body": "Recenzia ta (opțional)",
+    "submit": "Trimite recenzia",
+    "moderationHint": "Recenziile sunt verificate înainte de publicare."
+  },
+  "error": {
+    "title": "Ceva nu a mers bine",
+    "text": "Reîncarcă pagina. Dacă problema persistă, revino mai târziu.",
+    "retry": "Reîncarcă"
+  }
+}

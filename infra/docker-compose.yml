@@ -1,0 +1,26 @@
+# Local development services. App code (Django, Vite) runs on the host, not in Docker.
+#   docker compose -f infra/docker-compose.yml up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: onlywheels
+      POSTGRES_USER: onlywheels
+      POSTGRES_PASSWORD: onlywheels
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onlywheels"]
+      interval: 5s
+      retries: 10
+
+  # Not needed while Celery runs in eager mode – enable when a real worker is added.
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+
+volumes:
+  postgres-data:

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OnlyWheels – Demo aplicație mobilă</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0c10;--panel:#14161c;--panel2:#1c1f27;--line:#272b35;--text:#f2f3f5;--muted:#8b90a0;--accent:#ff5a1f;--accent2:#ffb01f;--ok:#2ecc71}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 20% 10%,#1f1410,#07080b 60%);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;gap:56px;padding:24px}
+button,select,input{font:inherit}
+.intro{max-width:340px}
+.intro h1{font-size:30px;line-height:1.15;margin:14px 0 12px}
+.intro p{color:var(--muted);line-height:1.55;font-size:14px}
+.intro ul{list-style:none;margin:18px 0;display:grid;gap:10px}
+.intro li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.intro li b{color:var(--accent)}
+.tech{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px}
+.tech b{display:block;margin-bottom:8px;font-size:14px}
+.tech p{color:var(--muted);font-size:12.5px;line-height:1.4;margin:4px 0}
+.tech span{color:var(--text);font-weight:600}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.logo.big{font-size:40px}
+.phone{width:390px;height:844px;border-radius:52px;background:var(--bg);border:11px solid #000;box-shadow:0 0 0 2px #2a2a2a,0 40px 90px rgba(0,0,0,.7);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:20px;z-index:50}
+.statusbar{height:46px;flex:0 0 46px;display:flex;justify-content:space-between;align-items:center;padding:6px 28px 0;font-size:14px;font-weight:600}
+.statusbar svg{width:44px;height:14px}
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:0 16px 24px;display:none;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{display:block}
+.tabbar{flex:0 0 80px;display:flex;border-top:1px solid var(--line);background:rgba(20,22,28,.97);padding-bottom:16px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10.5px;color:var(--muted);background:none;border:0;cursor:pointer;position:relative;font-weight:600}
+.tab.active{color:var(--accent)}
+.tab svg{width:23px;height:23px}
+.tab .badge{position:absolute;top:8px;left:calc(50% + 6px);background:var(--accent);color:#fff;font-size:10px;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+.tab.center svg{width:26px;height:26px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.header{display:flex;align-items:center;justify-content:space-between;padding:6px 0 14px}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--text);cursor:pointer;position:relative}
+.icon-btn.on{color:var(--accent);border-color:var(--accent)}
+.dot{position:absolute;top:9px;right:10px;width:7px;height:7px;background:var(--accent);border-radius:50%}
+.muted{color:var(--muted)}.small{font-size:12px}
+.hello{font-size:22px;font-weight:800;margin:2px 0 12px;line-height:1.2}
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--muted);font-size:14px;width:100%;cursor:pointer;text-align:left}
+.searchbar input{background:none;border:0;outline:0;color:var(--text);flex:1;font-size:14px}
+.hero{position:relative;border-radius:22px;overflow:hidden;background:#111;margin:14px 0;aspect-ratio:16/10;cursor:pointer;border:1px solid var(--line)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero .over{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 30%,rgba(0,0,0,.88));display:flex;flex-direction:column;justify-content:space-between;padding:14px}
+.hero h2{font-size:19px;margin:4px 0 2px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,90,31,.18);color:var(--accent);font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;width:max-content}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.block{width:100%}
+.btn.sm{padding:9px 12px;font-size:12px;border-radius:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
+.selects{display:grid;grid-template-columns:1fr 1.3fr .9fr;gap:8px;margin:10px 0 12px}
+select{appearance:none;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font-size:12.5px;width:100%;min-width:0}
+.sec-title{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}
+.sec-title h3{font-size:17px}
+.link{color:var(--accent);font-size:12px;font-weight:600;background:none;border:0;cursor:pointer}
+.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px}
+.hscroll::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;width:104px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 10px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)}
+.cat .ci{width:46px;height:46px;margin:0 auto 8px;border-radius:14px;background:var(--panel2);display:grid;place-items:center;color:var(--accent)}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.feat div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;font-size:11px;color:var(--muted);text-align:center}
+.feat b{display:block;color:var(--text);font-size:12px;margin-bottom:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rim-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px;position:relative;cursor:pointer}
+.hscroll .rim-card{flex:0 0 160px}
+.thumb{aspect-ratio:1;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2a2e38,#15171c 70%);border-radius:14px;padding:12px}
+.rim-svg{width:100%;height:100%;filter:drop-shadow(0 8px 12px rgba(0,0,0,.55))}
+.tag{position:absolute;top:16px;left:16px;background:var(--accent);font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;z-index:2}
+.fav{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.45);border:0;color:#fff;display:grid;place-items:center;cursor:pointer;z-index:2}
+.fav svg{width:16px;height:16px}
+.fav.on{color:var(--accent)}.fav.on svg{fill:var(--accent)}
+.brand{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;margin-top:8px;font-weight:600}
+.name{font-weight:700;font-size:14px;margin:2px 0 3px}
+.name.big{font-size:18px}
+.stars{color:var(--accent2);font-size:11px}
+.stars span{color:var(--muted)}
+.meta{color:var(--muted);font-size:11px;margin:3px 0}
+.price{font-weight:800;font-size:16px}
+.old{color:var(--muted);text-decoration:line-through;font-size:12px;margin-left:6px}
+.pp{color:var(--muted);font-size:10.5px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:8px 13px;border-radius:99px;font-size:12.5px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.swatch{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.35);display:inline-block}
+.vehicle-banner{display:flex;gap:10px;align-items:center;background:linear-gradient(90deg,rgba(255,90,31,.16),rgba(255,90,31,.04));border:1px solid rgba(255,90,31,.35);border-radius:14px;padding:10px 12px;font-size:12px;margin:12px 0}
+.vehicle-banner svg{color:var(--accent);flex:0 0 auto}
+.toolbar{display:flex;gap:8px;margin:12px 0}
+.toolbar select{width:auto;flex:0 0 auto}
+.count{font-size:12px;color:var(--muted);margin:4px 0 10px}
+/* showroom */
+#s-showroom{padding:0}
+#s-showroom.active{display:flex;flex-direction:column}
+.viewer{position:relative;flex:0 0 50%;background:#0c0d11;overflow:hidden}
+.viewer canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.v-top{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.v-top>*{pointer-events:auto}
+.car-label{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 10px;font-size:11px;line-height:1.4}
+.car-label b{font-size:13px}
+.v-tools{display:flex;flex-direction:column;gap:8px}
+.v-tools .icon-btn{background:rgba(0,0,0,.5);backdrop-filter:blur(8px);width:36px;height:36px}
+.v-hint{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:11px;color:rgba(255,255,255,.5);pointer-events:none}
+.panel{flex:1;overflow-y:auto;padding:16px 16px 20px;background:var(--bg);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;z-index:2;scrollbar-width:none}
+.panel::-webkit-scrollbar{display:none}
+.sel-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sel-row .brand{margin-top:0}
+.mini-rim{flex:0 0 82px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 6px;cursor:pointer;text-align:center;font-size:10.5px;font-weight:600;color:var(--text)}
+.mini-rim.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.mini-rim svg{width:60px;height:60px;display:block;margin:0 auto 4px}
+.label{font-size:11px;color:var(--muted);margin:16px 0 8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.actions{display:grid;grid-template-columns:1fr 1.5fr;gap:8px;margin-top:18px}
+/* AI */
+.ai-preview{aspect-ratio:3/2;border-radius:18px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#232733,#101116);position:relative;display:grid;place-items:center;border:1px solid var(--line)}
+.ai-preview img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.ph{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+.ph svg{width:40px;height:40px;color:var(--accent);margin-bottom:8px}
+.ai-loading{position:absolute;inset:0;background:rgba(10,10,14,.78);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(6px);font-size:13px;font-weight:600;z-index:2}
+.ai-loading.on{display:flex}
+.bar{width:60%;height:6px;background:#2a2e38;border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.conf{display:flex;align-items:center;gap:10px;margin-top:12px}
+.conf svg.rim-svg{width:44px;height:44px;flex:0 0 44px}
+.conf div{flex:1;font-size:12px}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.gallery img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:10px;cursor:pointer;border:1px solid var(--line)}
+.note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:14px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+/* cart */
+.cart-item{display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px}
+.cart-item .t{width:64px;height:64px;flex:0 0 64px;background:radial-gradient(circle,#2a2e38,#15171c 70%);border-radius:12px;padding:6px}
+.cart-item .info{flex:1;min-width:0}
+.cart-item .name{font-size:13px}
+.stepper{display:flex;align-items:center;gap:8px;margin-top:6px}
+.stepper button{width:26px;height:26px;border-radius:8px;border:0;background:#2a2e38;color:#fff;cursor:pointer;font-size:15px}
+.stepper span{font-size:12px;font-weight:700}
+.rm{background:none;border:0;color:var(--muted);cursor:pointer;font-size:11px;margin-left:auto}
+.summary .row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:var(--muted)}
+.summary .row.total{color:var(--text);font-weight:800;font-size:18px;border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.check{display:flex;align-items:center;gap:10px;font-size:13px;margin:12px 0;cursor:pointer}
+.check input{accent-color:var(--accent);width:18px;height:18px}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty svg{width:56px;height:56px;color:var(--line);margin-bottom:12px}
+/* sheet */
+.sheet-wrap{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.25s;z-index:20;display:flex;align-items:flex-end}
+.sheet-wrap.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-height:94%;overflow-y:auto;background:var(--panel);border-radius:26px 26px 0 0;padding:10px 18px 22px;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);scrollbar-width:none}
+.sheet-wrap.open .sheet{transform:none}
+.grab{width:40px;height:5px;background:#3a3f4b;border-radius:9px;margin:0 auto 10px}
+.big-rim{width:70%;margin:6px auto;display:block;animation:spin 20s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.spec{background:var(--panel2);border-radius:12px;padding:9px 10px}
+.spec small{color:var(--muted);display:block;font-size:10.5px}
+.spec b{font-size:13px}
+.toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,40px);opacity:0;background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;transition:.3s;z-index:40;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:820px){.intro{display:none}}
+@media(max-width:520px){body{padding:0}.phone{width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none}.notch{display:none}}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="logo big">Only<span>Wheels</span></div>
+  <h1>Concept aplicație mobilă</h1>
+  <ul>
+    <li><b>Acasă</b> – căutare după mașină, oferte, categorii</li>
+    <li><b>Catalog</b> – bază de date jante, filtre, detalii produs</li>
+    <li><b>Showroom 3D</b> – Duster negru, schimbi janta, mărimea, finisajul</li>
+    <li><b>Studio AI</b> – generezi poze cu mașina în diverse scene</li>
+    <li><b>Coș</b> – seturi de 4, montaj, total</li>
+  </ul>
+  <p class="small">Pe telefon, deschide fișierul direct – se afișează pe tot ecranul.</p>
+  <div class="tech">
+    <b>Tehnologii posibile</b>
+    <p><span>Mobil:</span> Flutter / React Native (sau PWA)</p>
+    <p><span>3D / AR:</span> Three.js, react-three-fiber, ARCore / ARKit</p>
+    <p><span>Backend:</span> Node.js (Express) sau Firebase</p>
+    <p><span>Bază de date:</span> PostgreSQL / Firestore</p>
+    <p><span>Poze AI:</span> Stable Diffusion + ControlNet</p>
+    <p><span>Plăți:</span> Stripe / Netopia</p>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <svg viewBox="0 0 44 14" fill="currentColor"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="0" width="3" height="14" rx="1"/><rect x="22" y="1" width="19" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="24" y="3" width="13" height="8" rx="1.5"/><rect x="42" y="5" width="2" height="4" rx="1"/></svg>
+  </div>
+
+  <div class="screens">
+
+    <!-- HOME -->
+    <section class="screen active" id="s-home">
+      <div class="header">
+        <div class="logo">Only<span>Wheels</span></div>
+        <button class="icon-btn" data-act="toast" data-msg="Nicio notificare nouă"><i data-icon="bell"></i><span class="dot"></span></button>
+      </div>
+      <div class="hello">Salut! Ce jante<br>punem azi pe mașină?</div>
+      <button class="searchbar" data-act="tab" data-tab="catalog"><i data-icon="search"></i>Caută jante, mărci, dimensiuni…</button>
+
+      <div class="hero" data-act="tab" data-tab="showroom">
+        <img id="hero-img" alt="Dacia Duster negru în showroom">
+        <div class="over">
+          <span class="pill"><i data-icon="cube"></i> Showroom 3D</span>
+          <div>
+            <div class="muted small">Dacia Duster · Negru metalizat</div>
+            <h2 id="hero-rim">Carpatia R5 18"</h2>
+            <span class="btn sm" style="margin-top:6px">Deschide configuratorul</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Găsește jante pentru mașina ta</b>
+        <div class="selects">
+          <select id="v-brand"></select>
+          <select id="v-model"></select>
+          <select id="v-year"></select>
+        </div>
+        <button class="btn block" data-act="find">Vezi jante compatibile</button>
+      </div>
+
+      <div class="sec-title"><h3>Categorii</h3></div>
+      <div class="hscroll">
+        <button class="cat" data-act="tab" data-tab="catalog"><div class="ci"><i data-icon="rim"></i></div>Jante aliaj</button>
+        <button class="cat" data-act="toast" data-msg="Anvelope – în curând"><div class="ci"><i data-icon="tire"></i></div>Anvelope</button>
+        <button class="cat" data-act="toast" data-msg="Roți complete – în curând"><div class="ci"><i data-icon="cube"></i></div>Roți complete</button>
+        <button class="cat" data-act="toast" data-msg="Accesorii – în curând"><div class="ci"><i data-icon="bolt"></i></div>Accesorii</button>
+      </div>
+
+      <div class="sec-title"><h3>Oferte săptămâna asta</h3><button class="link" data-act="tab" data-tab="catalog">Vezi tot</button></div>
+      <div class="hscroll" id="home-offers"></div>
+
+      <div class="sec-title"><h3>Studio foto AI</h3></div>
+      <div class="card" style="display:flex;gap:12px;align-items:center">
+        <div class="cat" style="width:auto;border:0;padding:0;background:none"><div class="ci" style="margin:0"><i data-icon="spark"></i></div></div>
+        <div style="flex:1;font-size:12.5px"><b>Vezi mașina cu jantele noi</b><br><span class="muted">În oraș, la munte sau la apus – generezi poza în câteva secunde.</span></div>
+        <button class="btn sm" data-act="tab" data-tab="ai">Încearcă</button>
+      </div>
+
+      <div class="feat">
+        <div><b>24–48h</b>Livrare gratuită</div>
+        <div><b>Montaj</b>La service partener</div>
+        <div><b>Rate 0%</b>Până la 12 luni</div>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section class="screen" id="s-catalog">
+      <div class="header"><div class="logo">Catalog <span>jante</span></div><button class="icon-btn" data-act="toast" data-msg="Filtre avansate – în curând"><i data-icon="filter"></i></button></div>
+      <label class="searchbar"><i data-icon="search"></i><input id="q" placeholder="Caută după nume sau marcă" autocomplete="off"></label>
+      <div class="vehicle-banner"><i data-icon="check"></i><div>Compatibile cu <b id="veh-text">Dacia Duster II</b><br><span class="muted">PCD 5x114.3 · CB 66.1 · ET 40–50</span></div></div>
+      <div class="chips" id="f-size"></div>
+      <div class="chips" id="f-color" style="margin-top:8px"></div>
+      <div class="toolbar">
+        <select id="sort"><option value="pop">Cele mai populare</option><option value="asc">Preț crescător</option><option value="desc">Preț descrescător</option><option value="rating">Rating</option></select>
+      </div>
+      <div class="count" id="count"></div>
+      <div class="grid2" id="grid"></div>
+    </section>
+
+    <!-- SHOWROOM -->
+    <section class="screen" id="s-showroom">
+      <div class="viewer" id="viewer">
+        <div class="v-top">
+          <div class="car-label"><b>Dacia Duster</b><br><span class="muted">Negru metalizat · 4x4</span></div>
+          <div class="v-tools">
+            <button class="icon-btn on" data-act="rotate" title="Rotire automată"><i data-icon="rotate"></i></button>
+            <button class="icon-btn" data-act="drive" title="Rotește roțile"><i data-icon="play"></i></button>
+            <button class="icon-btn" data-act="reset" title="Resetează camera"><i data-icon="target"></i></button>
+          </div>
+        </div>
+        <div class="v-hint">Trage pentru 360° · ciupește / scroll pentru zoom</div>
+      </div>
+      <div class="panel">
+        <div class="sel-row">
+          <div><div class="brand" id="sr-brand"></div><div class="name big" id="sr-name"></div></div>
+          <div style="text-align:right"><div class="price" id="sr-price"></div><div class="pp">set 4 bucăți</div></div>
+        </div>
+        <div class="label">Alege janta</div>
+        <div class="hscroll" id="sr-rims"></div>
+        <div class="label">Dimensiune</div>
+        <div class="chips" id="sr-sizes"></div>
+        <div class="label">Finisaj</div>
+        <div class="chips" id="sr-colors"></div>
+        <div class="label">Scenă</div>
+        <div class="chips" id="sr-scenes"></div>
+        <div class="actions">
+          <button class="btn ghost" data-act="tab" data-tab="ai"><i data-icon="spark"></i>Poză AI</button>
+          <button class="btn" data-act="add-set"><i data-icon="cart"></i>Adaugă în coș</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section class="screen" id="s-ai">
+      <div class="header"><div><div class="logo">Studio <span>AI</span></div><div class="muted small">Poze cu jantele pe mașina ta</div></div></div>
+      <div class="ai-preview">
+        <div class="ph" id="ai-ph"><i data-icon="spark"></i><br>Alege scena și apasă „Generează”</div>
+        <img id="ai-img" alt="Poză generată" hidden>
+        <div class="ai-loading" id="ai-loading"><div id="ai-step">Pregătesc…</div><div class="bar"><i id="ai-bar"></i></div></div>
+      </div>
+      <div class="card conf" id="ai-conf"></div>
+      <div class="label">Scenă</div><div class="chips" id="ai-scenes"></div>
+      <div class="label">Unghi</div><div class="chips" id="ai-angles"></div>
+      <div class="label">Stil</div><div class="chips" id="ai-styles"></div>
+      <div style="display:grid;gap:8px;margin-top:16px">
+        <button class="btn block" data-act="ai-gen"><i data-icon="spark"></i>Generează poza</button>
+        <a class="btn ghost block" id="ai-dl" download="OnlyWheels.jpg" hidden><i data-icon="download"></i>Descarcă</a>
+      </div>
+      <div class="label">Galeria ta</div>
+      <div class="gallery" id="ai-gallery"></div>
+      <p class="note">Demo: imaginea e randată din scena 3D + filtre foto. În aplicația finală se poate folosi un model generativ (ex. Stable Diffusion + ControlNet) pentru fotografii realiste, inclusiv pornind de la o poză cu mașina clientului.</p>
+    </section>
+
+    <!-- CART -->
+    <section class="screen" id="s-cart">
+      <div class="header"><div class="logo">Coșul <span>meu</span></div></div>
+      <div id="cart-body"></div>
+    </section>
+
+    <div class="sheet-wrap" id="sheet" data-act="close-sheet"><div class="sheet" id="sheet-body"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-act="tab" data-tab="home"><i data-icon="home"></i>Acasă</button>
+    <button class="tab" data-act="tab" data-tab="catalog"><i data-icon="rim"></i>Catalog</button>
+    <button class="tab center" data-act="tab" data-tab="showroom"><i data-icon="cube"></i>Showroom 3D</button>
+    <button class="tab" data-act="tab" data-tab="ai"><i data-icon="spark"></i>Studio AI</button>
+    <button class="tab" data-act="tab" data-tab="cart"><i data-icon="cart"></i>Coș<span class="badge" id="badge" hidden>0</span></button>
+  </nav>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = n => n.toLocaleString('ro-RO') + ' lei';
+
+// ---------- ICONS ----------
+const ICONS = {
+  home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  rim:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v6.5M12 14.5V21M3 12h6.5M14.5 12H21"/>',
+  tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/>',
+  cube:'<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/>',
+  spark:'<path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+  cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+  rotate:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  play:'<path d="M6 4l14 8-14 8z"/>',
+  target:'<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+  download:'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+  filter:'<path d="M3 5h18M6 12h12M10 19h4"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'
+};
+const icon = n => `<svg class="i" viewBox="0 0 24 24">${ICONS[n]}</svg>`;
+$$('[data-icon]').forEach(el => el.outerHTML = icon(el.dataset.icon));
+
+// ---------- DATA ----------
+const COLORS = {
+  silver:  {name:'Argintiu',     hex:'#c3c8cf', metal:.95, rough:.22},
+  gunmetal:{name:'Gri antracit', hex:'#4b5058', metal:.9,  rough:.3},
+  black:   {name:'Negru lucios', hex:'#18191b', metal:.6,  rough:.15},
+  matte:   {name:'Negru mat',    hex:'#232427', metal:.3,  rough:.75},
+  bronze:  {name:'Bronz',        hex:'#a07a45', metal:.95, rough:.28},
+  polished:{name:'Diamond cut',  hex:'#e4e7eb', metal:1,   rough:.08}
+};
+const RIMS = [
+  {id:1, name:'Carpatia R5',      brand:'NDJ Forge', style:'sport5',  color:'gunmetal', sizes:[17,18,19], price:649, old:749, rating:4.8, reviews:214, tag:'Best seller'},
+  {id:2, name:'Velocita V-Split', brand:'Velocita',  style:'split5',  color:'black',    sizes:[17,18,19], price:729, rating:4.7, reviews:98,  tag:'Nou'},
+  {id:3, name:'Rally Pro 6X',     brand:'Rally Pro', style:'off6',    color:'matte',    sizes:[16,17],    price:579, old:659, rating:4.9, reviews:167, tag:'Off-road'},
+  {id:4, name:'Nordic Mesh',      brand:'Nordic',    style:'mesh',    color:'silver',   sizes:[17,18],    price:689, rating:4.6, reviews:73},
+  {id:5, name:'Turbo Twist',      brand:'Velocita',  style:'turbine', color:'polished', sizes:[18,19],    price:859, old:949, rating:4.8, reviews:51,  tag:'Premium'},
+  {id:6, name:'Alpin 10',         brand:'Alpin',     style:'multi10', color:'bronze',   sizes:[17,18],    price:699, rating:4.5, reviews:64},
+  {id:7, name:'Transfăgărășan Y', brand:'NDJ Forge', style:'y5',      color:'black',    sizes:[18,19],    price:799, old:899, rating:4.9, reviews:132, tag:'Top'},
+  {id:8, name:'Classic 7',        brand:'OEM Style', style:'oem',     color:'silver',   sizes:[16,17],    price:449, rating:4.4, reviews:301},
+  {id:9, name:'Rally Pro 6X Bronze', brand:'Rally Pro', style:'off6', color:'bronze',   sizes:[16,17],    price:599, rating:4.7, reviews:88},
+  {id:10,name:'Carpatia R5 Black',brand:'NDJ Forge', style:'sport5',  color:'black',    sizes:[17,18,19], price:669, rating:4.8, reviews:156}
+];
+const rimById = id => RIMS.find(r => r.id === id);
+const priceFor = (r, s) => r.price + (s - r.sizes[0]) * 70;
+const WIDTH = {16:'6.5J',17:'7J',18:'7.5J',19:'8J'};
+const TIRE = {16:'215/65 R16',17:'215/60 R17',18:'225/55 R18',19:'235/50 R19'};
+const VEH = {
+  'Dacia':['Duster II (2018–2024)','Duster III (2024+)','Bigster','Sandero Stepway'],
+  'Renault':['Kadjar','Captur','Austral'],
+  'Volkswagen':['Tiguan','T-Roc','Golf 8'],
+  'Skoda':['Kodiaq','Karoq','Octavia']
+};
+const PRESETS = {
+  studio:  {name:'Studio',       sky:['#2a2e38','#15171c','#0d0e12'], fog:'#0d0e12', ground:'#0f1014', platform:true, exp:1,    hemi:['#ffffff','#202030',.6], sun:['#ffffff',2.2]},
+  city:    {name:'Oraș noaptea', sky:['#03050f','#0d1233','#2a2552'], fog:'#1a1838', ground:'#16171d', exp:1,    hemi:['#8090ff','#120f1c',.55], sun:['#ffc890',1.5]},
+  mountain:{name:'Munte',        sky:['#3f86cf','#8fc0e8','#d7ebf7'], fog:'#c9dceb', ground:'#4f6a3a', exp:1.1,  hemi:['#d6ecff','#4f6a3a',.9], sun:['#fff4e0',2.6]},
+  sunset:  {name:'Apus',         sky:['#1c1236','#7a2d63','#ff8a4c'], fog:'#d8734f', ground:'#3b2a2a', exp:1.05, hemi:['#ffb38a','#2a1d22',.7], sun:['#ff9a5a',2.4]},
+  desert:  {name:'Off-road',     sky:['#5f9edb','#a8cdeb','#f1dcb6'], fog:'#e8d2ac', ground:'#b48a56', exp:1.1,  hemi:['#dbeaff','#b48a56',.85], sun:['#fff0d0',2.8]}
+};
+const ANGLES = {
+  front:{name:'Față 3/4', pos:[5.4,1.5,4.4],  target:[0,.75,0]},
+  side: {name:'Profil',   pos:[0,1.1,7.4],    target:[0,.75,0]},
+  rear: {name:'Spate 3/4',pos:[-5.2,1.7,4.6], target:[0,.75,0]},
+  low:  {name:'Jos, dramatic', pos:[3.6,.4,3.4], target:[0,.85,0]},
+  hero: {pos:[4.6,1.3,3.9], target:[0,.7,0]}
+};
+const STYLES = {
+  realist:  {name:'Realist',    filter:'contrast(1.05) saturate(1.05)', vig:.35},
+  cinematic:{name:'Cinematic',  filter:'contrast(1.18) saturate(1.2) sepia(.1)', vig:.6},
+  vibrant:  {name:'Vibrant',    filter:'saturate(1.45) contrast(1.1) brightness(1.05)', vig:.3},
+  bw:       {name:'Alb-negru',  filter:'grayscale(1) contrast(1.3)', vig:.55}
+};
+
+const state = {
+  tab:'home', rimId:1, size:18, color:'gunmetal', scene:'studio', autoRotate:true, drive:false,
+  cart:[], favs:new Set(), montaj:true,
+  filters:{size:0, color:'', q:'', sort:'pop'}, vehicle:'Dacia Duster II (2018–2024)',
+  ai:{scene:'city', angle:'front', style:'cinematic', shots:[], current:null},
+  sheet:{id:null, size:null}, heroDirty:true
+};
+
+// ---------- RIM GEOMETRY (shared by SVG + 3D) ----------
+function spokes(style){
+  const s = [];
+  const add = (n, w, off = 0, tw = 0, inner = .22, outer = 1) => {
+    for (let i = 0; i < n; i++) s.push({a: off + i * 2 * Math.PI / n + Math.PI / 2, w, tw, inner, outer});
+  };
+  switch (style){
+    case 'sport5':  add(5,.2); break;
+    case 'split5':  add(5,.07,0,.18); add(5,.07,0,-.18); break;
+    case 'off6':    add(6,.26); break;
+    case 'mesh':    add(12,.05,0,.5); add(12,.05,0,-.5); break;
+    case 'turbine': add(9,.1,0,.6); break;
+    case 'multi10': add(10,.08); break;
+    case 'y5':      add(5,.15,0,0,.2,.55); add(5,.07,0,.28,.5,1); add(5,.07,0,-.28,.5,1); break;
+    case 'oem':     add(7,.12,0,.15); break;
+  }
+  return s;
+}
+function shade(hex, p){
+  const n = parseInt(hex.slice(1), 16);
+  const f = v => Math.max(0, Math.min(255, Math.round(v + (p > 0 ? (255 - v) * p / 100 : v * p / 100))));
+  return '#' + [n >> 16, n >> 8 & 255, n & 255].map(v => f(v).toString(16).padStart(2, '0')).join('');
+}
+let svgId = 0;
+function rimSVG(style, colorKey){
+  const c = COLORS[colorKey], id = 'rg' + (svgId++);
+  const light = shade(c.hex, 45), dark = shade(c.hex, -40);
+  let sp = '';
+  for (const s of spokes(style)){
+    const r1 = s.inner, r2 = .96 * s.outer;
+    const x1 = r1 * Math.cos(s.a), y1 = -r1 * Math.sin(s.a);
+    const x2 = r2 * Math.cos(s.a + s.tw), y2 = -r2 * Math.sin(s.a + s.tw);
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
+    const h1 = s.w * .55, h2 = s.w * .45;
+    const p = [x1+nx*h1, y1+ny*h1, x2+nx*h2, y2+ny*h2, x2-nx*h2, y2-ny*h2, x1-nx*h1, y1-ny*h1].map(v => v.toFixed(3));
+    sp += `<polygon points="${p.join(' ')}" fill="url(#${id})"/>`;
+  }
+  let nuts = '';
+  for (let i = 0; i < 5; i++){ const a = i * 2 * Math.PI / 5 - Math.PI / 2; nuts += `<circle cx="${(.15*Math.cos(a)).toFixed(3)}" cy="${(.15*Math.sin(a)).toFixed(3)}" r=".032" fill="#d9dde2"/>`; }
+  return `<svg class="rim-svg" viewBox="-1.3 -1.3 2.6 2.6">
+    <defs>
+      <linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="-1" y1="-1" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset=".5" stop-color="${c.hex}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
+      <radialGradient id="${id}t"><stop offset=".75" stop-color="#2b2b2b"/><stop offset="1" stop-color="#0c0c0c"/></radialGradient>
+    </defs>
+    <circle r="1.28" fill="url(#${id}t)"/><circle r="1.19" fill="none" stroke="#1d1d1d" stroke-width=".035"/>
+    <circle r="1" fill="#0a0a0b"/><circle r=".74" fill="#3b3d42"/><circle r=".5" fill="#26282c"/>
+    <path d="M -.62 -.36 A .72 .72 0 0 1 -.25 -.68" stroke="#d32f2f" stroke-width=".15" fill="none" stroke-linecap="round"/>
+    ${sp}
+    <circle r=".965" fill="none" stroke="url(#${id})" stroke-width=".075"/>
+    <circle r=".26" fill="url(#${id})"/>${nuts}
+    <circle r=".085" fill="#111" stroke="${light}" stroke-width=".015"/>
+  </svg>`;
+}
+
+// ---------- 3D SCENE ----------
+const viewer = $('#viewer');
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(1, 1, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+viewer.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+const camera = new THREE.PerspectiveCamera(35, 1, .1, 120);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 4; controls.maxDistance = 12; controls.maxPolarAngle = 1.52;
+controls.autoRotateSpeed = .8;
+function resetCam(){ camera.position.set(6.2, 2.0, 5.2); controls.target.set(0, .7, 0); controls.update(); }
+resetCam();
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x202030, .6); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(4, 8, 3); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, {left:-5, right:5, top:5, bottom:-5, near:1, far:20});
+sun.shadow.bias = -.0005;
+scene.add(sun);
+const back = new THREE.DirectionalLight(0x99aaff, 1); back.position.set(-5, 3, -4); scene.add(back);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(44, 64), new THREE.MeshStandardMaterial({color:0x0f1014, roughness:.9}));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -.002; ground.receiveShadow = true; scene.add(ground);
+const platform = new THREE.Group();
+const disk = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.7, .08, 96), new THREE.MeshStandardMaterial({color:0x17191f, metalness:.3, roughness:.35}));
+disk.position.y = -.04; disk.receiveShadow = true; platform.add(disk);
+const ring = new THREE.Mesh(new THREE.TorusGeometry(3.65, .018, 8, 128), new THREE.MeshBasicMaterial({color:0xff5a1f}));
+ring.rotation.x = Math.PI / 2; platform.add(ring);
+scene.add(platform);
+
+const sky = new THREE.Mesh(new THREE.CylinderGeometry(45, 45, 40, 64, 1, true), new THREE.MeshBasicMaterial({side:THREE.BackSide, fog:false, depthWrite:false}));
+sky.position.y = 19.5; scene.add(sky);
+
+{ // soft contact shadow under the car
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(128,128,10,128,128,128);
+  gr.addColorStop(0,'rgba(0,0,0,.85)'); gr.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0,0,256,256);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.6), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
+  m.rotation.x = -Math.PI / 2; m.position.y = .004; scene.add(m);
+}
+
+const M = {
+  paint:  new THREE.MeshPhysicalMaterial({color:0x0a0b0d, metalness:.7, roughness:.28, clearcoat:1, clearcoatRoughness:.05}),
+  glass:  new THREE.MeshPhysicalMaterial({color:0x0b1118, metalness:.3, roughness:.05, clearcoat:1, side:THREE.DoubleSide}),
+  plastic:new THREE.MeshStandardMaterial({color:0x1a1b1e, roughness:.85}),
+  chrome: new THREE.MeshStandardMaterial({color:0xdde2e8, metalness:1, roughness:.12}),
+  silver: new THREE.MeshStandardMaterial({color:0xa9adb3, metalness:.8, roughness:.35}),
+  head:   new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xcfe6ff, emissiveIntensity:1.6}),
+  tail:   new THREE.MeshStandardMaterial({color:0x550000, emissive:0xff1a1a, emissiveIntensity:1.2}),
+  rubber: new THREE.MeshStandardMaterial({color:0x121212, roughness:.9, side:THREE.DoubleSide}),
+  barrel: new THREE.MeshStandardMaterial({color:0x777b80, metalness:.8, roughness:.4, side:THREE.DoubleSide}),
+  disc:   new THREE.MeshStandardMaterial({color:0x6d7075, metalness:.9, roughness:.45}),
+  caliper:new THREE.MeshStandardMaterial({color:0xd32f2f, metalness:.3, roughness:.4}),
+  dark:   new THREE.MeshStandardMaterial({color:0x050505, roughness:.9, side:THREE.DoubleSide}),
+  nut:    new THREE.MeshStandardMaterial({color:0xd9dde2, metalness:1, roughness:.2})
+};
+const SHARED = new Set(Object.values(M));
+
+// ---------- CAR (stylized Dacia Duster) ----------
+const car = new THREE.Group(); scene.add(car);
+const WB = 1.33;
+function box(w, h, d, mat, x, y, z){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = true; car.add(m); return m;
+}
+{
+  const s = new THREE.Shape(), AR = .47, AY = .38;
+  s.moveTo(2.12, .3);
+  s.lineTo(WB + AR, .3); s.absarc(WB, AY, AR, 0, Math.PI, false);
+  s.lineTo(WB - AR, .3); s.lineTo(-WB + AR, .3); s.absarc(-WB, AY, AR, 0, Math.PI, false);
+  s.lineTo(-WB - AR, .3); s.lineTo(-2.12, .3); s.lineTo(-2.2, .42); s.lineTo(-2.22, .95);
+  s.lineTo(-2.12, 1.12); s.lineTo(-2.02, 1.62); s.quadraticCurveTo(-1.98, 1.7, -1.85, 1.7);
+  s.lineTo(.45, 1.7); s.lineTo(1.2, 1.12); s.lineTo(2.0, 1.0);
+  s.quadraticCurveTo(2.22, .96, 2.22, .75); s.lineTo(2.2, .42); s.lineTo(2.12, .3);
+  const geo = new THREE.ExtrudeGeometry(s, {depth:1.62, bevelEnabled:true, bevelThickness:.06, bevelSize:.05, bevelSegments:4, curveSegments:24});
+  geo.translate(0, 0, -.81);
+  const body = new THREE.Mesh(geo, M.paint); body.castShadow = true; car.add(body);
+
+  const win = new THREE.ShapeGeometry(new THREE.Shape([[-1.95,1.16],[-1.9,1.58],[.38,1.6],[1.06,1.15]].map(p => new THREE.Vector2(...p))));
+  for (const z of [.872, -.872]){
+    const w = new THREE.Mesh(win, M.glass); w.position.z = z; car.add(w);
+    box(.09, .46, .006, M.paint, -.4, 1.38, z * 1.003);
+    box(3.0, .02, .006, M.chrome, -.45, 1.15, z * 1.004);
+    box(.12, .025, .02, M.chrome, .55, 1.02, z * 1.01);
+    box(.12, .025, .02, M.chrome, -.75, 1.02, z * 1.01);
+    box(1.7, .14, .03, M.plastic, 0, .38, z * 1.015);
+    box(.16, .11, .16, M.paint, 1.0, 1.2, Math.sign(z) * .96);
+    for (const x of [WB, -WB]){
+      const f = new THREE.Mesh(new THREE.TorusGeometry(.5, .05, 8, 40, Math.PI), M.plastic);
+      f.position.set(x, .38, z * 1.004); f.scale.z = .7; f.castShadow = true; car.add(f);
+    }
+    // roof rails
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 2.0, 12), M.silver);
+    rail.rotation.z = Math.PI / 2; rail.position.set(-.75, 1.84, Math.sign(z) * .66); car.add(rail);
+    box(.08, .1, .05, M.silver, -1.7, 1.79, Math.sign(z) * .66);
+    box(.08, .1, .05, M.silver, .2, 1.79, Math.sign(z) * .66);
+    // lights
+    box(.08, .11, .34, M.head, 2.21, .86, Math.sign(z) * .56);
+    box(.04, .26, .14, M.tail, -2.24, .98, Math.sign(z) * .72);
+    const fog = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .02, 16), M.head);
+    fog.rotation.z = Math.PI / 2; fog.position.set(2.27, .55, Math.sign(z) * .62); car.add(fog);
+  }
+  const glassPanel = (p1, p2, width) => {
+    const dx = p2[0]-p1[0], dy = p2[1]-p1[1], L = Math.hypot(dx, dy);
+    const m = box(L * .92, .012, width, M.glass, (p1[0]+p2[0])/2 - dy/L*.058, (p1[1]+p2[1])/2 + dx/L*.058, 0);
+    m.rotation.z = Math.atan2(dy, dx);
+  };
+  glassPanel([.45,1.7], [1.2,1.12], 1.5);
+  glassPanel([-2.12,1.12], [-2.02,1.62], 1.4);
+  box(.06, .2, .72, M.dark, 2.24, .8, 0);
+  box(.02, .025, .76, M.chrome, 2.27, .86, 0);
+  box(.02, .025, .76, M.chrome, 2.27, .74, 0);
+  box(.04, .12, 1.0, M.plastic, 2.27, .55, 0);
+  box(.05, .08, .9, M.silver, 2.26, .38, 0);
+  box(.04, .14, 1.6, M.plastic, -2.27, .5, 0);
+  box(.05, .08, .9, M.silver, -2.26, .38, 0);
+  // license plates
+  const c = document.createElement('canvas'); c.width = 520; c.height = 110;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f4f4'; g.fillRect(0, 0, 520, 110);
+  g.fillStyle = '#1f3fa8'; g.fillRect(0, 0, 56, 110);
+  g.fillStyle = '#fff'; g.font = 'bold 26px Arial'; g.fillText('RO', 10, 92);
+  g.fillStyle = '#111'; g.font = 'bold 74px Arial'; g.fillText('B 01 NDJ', 80, 84);
+  const plateMat = new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(c), roughness:.5});
+  plateMat.map.colorSpace = THREE.SRGBColorSpace;
+  const pf = new THREE.Mesh(new THREE.PlaneGeometry(.52, .11), plateMat); pf.rotation.y = Math.PI/2; pf.position.set(2.295, .66, 0); car.add(pf);
+  const pr = new THREE.Mesh(new THREE.PlaneGeometry(.52, .11), plateMat); pr.rotation.y = -Math.PI/2; pr.position.set(-2.295, .72, 0); car.add(pr);
+}
+
+// ---------- WHEELS ----------
+const wheels = [[WB,.81],[WB,-.81],[-WB,.81],[-WB,-.81]].map(([x, z]) => {
+  const g = new THREE.Group(), spin = new THREE.Group();
+  g.position.set(x, .36, z); if (z < 0) g.rotation.y = Math.PI;
+  g.add(spin); car.add(g);
+  const cal = new THREE.Mesh(new THREE.BoxGeometry(.07, .13, .05), M.caliper); g.add(cal);
+  return {g, spin, cal, side: z < 0 ? -1 : 1};
+});
+function tireGeo(R){
+  const pts = [[R,-.1],[R+.012,-.116],[.31,-.122],[.348,-.108],[.36,-.06],[.362,0],[.36,.06],[.348,.108],[.31,.122],[R+.012,.116],[R,.1]];
+  return new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(...p)), 64);
+}
+function buildRim(R, style, colorKey){
+  const c = COLORS[colorKey], g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:c.hex, metalness:c.metal, roughness:c.rough});
+  const add = (geo, m, z = 0, rotX = false) => { const o = new THREE.Mesh(geo, m); o.position.z = z; if (rotX) o.rotation.x = Math.PI/2; o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CylinderGeometry(R*.97, R*.97, .2, 48, 1, true), M.barrel, 0, true);
+  add(new THREE.CircleGeometry(R*.96, 48), M.dark, -.09);
+  add(new THREE.CylinderGeometry(R*.72, R*.72, .02, 40), M.disc, -.02, true);
+  add(new THREE.TorusGeometry(R*.975, .013, 12, 72), mat, .09);
+  for (const s of spokes(style)){
+    const r1 = R * s.inner, r2 = R * .96 * s.outer;
+    const x1 = r1*Math.cos(s.a), y1 = r1*Math.sin(s.a), x2 = r2*Math.cos(s.a+s.tw), y2 = r2*Math.sin(s.a+s.tw);
+    const m = add(new THREE.BoxGeometry(Math.hypot(x2-x1, y2-y1), s.w*R, .035), mat, .065 - (s.tw < 0 ? .006 : 0));
+    m.position.x = (x1+x2)/2; m.position.y = (y1+y2)/2; m.rotation.z = Math.atan2(y2-y1, x2-x1);
+  }
+  add(new THREE.CylinderGeometry(R*.24, R*.27, .05, 36), mat, .06, true);
+  for (let i = 0; i < 5; i++){
+    const a = i * 2 * Math.PI / 5, n = add(new THREE.CylinderGeometry(.011, .011, .025, 6), M.nut, .09, true);
+    n.position.x = R*.15*Math.cos(a); n.position.y = R*.15*Math.sin(a);
+  }
+  add(new THREE.CylinderGeometry(R*.085, R*.085, .012, 24), M.dark, .092, true);
+  return g;
+}
+function disposeTree(o){
+  o.traverse(m => { if (m.isMesh){ m.geometry.dispose(); if (!SHARED.has(m.material)) m.material.dispose(); } });
+}
+function rebuildWheels(){
+  const r = rimById(state.rimId), R = state.size * .0254 / 2;
+  for (const w of wheels){
+    disposeTree(w.spin); w.spin.clear();
+    const tire = new THREE.Mesh(tireGeo(R), M.rubber); tire.rotation.x = Math.PI/2; tire.castShadow = true;
+    w.spin.add(tire, buildRim(R, r.style, state.color));
+    w.cal.position.set(-R*.54, R*.38, -.005); w.cal.rotation.z = 2.53;
+  }
+  state.heroDirty = true;
+}
+
+// ---------- BACKGROUNDS ----------
+function rng(seed){ return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const bgCache = {};
+function bgTexture(key){
+  if (bgCache[key]) return bgCache[key];
+  const p = PRESETS[key], W = 2048, H = 512, r = rng(7);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, H);
+  p.sky.forEach((s, i) => gr.addColorStop(i / (p.sky.length - 1), s));
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const ridge = (color, base, amp, step) => {
+    const pts = []; for (let x = 0; x <= W; x += step) pts.push([x, H - base - r() * amp]);
+    pts[pts.length - 1][1] = pts[0][1];
+    g.fillStyle = color; g.beginPath(); g.moveTo(0, H); g.lineTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++){ const mx = (pts[i][0]+pts[i+1][0])/2, my = (pts[i][1]+pts[i+1][1])/2; g.quadraticCurveTo(pts[i][0], pts[i][1], mx, my); }
+    g.lineTo(W, pts[pts.length-1][1]); g.lineTo(W, H); g.fill();
+  };
+  if (key === 'city'){
+    for (let i = 0; i < 260; i++){ g.fillStyle = `rgba(255,255,255,${r()*.7})`; g.fillRect(r()*W, r()*H*.6, 1.5, 1.5); }
+    let x = 0;
+    while (x < W){
+      const w = 40 + r()*70, h = 60 + r()*190;
+      g.fillStyle = r() > .5 ? '#0a0c1f' : '#0e1128'; g.fillRect(x, H - h, w, h);
+      for (let wy = H - h + 8; wy < H - 10; wy += 13) for (let wx = x + 6; wx < x + w - 8; wx += 11)
+        if (r() > .62){ g.fillStyle = `rgba(255,${190 + r()*50 | 0},120,${.4 + r()*.6})`; g.fillRect(wx, wy, 5, 7); }
+      x += w + 2;
+    }
+  } else if (key === 'mountain'){
+    ridge('#7d97b3', 90, 150, 110);
+    g.fillStyle = 'rgba(255,255,255,.0)';
+    ridge('#5a7a8f', 40, 90, 80);
+    ridge('#3e5a3a', 10, 50, 60);
+  } else if (key === 'sunset'){
+    const sx = 700, sy = H - 110, glow = g.createRadialGradient(sx, sy, 10, sx, sy, 300);
+    glow.addColorStop(0, 'rgba(255,220,140,.9)'); glow.addColorStop(1, 'rgba(255,140,80,0)');
+    g.fillStyle = glow; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#ffd27a'; g.beginPath(); g.arc(sx, sy, 55, 0, Math.PI*2); g.fill();
+    ridge('#5a2a4a', 30, 70, 90);
+    ridge('#2a1630', 5, 35, 70);
+  } else if (key === 'desert'){
+    ridge('#e2bd88', 40, 60, 160);
+    ridge('#c99d66', 10, 35, 120);
+  } else {
+    const rg = g.createRadialGradient(W/2, H*.4, 10, W/2, H*.4, W*.4);
+    rg.addColorStop(0, 'rgba(255,255,255,.08)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  }
+  const haze = g.createLinearGradient(0, H - 70, 0, H);
+  haze.addColorStop(0, p.fog + '00'); haze.addColorStop(1, p.fog);
+  g.fillStyle = haze; g.fillRect(0, H - 70, W, 70);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.repeat.x = 2;
+  return bgCache[key] = t;
+}
+let curPreset = null;
+function applyPreset(key){
+  if (curPreset === key) return; curPreset = key;
+  const p = PRESETS[key];
+  sky.material.map = bgTexture(key); sky.material.needsUpdate = true;
+  scene.background = new THREE.Color(p.sky[0]);
+  scene.fog = new THREE.Fog(p.fog, 10, 44);
+  ground.material.color.set(p.ground);
+  ground.material.roughness = key === 'city' ? .45 : .9;
+  platform.visible = !!p.platform;
+  hemi.color.set(p.hemi[0]); hemi.groundColor.set(p.hemi[1]); hemi.intensity = p.hemi[2];
+  sun.color.set(p.sun[0]); sun.intensity = p.sun[1];
+  renderer.toneMappingExposure = p.exp;
+}
+
+// ---------- SNAPSHOT (hero + AI studio) ----------
+function snapshot({preset, angle, w, h, style, label}){
+  const prev = {size:renderer.getSize(new THREE.Vector2()), pr:renderer.getPixelRatio(), pos:camera.position.clone(), target:controls.target.clone(), fov:camera.fov, aspect:camera.aspect, preset:curPreset};
+  const A = ANGLES[angle];
+  applyPreset(preset);
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = 35; camera.updateProjectionMatrix();
+  camera.position.set(...A.pos); camera.lookAt(...A.target);
+  renderer.render(scene, camera);
+  let url;
+  if (style){
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'), S = STYLES[style];
+    x.filter = S.filter; x.drawImage(renderer.domElement, 0, 0, w, h); x.filter = 'none';
+    const v = x.createRadialGradient(w/2, h/2, h*.35, w/2, h/2, h*.95);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${S.vig})`);
+    x.fillStyle = v; x.fillRect(0, 0, w, h);
+    if (style === 'cinematic'){ x.fillStyle = '#000'; x.fillRect(0, 0, w, h*.07); x.fillRect(0, h*.93, w, h*.07); }
+    x.textBaseline = 'bottom'; x.font = '800 34px Inter, sans-serif';
+    const wN = x.measureText('Only').width, wJ = x.measureText('Wheels').width, sx = w - wN - wJ - 28;
+    x.fillStyle = '#fff'; x.fillText('Only', sx, h - 18);
+    x.fillStyle = '#ff5a1f'; x.fillText('Wheels', sx + wN, h - 18);
+    x.font = '600 22px Inter, sans-serif'; x.fillStyle = 'rgba(255,255,255,.85)'; x.fillText(label, 28, h - 22);
+    url = c.toDataURL('image/jpeg', .9);
+  } else url = renderer.domElement.toDataURL('image/jpeg', .85);
+  renderer.setPixelRatio(prev.pr); renderer.setSize(prev.size.x || 1, prev.size.y || 1, false);
+  camera.aspect = prev.aspect; camera.fov = prev.fov; camera.updateProjectionMatrix();
+  camera.position.copy(prev.pos); controls.target.copy(prev.target); controls.update();
+  applyPreset(prev.preset);
+  return url;
+}
+
+new ResizeObserver(() => {
+  const w = viewer.clientWidth, h = viewer.clientHeight; if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = camera.aspect < 1 ? 44 : 35; camera.updateProjectionMatrix();
+}).observe(viewer);
+
+function loop(){
+  requestAnimationFrame(loop);
+  if (state.tab !== 'showroom') return;
+  controls.autoRotate = state.autoRotate; controls.update();
+  if (state.drive) for (const w of wheels) w.spin.rotation.z -= .18 * w.side;
+  renderer.render(scene, camera);
+}
+
+// ---------- UI ----------
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+function go(tab){
+  state.tab = tab;
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === 's-' + tab));
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  if (tab === 'home') updateHero();
+  if (tab === 'catalog') renderCatalog();
+  if (tab === 'showroom') renderShowroom();
+  if (tab === 'ai') renderAI();
+  if (tab === 'cart') renderCart();
+}
+function updateHero(){
+  if (!state.heroDirty) return; state.heroDirty = false;
+  $('#hero-img').src = snapshot({preset:'studio', angle:'hero', w:960, h:600});
+  $('#hero-rim').textContent = `${rimById(state.rimId).name} ${state.size}"`;
+}
+function rimCard(r){
+  return `<div class="rim-card" data-act="open" data-id="${r.id}">
+    ${r.tag ? `<span class="tag">${r.tag}</span>` : ''}
+    <button class="fav ${state.favs.has(r.id) ? 'on' : ''}" data-act="fav" data-id="${r.id}">${icon('heart')}</button>
+    <div class="thumb">${rimSVG(r.style, r.color)}</div>
+    <div class="brand">${r.brand}</div><div class="name">${r.name}</div>
+    <div class="stars">★ ${r.rating} <span>(${r.reviews})</span></div>
+    <div class="meta">${r.sizes.map(s => s + '"').join(' · ')} · ${COLORS[r.color].name}</div>
+    <div><span class="price">${fmt(r.price)}</span>${r.old ? `<span class="old">${fmt(r.old)}</span>` : ''}</div>
+    <div class="pp">de la / bucată</div>
+  </div>`;
+}
+function renderHome(){
+  $('#home-offers').innerHTML = RIMS.filter(r => r.old).map(rimCard).join('');
+}
+function renderCatalog(){
+  const f = state.filters;
+  $('#f-size').innerHTML = [0,16,17,18,19].map(s => `<button class="chip ${f.size === s ? 'active' : ''}" data-act="f-size" data-v="${s}">${s ? s + '"' : 'Toate mărimile'}</button>`).join('');
+  $('#f-color').innerHTML = `<button class="chip ${!f.color ? 'active' : ''}" data-act="f-color" data-v="">Toate culorile</button>` +
+    Object.entries(COLORS).map(([k, c]) => `<button class="chip ${f.color === k ? 'active' : ''}" data-act="f-color" data-v="${k}"><span class="swatch" style="background:${c.hex}"></span>${c.name}</button>`).join('');
+  const q = f.q.trim().toLowerCase();
+  let list = RIMS.filter(r => (!f.size || r.sizes.includes(f.size)) && (!f.color || r.color === f.color) && (!q || (r.name + ' ' + r.brand).toLowerCase().includes(q)));
+  if (f.sort === 'asc') list.sort((a, b) => a.price - b.price);
+  if (f.sort === 'desc') list.sort((a, b) => b.price - a.price);
+  if (f.sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+  if (f.sort === 'pop') list.sort((a, b) => b.reviews - a.reviews);
+  $('#count').textContent = `${list.length} produse găsite`;
+  $('#grid').innerHTML = list.length ? list.map(rimCard).join('') : `<div class="empty" style="grid-column:1/-1">Niciun rezultat. Încearcă alt filtru.</div>`;
+}
+function renderShowroom(){
+  const r = rimById(state.rimId);
+  $('#sr-brand').textContent = r.brand;
+  $('#sr-name').textContent = `${r.name} ${state.size}"`;
+  $('#sr-price').textContent = fmt(priceFor(r, state.size) * 4);
+  $('#sr-rims').innerHTML = RIMS.map(x => `<button class="mini-rim ${x.id === state.rimId ? 'active' : ''}" data-act="pick-rim" data-id="${x.id}">${rimSVG(x.style, x.color)}${x.name}</button>`).join('');
+  $('#sr-sizes').innerHTML = r.sizes.map(s => `<button class="chip ${s === state.size ? 'active' : ''}" data-act="pick-size" data-v="${s}">${s}" · ${TIRE[s]}</button>`).join('');
+  $('#sr-colors').innerHTML = Object.entries(COLORS).map(([k, c]) => `<button class="chip ${k === state.color ? 'active' : ''}" data-act="pick-color" data-v="${k}"><span class="swatch" style="background:${c.hex}"></span>${c.name}</button>`).join('');
+  $('#sr-scenes').innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip ${k === state.scene ? 'active' : ''}" data-act="pick-scene" data-v="${k}"><span class="swatch" style="background:linear-gradient(${p.sky.join(',')})"></span>${p.name}</button>`).join('');
+}
+function renderAI(){
+  const r = rimById(state.rimId), a = state.ai;
+  $('#ai-conf').innerHTML = `${rimSVG(r.style, state.color)}<div><b>Dacia Duster negru</b><br><span class="muted">${r.name} ${state.size}" · ${COLORS[state.color].name}</span></div><button class="btn sm ghost" data-act="tab" data-tab="showroom">Schimbă</button>`;
+  $('#ai-scenes').innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="chip ${k === a.scene ? 'active' : ''}" data-act="ai-scene" data-v="${k}"><span class="swatch" style="background:linear-gradient(${p.sky.join(',')})"></span>${p.name}</button>`).join('');
+  $('#ai-angles').innerHTML = ['front','side','rear','low'].map(k => `<button class="chip ${k === a.angle ? 'active' : ''}" data-act="ai-angle" data-v="${k}">${ANGLES[k].name}</button>`).join('');
+  $('#ai-styles').innerHTML = Object.entries(STYLES).map(([k, s]) => `<button class="chip ${k === a.style ? 'active' : ''}" data-act="ai-style" data-v="${k}">${s.name}</button>`).join('');
+  $('#ai-gallery').innerHTML = a.shots.length ? a.shots.map((s, i) => `<img src="${s}" data-act="ai-thumb" data-i="${i}" alt="">`).join('') : `<div class="muted small" style="grid-column:1/-1">Încă nu ai generat nicio poză.</div>`;
+  const img = $('#ai-img');
+  img.hidden = !a.current; $('#ai-ph').hidden = !!a.current; $('#ai-dl').hidden = !a.current;
+  if (a.current){ img.src = a.current; $('#ai-dl').href = a.current; }
+}
+let aiBusy = false;
+function aiGenerate(){
+  if (aiBusy) return; aiBusy = true;
+  const steps = ['Analizez configurația…','Construiesc scena…','Randez lumina și reflexiile…','Finisez imaginea…'];
+  const L = $('#ai-loading'), bar = $('#ai-bar'), st = $('#ai-step');
+  L.classList.add('on'); let p = 0;
+  const t = setInterval(() => {
+    p += 4; bar.style.width = p + '%'; st.textContent = steps[Math.min(3, p / 25 | 0)];
+    if (p < 100) return;
+    clearInterval(t);
+    const r = rimById(state.rimId), a = state.ai;
+    a.current = snapshot({preset:a.scene, angle:a.angle, w:1200, h:800, style:a.style, label:`Dacia Duster · ${r.name} ${state.size}"`});
+    a.shots.unshift(a.current);
+    L.classList.remove('on'); bar.style.width = '0'; aiBusy = false;
+    renderAI(); toast('Poză generată');
+  }, 55);
+}
+function renderSheet(){
+  const r = rimById(state.sheet.id), s = state.sheet.size;
+  $('#sheet-body').innerHTML = `<div class="grab"></div>
+    <div class="big-rim">${rimSVG(r.style, r.color)}</div>
+    <div class="brand">${r.brand}</div>
+    <div class="sel-row"><div class="name big">${r.name}</div><div class="stars">★ ${r.rating} <span>(${r.reviews} recenzii)</span></div></div>
+    <div style="margin:6px 0 4px"><span class="price" style="font-size:22px">${fmt(priceFor(r, s))}</span><span class="pp"> / buc · set 4: <b style="color:var(--text)">${fmt(priceFor(r, s) * 4)}</b></span></div>
+    <div class="label">Dimensiune</div>
+    <div class="chips">${r.sizes.map(x => `<button class="chip ${x === s ? 'active' : ''}" data-act="sheet-size" data-v="${x}">${x}"</button>`).join('')}</div>
+    <div class="label">Specificații</div>
+    <div class="specs">
+      <div class="spec"><small>Lățime</small><b>${WIDTH[s]}</b></div>
+      <div class="spec"><small>PCD</small><b>5x114.3</b></div>
+      <div class="spec"><small>ET / CB</small><b>ET45 / 66.1</b></div>
+      <div class="spec"><small>Finisaj</small><b>${COLORS[r.color].name}</b></div>
+      <div class="spec"><small>Greutate</small><b>${(9.2 + (s - 16) * 1.1).toFixed(1)} kg</b></div>
+      <div class="spec"><small>Anvelopă recomandată</small><b>${TIRE[s]}</b></div>
+    </div>
+    <div class="vehicle-banner"><i>${icon('check')}</i><div>Compatibilă cu Dacia Duster · omologare RAR inclusă</div></div>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn ghost" data-act="sheet-3d">${icon('cube')}Vezi în 3D</button>
+      <button class="btn" data-act="sheet-add">${icon('cart')}Adaugă set 4</button>
+    </div>`;
+}
+function addToCart(id, size, color){
+  const key = `${id}-${size}-${color}`, it = state.cart.find(c => c.key === key);
+  if (it) it.qty++; else state.cart.push({key, id, size, color, qty:1});
+  updateBadge(); toast('Set de 4 jante adăugat în coș');
+}
+function updateBadge(){
+  const n = state.cart.reduce((a, c) => a + c.qty, 0), b = $('#badge');
+  b.hidden = !n; b.textContent = n;
+}
+function renderCart(){
+  const el = $('#cart-body');
+  if (!state.cart.length){
+    el.innerHTML = `<div class="empty">${icon('cart')}<p>Coșul tău e gol.</p><br><button class="btn" data-act="tab" data-tab="catalog">Vezi catalogul</button></div>`;
+    return;
+  }
+  const sub = state.cart.reduce((a, c) => a + priceFor(rimById(c.id), c.size) * 4 * c.qty, 0);
+  const sets = state.cart.reduce((a, c) => a + c.qty, 0);
+  const mont = state.montaj ? 120 * sets : 0, ship = sub > 1000 ? 0 : 35;
+  el.innerHTML = state.cart.map(c => {
+    const r = rimById(c.id);
+    return `<div class="cart-item"><div class="t">${rimSVG(r.style, c.color)}</div><div class="info">
+      <div class="brand" style="margin:0">${r.brand}</div><div class="name">${r.name} ${c.size}"</div>
+      <div class="muted small">${COLORS[c.color].name} · set 4 buc</div>
+      <div class="stepper"><button data-act="qty" data-key="${c.key}" data-d="-1">−</button><span>${c.qty}</span><button data-act="qty" data-key="${c.key}" data-d="1">+</button>
+      <span class="price" style="font-size:14px;margin-left:auto">${fmt(priceFor(r, c.size) * 4 * c.qty)}</span></div>
+    </div></div>`;
+  }).join('') + `
+    <label class="check"><input type="checkbox" id="montaj" ${state.montaj ? 'checked' : ''}> Montaj + echilibrare la service partener (120 lei / set)</label>
+    <div class="card summary">
+      <div class="row"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+      <div class="row"><span>Montaj</span><span>${mont ? fmt(mont) : '—'}</span></div>
+      <div class="row"><span>Livrare</span><span>${ship ? fmt(ship) : 'Gratuită'}</span></div>
+      <div class="row total"><span>Total</span><span>${fmt(sub + mont + ship)}</span></div>
+    </div>
+    <div style="display:grid;gap:8px;margin-top:14px">
+      <button class="btn block" data-act="checkout">Finalizează comanda</button>
+      <button class="btn ghost block" data-act="toast" data-msg="Plata în rate – în curând">Plătește în rate 0%</button>
+    </div>`;
+  $('#montaj').addEventListener('change', e => { state.montaj = e.target.checked; renderCart(); });
+}
+
+// ---------- EVENTS ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const d = t.dataset, r = d.id ? rimById(+d.id) : null;
+  switch (d.act){
+    case 'tab': go(d.tab); break;
+    case 'toast': toast(d.msg); break;
+    case 'find':
+      state.vehicle = `${$('#v-brand').value} ${$('#v-model').value}, ${$('#v-year').value}`;
+      $('#veh-text').textContent = state.vehicle; go('catalog'); break;
+    case 'fav':
+      state.favs.has(r.id) ? state.favs.delete(r.id) : state.favs.add(r.id);
+      t.classList.toggle('on'); toast(state.favs.has(r.id) ? 'Adăugat la favorite' : 'Scos de la favorite'); break;
+    case 'open':
+      state.sheet = {id:r.id, size:r.sizes.includes(state.size) ? state.size : r.sizes[0]};
+      renderSheet(); $('#sheet').classList.add('open'); break;
+    case 'close-sheet': if (e.target === t) $('#sheet').classList.remove('open'); break;
+    case 'sheet-size': state.sheet.size = +d.v; renderSheet(); break;
+    case 'sheet-add': addToCart(state.sheet.id, state.sheet.size, rimById(state.sheet.id).color); $('#sheet').classList.remove('open'); break;
+    case 'sheet-3d': {
+      const x = rimById(state.sheet.id);
+      Object.assign(state, {rimId:x.id, size:state.sheet.size, color:x.color});
+      rebuildWheels(); $('#sheet').classList.remove('open'); go('showroom'); break;
+    }
+    case 'f-size': state.filters.size = +d.v; renderCatalog(); break;
+    case 'f-color': state.filters.color = d.v; renderCatalog(); break;
+    case 'pick-rim':
+      state.rimId = r.id; state.color = r.color;
+      if (!r.sizes.includes(state.size)) state.size = r.sizes[Math.min(1, r.sizes.length - 1)];
+      rebuildWheels(); renderShowroom(); break;
+    case 'pick-size': state.size = +d.v; rebuildWheels(); renderShowroom(); break;
+    case 'pick-color': state.color = d.v; rebuildWheels(); renderShowroom(); break;
+    case 'pick-scene': state.scene = d.v; applyPreset(d.v); renderShowroom(); break;
+    case 'add-set': addToCart(state.rimId, state.size, state.color); break;
+    case 'rotate': state.autoRotate = !state.autoRotate; t.classList.toggle('on', state.autoRotate); break;
+    case 'drive': state.drive = !state.drive; t.classList.toggle('on', state.drive); break;
+    case 'reset': resetCam(); break;
+    case 'ai-scene': state.ai.scene = d.v; renderAI(); break;
+    case 'ai-angle': state.ai.angle = d.v; renderAI(); break;
+    case 'ai-style': state.ai.style = d.v; renderAI(); break;
+    case 'ai-gen': aiGenerate(); break;
+    case 'ai-thumb': state.ai.current = state.ai.shots[+d.i]; renderAI(); break;
+    case 'qty': {
+      const it = state.cart.find(c => c.key === d.key); it.qty += +d.d;
+      if (it.qty <= 0) state.cart = state.cart.filter(c => c !== it);
+      updateBadge(); renderCart(); break;
+    }
+    case 'checkout': toast('Demo: comanda a fost simulată'); break;
+  }
+});
+$('#q').addEventListener('input', e => { state.filters.q = e.target.value; renderCatalog(); });
+$('#sort').addEventListener('change', e => { state.filters.sort = e.target.value; renderCatalog(); });
+
+const vb = $('#v-brand'), vm = $('#v-model'), vy = $('#v-year');
+Object.keys(VEH).forEach(b => vb.add(new Option(b, b)));
+const fillModels = () => { vm.innerHTML = ''; VEH[vb.value].forEach(m => vm.add(new Option(m, m))); };
+vb.addEventListener('change', fillModels); fillModels();
+for (let y = 2025; y >= 2015; y--) vy.add(new Option(y, y));
+vy.value = '2022';
+
+const tick = () => { const n = new Date(); $('#clock').textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2, '0')}`; };
+tick(); setInterval(tick, 30000);
+
+// ---------- INIT ----------
+applyPreset('studio');
+rebuildWheels();
+renderHome();
+updateHero();
+loop();
+</script>
+</body>
+</html>

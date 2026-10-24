@@ -1,0 +1,54 @@
+[project]
+name = "onlywheels-backend"
+version = "0.1.0"
+description = "OnlyWheels REST API and back-office (Django)"
+requires-python = ">=3.12"
+dependencies = [
+    "django[argon2]>=5.2,<6.0",
+    "djangorestframework>=3.16",
+    "djangorestframework-simplejwt>=5.5",
+    "drf-spectacular>=0.28",
+    "django-environ>=0.12",
+    "django-cors-headers>=4.7",
+    "django-filter>=25.1",
+    "django-unfold>=0.60",
+    "django-simple-history>=3.8",
+    "django-import-export>=4.3",
+    "psycopg[binary]>=3.2",
+    "celery>=5.5",
+    "pillow>=11.2",
+    "google-auth>=2.40",
+    "requests>=2.32",
+    "stripe>=12.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.11",
+    "factory-boy>=3.3",
+    "ruff>=0.11",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "tests"]
+addopts = "--reuse-db -ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S105", "S106"]
+"tests/**" = ["S105", "S106"]
+"conftest.py" = ["S105"]

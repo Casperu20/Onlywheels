@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101113">
+  <meta name="description" content="Concept OnlyWheels: jante, anvelope, showroom și montaj. Prototip interactiv cu date demonstrative.">
+  <title>OnlyWheels — Un nou look. Aceeași pasiune.</title>
+  <style>
+    :root { color-scheme: dark; --bg:#101113; --panel:#191b1f; --line:#2b2d32; --text:#f5f5f6; --muted:#a2a4ac; --orange:#ff642d; --green:#a8d8b6; --radius:16px; }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    html { scroll-behavior:smooth; scroll-padding-top:100px; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,"Segoe UI",Arial,sans-serif; font-size:14px; line-height:1.5; }
+    button,input,select { font:inherit; }
+    button,a,input,select { -webkit-tap-highlight-color:transparent; }
+    button,a { touch-action:manipulation; }
+    button { cursor:pointer; }
+    a { color:inherit; text-decoration:none; }
+    button { color:inherit; }
+    :focus-visible { outline:3px solid #ffad80; outline-offset:4px; }
+    .container { width:min(1240px,calc(100% - 80px)); margin-inline:auto; }
+    .icon { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+    .sprite { position:absolute; width:0; height:0; overflow:hidden; }
+    .announcement { min-height:35px; background:#1b1c20; border-bottom:1px solid var(--line); color:#b9bac1; font-size:11px; letter-spacing:.2px; }
+    .announcement .container { display:flex; align-items:center; justify-content:space-between; min-height:35px; gap:16px; }
+    .announcement strong { color:#f2f2f3; font-weight:500; }
+    .announcement .right { display:flex; gap:24px; }
+    header { position:sticky; top:0; z-index:20; background:rgba(16,17,19,.96); border-bottom:1px solid var(--line); backdrop-filter:blur(16px); }
+    .header-inner { display:flex; align-items:center; justify-content:space-between; gap:32px; height:86px; }
+    .logo { display:flex; align-items:center; gap:7px; font-size:23px; font-weight:800; letter-spacing:-1.2px; white-space:nowrap; }
+    .logo img { height:37px; width:37px; }
+    .logo span { color:var(--orange); }
+    .desktop-nav { display:flex; gap:29px; align-items:center; height:100%; }
+    .desktop-nav a { color:#b8bac1; font-size:13px; position:relative; display:flex; align-items:center; height:100%; gap:7px; }
+    .desktop-nav a:hover,.desktop-nav a.active { color:white; }
+    .desktop-nav .active:after { content:""; height:2px; background:var(--orange); position:absolute; bottom:0; left:0; right:0; }
+    .mini-tag { background:#35251e; color:#ff9a70; padding:2px 5px; border-radius:4px; font-size:8px; font-weight:700; letter-spacing:.7px; }
+    .header-actions { display:flex; gap:10px; }
+    .icon-btn { position:relative; display:inline-grid; place-items:center; background:none; border:1px solid var(--line); border-radius:10px; width:40px; height:40px; }
+    .icon-btn:hover { background:#292b30; }
+    .cart-count { position:absolute; top:-5px; right:-5px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; background:var(--orange); color:#111; border-radius:50%; font-size:10px; font-weight:800; }
+    .hero { padding-top:47px; position:relative; overflow:hidden; }
+    .hero-top { display:grid; grid-template-columns:.95fr 1.2fr; align-items:center; min-height:410px; gap:12px; }
+    .eyebrow { display:flex; align-items:center; gap:9px; font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:700; color:var(--orange); }
+    .eyebrow:before { content:""; width:23px; height:1px; background:var(--orange); }
+    h1 { font-size:clamp(40px,4.6vw,65px); line-height:1.05; letter-spacing:-2.8px; margin:24px 0 19px; font-weight:800; }
+    h1 em { font-style:normal; color:var(--orange); }
+    .hero-copy>p { max-width:385px; color:var(--muted); font-size:14px; line-height:1.8; margin:0 0 27px; }
+    .button { border:1px solid transparent; background:var(--orange); color:#111; padding:13px 20px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; gap:12px; font-weight:700; font-size:12px; min-height:46px; }
+    .button:hover { background:#ff865b; }
+    .button.secondary { border-color:#3b3d43; background:transparent; color:#efeff1; }
+    .button.secondary:hover { background:#24262b; }
+    .button .icon { width:17px; height:17px; }
+    .hero-buttons { display:flex; gap:12px; flex-wrap:wrap; }
+    .hero-note { display:flex; align-items:center; gap:8px; margin-top:25px; color:var(--muted); font-size:10px; }
+    .hero-note .icon { width:14px; height:14px; color:var(--green); }
+    .car-stage { position:relative; min-width:0; align-self:stretch; display:flex; align-items:center; justify-content:center; isolation:isolate; }
+    .car-stage:before { content:""; position:absolute; z-index:-1; width:95%; height:80%; background:radial-gradient(ellipse,#41454b44,transparent 67%); }
+    .stage-word { position:absolute; top:28px; left:1%; font-size:clamp(50px,7vw,100px); font-weight:900; letter-spacing:-6px; color:#ffffff05; -webkit-text-stroke:1px #ffffff0e; z-index:-1; }
+    .car-art { width:115%; max-width:none; flex-shrink:0; filter:drop-shadow(0 20px 24px #0008); }
+    .scene-label { position:absolute; right:3px; top:43px; display:flex; align-items:center; gap:8px; font-size:9px; letter-spacing:1px; color:#81858e; }
+    .scene-label:before { content:""; width:5px; height:5px; border-radius:50%; background:var(--orange); }
+    .car-caption { position:absolute; bottom:25px; right:13px; display:flex; align-items:center; gap:13px; }
+    .car-caption .line { width:34px; height:1px; background:#565961; }
+    .car-caption b { font-size:11px; font-weight:500; }
+    .car-caption small { display:block; color:var(--muted); font-size:9px; }
+    .dots { position:absolute; bottom:29px; left:40%; display:flex; gap:5px; }
+    .dots span { width:5px; height:5px; background:#4b4d52; border-radius:50%; }
+    .dots span:first-child { width:18px; border-radius:4px; background:var(--orange); }
+    .fitment { margin-top:27px; padding:25px 27px; background:linear-gradient(110deg,#222429,#191b1f); border:1px solid #34363b; border-radius:var(--radius); }
+    .fitment-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .fitment-title { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:650; }
+    .fitment-title .icon { color:var(--orange); }
+    .text-link { padding:0; border:0; background:none; color:var(--orange); font-size:11px; display:inline-flex; align-items:center; gap:8px; }
+    .text-link .icon { width:14px; height:14px; }
+    .fitment-form { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:12px; align-items:end; }
+    label.field { display:flex; flex-direction:column; gap:6px; color:#b8bac1; font-size:10px; }
+    select,input[type="text"],input[type="search"] { border:1px solid #383a41; border-radius:7px; background:#15171b; color:#e9e9ec; width:100%; min-width:0; padding:12px; min-height:45px; }
+    select:disabled { opacity:.45; cursor:not-allowed; }
+    .fitment-footer { font-size:10px; color:#8e919b; margin:12px 0 0; }
+    .benefits { display:grid; grid-template-columns:repeat(4,1fr); padding:25px 0 29px; border-bottom:1px solid var(--line); gap:25px; }
+    .benefit { display:flex; align-items:center; gap:11px; }
+    .benefit>.icon { color:#8b8e97; width:23px; height:23px; }
+    .benefit b { font-size:11px; display:block; font-weight:600; }
+    .benefit small { color:#82858e; font-size:10px; }
+    section.content { padding-top:42px; }
+    .section-heading { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:22px; }
+    h2 { margin:0; font-size:24px; letter-spacing:-.7px; line-height:1.25; }
+    .section-heading p { margin:6px 0 0; color:var(--muted); font-size:12px; }
+    .category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }
+    .category { position:relative; display:flex; align-items:center; justify-content:space-between; padding:20px 17px; height:117px; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .category:hover,.category[aria-pressed="true"] { border-color:#a54e2b; background:#211d1c; }
+    .category b { font-size:14px; display:block; margin-bottom:5px; }
+    .category small { font-size:10px; color:var(--muted); }
+    .category .cat-visual { width:80px; height:80px; transform:rotate(-12deg); flex-shrink:0; }
+    .category .arrow { position:absolute; bottom:15px; left:18px; color:#82858c; width:13px; height:13px; }
+    .category .copy { align-self:flex-start; }
+    .tire-art { width:73px; height:88px; border:16px solid #34373c; border-radius:50%; box-shadow:inset 4px 1px 3px #000,4px 3px 0 #08090a,-2px -2px 0 #62656a; background:#0e0f11; transform:rotate(20deg); position:relative; }
+    .tire-art:after { content:""; position:absolute; inset:-12px; border:3px dashed #17191d; border-radius:50%; }
+    .category .accessory { width:68px; height:68px; color:#999da6; }
+    .brand-strip { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:29px 10px 0; color:#747780; }
+    .brand-strip span { font-size:20px; font-weight:850; font-style:italic; letter-spacing:-1px; }
+    .brand-strip .light { font-size:16px; font-weight:500; letter-spacing:3px; font-style:normal; }
+    .brand-strip small { font-size:9px; color:#777a83; }
+    .product-tools { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:19px; }
+    .tabs { display:flex; gap:7px; flex-wrap:wrap; }
+    .tab { color:#a8abb3; background:transparent; border:1px solid var(--line); border-radius:6px; padding:7px 13px; font-size:11px; }
+    .tab[aria-pressed="true"] { color:#ff9a70; background:#35241d; border-color:#68402e; }
+    .search { max-width:235px; }
+    .search input { font-size:11px; min-height:35px; padding:8px 11px; }
+    .product-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:17px; }
+    .product { min-width:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); }
+    .product-image { height:205px; position:relative; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 70%,#34373e33,transparent 65%),#1c1e22; }
+    .product-image .wheel-svg { width:163px; height:163px; filter:drop-shadow(6px 14px 10px #0008); transition:transform .25s; }
+    .product:hover .wheel-svg { transform:rotate(10deg); }
+    .product-image .tire-art { width:116px; height:144px; border-width:25px; }
+    .product-image>.icon { width:100px; height:100px; color:#9398a1; }
+    .product-tag { position:absolute; left:12px; top:12px; font-size:9px; background:#303339; border:1px solid #41444c; color:#dddfe4; border-radius:4px; padding:3px 7px; }
+    .product-tag.sale { background:#3d2720; color:#ff9a70; border-color:#68402e; }
+    .favorite { position:absolute; right:10px; top:10px; width:29px; height:29px; border-radius:50%; border:1px solid #393c43; display:grid; place-items:center; background:#191b20; }
+    .favorite .icon { width:14px; height:14px; }
+    .favorite[aria-pressed="true"] { color:var(--orange); }
+    .favorite[aria-pressed="true"] .icon { fill:var(--orange); }
+    .product-info { padding:17px; }
+    .product-brand { color:#8c9099; font-size:9px; letter-spacing:1.5px; }
+    .product h3 { margin:4px 0 5px; font-size:15px; font-weight:650; }
+    .product-meta { color:#9da0aa; font-size:10px; margin:0; }
+    .stock { margin:12px 0; color:var(--green); font-size:9px; display:flex; align-items:center; gap:5px; }
+    .stock:before { content:""; width:4px; height:4px; background:var(--green); border-radius:50%; }
+    .price-row { display:flex; align-items:end; justify-content:space-between; gap:8px; padding-top:12px; border-top:1px solid var(--line); }
+    .price { font-size:19px; font-weight:700; letter-spacing:-.5px; }
+    .price small { font-size:10px; font-weight:500; }
+    .price-unit { display:block; font-size:9px; font-weight:400; color:#92959e; letter-spacing:0; }
+    .add-cart { width:34px; height:34px; display:grid; place-items:center; border:1px solid #64412f; background:#35251e; color:var(--orange); border-radius:7px; }
+    .add-cart:hover { background:#5c3523; }
+    .add-cart .icon { width:17px; height:17px; }
+    .demo-caption { margin:13px 0 0; font-size:10px; color:#838791; }
+    #result-status { color:#d2d5dc; font-size:12px; margin:0 0 15px; }
+    .feature-grid { display:grid; grid-template-columns:1.22fr 1fr; gap:19px; margin-top:43px; }
+    .feature { border:1px solid #34363c; border-radius:14px; overflow:hidden; min-height:278px; padding:27px; position:relative; isolation:isolate; background:#1b1d22; }
+    .feature .eyebrow { font-size:8px; letter-spacing:1.5px; }
+    .feature h2 { font-size:27px; margin:17px 0 11px; max-width:270px; }
+    .feature p { color:#a5a8b2; font-size:11px; max-width:230px; margin:0 0 23px; }
+    .feature .button { min-height:37px; padding:9px 13px; font-size:10px; }
+    .feature .feature-wheel { position:absolute; width:280px; height:280px; right:-58px; top:18px; opacity:.65; z-index:-1; filter:drop-shadow(0 14px 20px #000); transform:rotate(-15deg); }
+    .feature.ai { background:radial-gradient(ellipse at 85% 80%,#4a314c77,transparent 70%),#1b1c24; }
+    .ai-visual { position:absolute; right:20px; bottom:24px; width:138px; height:156px; border:1px solid #a08da94d; border-radius:12px; transform:rotate(10deg); background:linear-gradient(145deg,#6c647c55,#1b1c28); z-index:-1; display:grid; place-items:center; box-shadow:-12px 8px 0 #ffffff06; }
+    .ai-visual .icon { width:54px; height:54px; color:#c4a8d7; }
+    .feature.ai p,.feature.ai h2 { max-width:235px; }
+    .garage-banner { display:flex; justify-content:space-between; align-items:center; gap:25px; margin-top:22px; background:#1a1c20; border:1px solid var(--line); border-radius:12px; padding:25px 28px; }
+    .garage-copy { display:flex; align-items:center; gap:18px; }
+    .garage-icon { width:47px; height:47px; border:1px solid #484037; background:#2a251f; border-radius:10px; display:grid; place-items:center; color:#d3aa7d; flex-shrink:0; }
+    .garage-copy h3 { font-size:15px; margin:0 0 4px; }
+    .garage-copy p { color:var(--muted); font-size:11px; margin:0; }
+    footer { border-top:1px solid var(--line); margin-top:49px; padding:28px 0; }
+    .footer-inner { display:flex; align-items:center; justify-content:space-between; gap:25px; color:#81858e; font-size:10px; }
+    .footer-inner .logo { font-size:18px; color:#ececef; }
+    .footer-inner .logo img { width:28px; height:28px; }
+    .footer-links { display:flex; gap:22px; }
+    .mobile-nav { display:none; }
+    dialog { width:min(610px,calc(100% - 32px)); max-height:85dvh; padding:27px; color:var(--text); background:#1b1d22; border:1px solid #474a53; border-radius:16px; box-shadow:0 25px 100px #0009; }
+    dialog::backdrop { background:#000b; backdrop-filter:blur(6px); }
+    .dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:18px; }
+    .dialog-heading h2 { font-size:22px; }
+    .dialog-copy { color:#aeb1bb; font-size:13px; }
+    .demo-notice { background:#30251f; color:#e0b799; border:1px solid #634631; padding:12px; border-radius:8px; font-size:12px; margin:18px 0; }
+    .dialog-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+    .preview-stage { background:radial-gradient(ellipse,#444851,#101113 72%); border-radius:12px; overflow:hidden; }
+    .preview-stage svg { display:block; width:100%; }
+    .cart-line { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:15px 0; border-bottom:1px solid var(--line); }
+    .cart-line b { font-size:13px; }
+    .cart-line small { color:var(--muted); display:block; margin-top:3px; }
+    .cart-line .text-link { margin-top:6px; }
+    .cart-total { display:flex; justify-content:space-between; font-weight:700; font-size:19px; margin-top:22px; }
+    .photo-preview { max-width:100%; max-height:260px; object-fit:contain; margin-top:15px; border-radius:10px; }
+    input[type="file"] { width:100%; margin-top:10px; font-size:12px; }
+    input::file-selector-button { padding:9px 12px; margin-right:10px; border:1px solid #4b4e58; border-radius:6px; background:#292c34; color:white; cursor:pointer; }
+    .toast { position:fixed; bottom:25px; left:50%; transform:translateX(-50%); z-index:100; background:#f1f1f3; color:#17181b; border-radius:10px; padding:13px 22px; box-shadow:0 10px 40px #0008; font-size:12px; width:max-content; max-width:calc(100% - 32px); }
+    .skip { position:fixed; top:-80px; left:15px; z-index:100; padding:12px; background:var(--orange); color:black; }
+    .skip:focus { top:10px; }
+    @media(min-width:1500px) { .hero-top { min-height:440px; } }
+    @media(max-width:1100px) {
+      .container { width:calc(100% - 48px); }
+      .desktop-nav { gap:18px; }
+      .header-inner { gap:18px; }
+      .header-actions { gap:7px; }
+      .header-actions .account-button { display:none; }
+      .logo { font-size:21px; }
+      .hero-top { grid-template-columns:1fr 1.05fr; }
+      h1 { font-size:52px; }
+      .category { padding:16px 13px; }
+      .category .cat-visual { width:65px; height:65px; }
+      .product-info { padding:13px; }
+      .product-image { height:180px; }
+      .product-image .wheel-svg { width:145px; height:145px; }
+      .brand-strip span { font-size:17px; }
+      .feature .feature-wheel { right:-100px; opacity:.4; }
+      .ai-visual { opacity:.4; right:8px; }
+    }
+    @media(max-width:800px) {
+      .desktop-nav { gap:15px; }
+      .desktop-nav a { font-size:11px; }
+      .desktop-nav a:last-child,.mini-tag,.header-actions .saved-button { display:none; }
+      .hero { padding-top:32px; }
+      .hero-top { min-height:350px; }
+      h1 { font-size:43px; letter-spacing:-2px; }
+      .hero-copy>p { font-size:12px; }
+      .hero-buttons .button { padding:11px 13px; font-size:11px; }
+      .stage-word { top:75px; letter-spacing:-3px; }
+      .scene-label { top:67px; font-size:8px; }
+      .car-caption { bottom:40px; }
+      .dots { display:none; }
+      .fitment { padding:20px; }
+      .fitment-form { grid-template-columns:repeat(3,1fr); }
+      .fitment-form .button { grid-column:1/-1; }
+      .benefits { grid-template-columns:repeat(2,1fr); gap:18px; }
+      .category-grid { grid-template-columns:repeat(2,1fr); }
+      .product-grid { grid-template-columns:repeat(2,1fr); }
+      .product-image { height:210px; }
+      .product-image .wheel-svg { width:172px; height:172px; }
+      .brand-strip { flex-wrap:wrap; justify-content:center; gap:15px 30px; }
+      .brand-strip small { width:100%; text-align:center; }
+      .feature-grid { grid-template-columns:1fr; }
+      .feature .feature-wheel { right:0; opacity:.7; }
+      .ai-visual { opacity:.8; right:40px; }
+      .garage-banner { padding:22px; }
+      .footer-inner { flex-wrap:wrap; }
+    }
+    @media(max-width:560px) {
+      .container { width:calc(100% - 36px); }
+      .announcement .right { display:none; }
+      .announcement .container { justify-content:center; font-size:9px; }
+      .header-inner { height:67px; }
+      .desktop-nav { display:none; }
+      .header-actions .saved-button { display:inline-grid; }
+      .logo { font-size:22px; }
+      .logo img { height:32px; width:32px; }
+      .hero { padding-top:29px; }
+      .hero-top { display:flex; flex-direction:column; gap:0; align-items:stretch; }
+      .eyebrow { font-size:9px; letter-spacing:1.7px; }
+      h1 { font-size:46px; line-height:1.06; margin-top:20px; }
+      .hero-copy>p { font-size:13px; max-width:350px; }
+      .hero-note { margin-top:18px; }
+      .car-stage { height:240px; margin-top:6px; }
+      .car-art { width:109%; }
+      .stage-word { top:4px; left:8%; font-size:62px; }
+      .scene-label { top:13px; right:0; }
+      .car-caption { bottom:0; right:0; }
+      .fitment { margin-top:25px; padding:18px; }
+      .fitment-heading { align-items:start; flex-direction:column; gap:10px; }
+      .fitment-title { font-size:13px; }
+      .fitment-form { grid-template-columns:1fr; gap:11px; }
+      .benefits { gap:18px 10px; padding:23px 0; }
+      .benefit { gap:8px; }
+      .benefit b { font-size:10px; }
+      .benefit small { font-size:9px; }
+      .benefit>.icon { width:19px; height:19px; }
+      section.content { padding-top:31px; }
+      h2 { font-size:21px; }
+      .section-heading { gap:12px; }
+      .section-heading .text-link { font-size:10px; white-space:nowrap; }
+      .section-heading p { font-size:11px; }
+      .category-grid { gap:10px; }
+      .category { height:110px; padding:14px 10px; }
+      .category b { font-size:12px; }
+      .category small { font-size:9px; }
+      .category .cat-visual { width:54px; height:54px; margin-left:-8px; }
+      .category .tire-art { width:49px; height:65px; border-width:12px; }
+      .category .accessory { width:46px; }
+      .category .arrow { left:11px; }
+      .brand-strip span { font-size:15px; }
+      .brand-strip .light { font-size:12px; }
+      .product-tools { flex-direction:column; align-items:stretch; gap:12px; }
+      .search { max-width:none; }
+      .product-grid { gap:11px; }
+      .product-image { height:160px; }
+      .product-image .wheel-svg { width:126px; height:126px; }
+      .product-image .tire-art { width:90px; height:114px; border-width:20px; }
+      .product-info { padding:12px 10px; }
+      .product h3 { font-size:13px; }
+      .product-meta { font-size:9px; }
+      .price { font-size:17px; }
+      .add-cart { width:30px; height:32px; }
+      .feature-grid { margin-top:32px; gap:15px; }
+      .feature { padding:23px; min-height:265px; }
+      .feature h2 { font-size:25px; max-width:220px; }
+      .feature .feature-wheel { width:240px; right:-110px; opacity:.4; }
+      .ai-visual { right:-28px; opacity:.5; }
+      .garage-banner { align-items:start; flex-direction:column; gap:17px; padding:21px; }
+      .garage-copy { gap:12px; }
+      .garage-copy h3 { font-size:13px; }
+      .garage-banner>.button { width:100%; }
+      footer { margin-top:32px; padding-bottom:95px; }
+      .footer-inner { flex-direction:column; align-items:start; gap:16px; }
+      .mobile-nav { position:fixed; bottom:0; left:0; right:0; z-index:25; display:flex; justify-content:space-around; background:#191b1ff5; backdrop-filter:blur(15px); border-top:1px solid #373a42; padding:9px 5px max(10px,env(safe-area-inset-bottom)); }
+      .mobile-nav a,.mobile-nav button { border:0; background:none; color:#9da1ab; display:flex; align-items:center; gap:4px; flex-direction:column; font-size:9px; padding:2px 5px; }
+      .mobile-nav .active { color:var(--orange); }
+      .mobile-nav .icon { width:20px; height:20px; }
+      .toast { bottom:85px; }
+      .dialog-fields { grid-template-columns:1fr; }
+      dialog { padding:21px; }
+    }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { transition:none !important; } }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip">Sari la conținut</a>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+      <symbol id="i-car" viewBox="0 0 24 24"><path d="m5 7 2-4h10l2 4 2 3v8h-3v-3H6v3H3v-8l2-3Zm0 0h14M3 11h18M6 12v1m12-1v1"/></symbol>
+      <symbol id="i-cart" viewBox="0 0 24 24"><path d="M2 3h3l3 12h11l3-9H6M8 19h.01M18 19h.01"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20 5a5 5 0 0 0-8 1 5 5 0 0 0-8-1c-5 5 3 11 8 15 5-4 13-10 8-15Z"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6l8-4Z"/><path d="m8 12 3 3 5-6"/></symbol>
+      <symbol id="i-truck" viewBox="0 0 24 24"><path d="M1 4h13v13H1zM14 9h5l4 5v3h-9"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></symbol>
+      <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 9h20M6 15h4"/></symbol>
+      <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14 3a6 6 0 0 0-7 8L2 17a3 3 0 0 0 5 5l6-7a6 6 0 0 0 8-7l-5 4-4-4 4-5Z"/></symbol>
+      <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 10 5v10l-10 5L2 17V7l10-5Zm0 10L2 7m10 5L22 7M12 12v10M7 4.5l10 5"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4m-2-2h4"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="m2 11 10-9 10 9M5 9v13h14V9M9 22v-8h6v8"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+      <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e6e8ec"/><stop offset=".3" stop-color="#878e9a"/><stop offset=".52" stop-color="#edf0f4"/><stop offset=".72" stop-color="#626a78"/><stop offset="1" stop-color="#bfc5cf"/></linearGradient>
+      <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d9b589"/><stop offset=".4" stop-color="#816345"/><stop offset=".6" stop-color="#bb9366"/><stop offset="1" stop-color="#614a36"/></linearGradient>
+      <linearGradient id="black-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#797e88"/><stop offset=".4" stop-color="#272b32"/><stop offset=".6" stop-color="#565c67"/><stop offset="1" stop-color="#1f2227"/></linearGradient>
+      <symbol id="car-scene" viewBox="0 0 800 400">
+        <defs>
+          <linearGradient id="body-paint" x1=".3" y1="0" x2=".5" y2="1"><stop stop-color="#d0d3d5"/><stop offset=".27" stop-color="#a5adb3"/><stop offset=".5" stop-color="#737e86"/><stop offset=".7" stop-color="#3e4850"/><stop offset="1" stop-color="#7d878c"/></linearGradient>
+          <linearGradient id="hood-paint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a4adb3"/><stop offset=".5" stop-color="#5e6b76"/><stop offset="1" stop-color="#bec4c6"/></linearGradient>
+          <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#131b24"/><stop offset=".5" stop-color="#344653"/><stop offset="1" stop-color="#0a0e14"/></linearGradient>
+          <radialGradient id="ground"><stop stop-color="#000" stop-opacity=".8"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="418" cy="326" rx="353" ry="38" fill="url(#ground)"/>
+        <path d="M95 223 116 190 241 169 313 120Q325 112 351 111l122 3q30 1 54 22l79 68 91 24 20 48-13 28-76 13-407-5-110-32Z" fill="#11161d" stroke="#424b54" stroke-width="2"/>
+        <g transform="translate(237 274) rotate(-5)"><ellipse rx="57" ry="65" fill="#090b0f" stroke="#30353c" stroke-width="4"/><ellipse rx="44" ry="53" fill="#10151c" stroke="#88929d" stroke-width="3"/><g class="car-spokes" stroke="#bcc3ca" stroke-width="5"><path d="M0-48V48M-40-24l80 48M-40 24l80-48M-24-41l48 82M-24 41l48-82"/></g><ellipse rx="10" ry="12" fill="#49525e" stroke="#c0c6cd" stroke-width="2"/></g>
+        <g transform="translate(611 282) rotate(-5)"><ellipse rx="53" ry="61" fill="#080b10" stroke="#30363e" stroke-width="4"/><ellipse rx="40" ry="49" fill="#10151c" stroke="#88929d" stroke-width="3"/><g class="car-spokes" stroke="#bcc3ca" stroke-width="5"><path d="M0-44V44M-36-22l72 44M-36 22l72-44M-22-38l44 76M-22 38l44-76"/></g><ellipse rx="9" ry="11" fill="#49525e" stroke="#c0c6cd" stroke-width="2"/></g>
+        <path d="m92 230 26-36 125-20 72-49q15-10 40-10l117 3q24 1 47 20l84 67 89 25 19 37-8 26-34 9q2-93-60-93-64 0-65 93l-244-5q0-95-64-95-65 0-64 88l-63-18-18-22Z" fill="url(#body-paint)" stroke="#8f989e" stroke-width="1"/>
+        <path d="m120 193 123-20 68 39-152 19-66 1Z" fill="url(#hood-paint)" stroke="#c0c6c9" stroke-width="1"/>
+        <path d="m247 174 72-45q12-8 35-8l49 2-6 75-85 9Z" fill="url(#glass)" stroke="#c6cbcf" stroke-width="2"/>
+        <path d="m414 124 55 2q25 0 43 16l66 57-172-1Z" fill="url(#glass)" stroke="#b1bac2" stroke-width="2"/>
+        <path d="m467 129 7 68m-156 13 7 81m80-87 2 87m-88-81 252-5m-248 82 225 5" fill="none" stroke="#27343e" stroke-width="2" opacity=".8"/>
+        <path d="m425 219 24-1m-115 4 23-2" stroke="#d7dbdd" stroke-width="3" stroke-linecap="round"/>
+        <path d="m417 202-7-16 17-3 26 14-4 8Z" fill="#262f39" stroke="#919ba3"/>
+        <path d="m102 233 48 4 13 18-66-7Z" fill="#131922"/><path d="m104 235 43 4 7 7-49-4" fill="none" stroke="#e0f2ff" stroke-width="3"/>
+        <path d="m96 257 62 12 6 17-62-14Z" fill="#121820"/><path d="m111 261 37 8" stroke="#475260" stroke-width="2"/>
+        <path d="m686 234 16 5 5 13-18-4Z" fill="#b03128"/><path d="m687 236 14 5" stroke="#ff7c64" stroke-width="2"/>
+        <path d="m313 296 231 7-3 6-229-7Z" fill="#171f28"/>
+        <path d="m271 174 52-36 62-5" stroke="#e5e8eb" stroke-width="1" fill="none" opacity=".5"/>
+        <path d="m128 195 121-15m72 36 229-7" stroke="#f1f3f4" stroke-width="1.5" opacity=".45"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="announcement">
+    <div class="container"><span>Un nou set. O nouă perspectivă. <strong>Descoperă experiența OnlyWheels.</strong></span><div class="right"><span>Concept interactiv · date demo</span><span>România / RON</span></div></div>
+  </div>
+  <header>
+    <div class="container header-inner">
+      <a class="logo" href="#" aria-label="OnlyWheels — Acasă"><img src="onlywheels-logo.svg" alt="" width="37" height="37">Only<span>Wheels</span></a>
+      <nav class="desktop-nav" aria-label="Navigare principală">
+        <a href="#" class="active" aria-current="page">Acasă</a>
+        <a href="#catalog">Catalog</a>
+        <a href="#showroom">Showroom 3D <span class="mini-tag">EXPLORE</span></a>
+        <a href="#ai-studio">AI Studio</a>
+        <a href="#montaj">Montaj partener</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn saved-button" data-action="garage" aria-label="Garajul meu"><svg class="icon"><use href="#i-car"/></svg></button>
+        <button class="icon-btn account-button" data-action="account" aria-label="Contul meu"><svg class="icon"><use href="#i-user"/></svg></button>
+        <button class="icon-btn" data-action="cart" aria-label="Coș de cumpărături"><svg class="icon"><use href="#i-cart"/></svg><span class="cart-count" id="cart-count">0</span></button>
+      </div>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero container" aria-labelledby="hero-title">
+      <div class="hero-top">
+        <div class="hero-copy">
+          <div class="eyebrow">Pentru cei care simt diferența</div>
+          <h1 id="hero-title">Un nou look.<br>Aceeași <em>pasiune.</em></h1>
+          <p>Jantele potrivite schimbă totul. Găsește-ți stilul, vezi-l pe mașina ta și transformă fiecare drum.</p>
+          <div class="hero-buttons">
+            <a href="#catalog" class="button">Descoperă colecția <svg class="icon"><use href="#i-arrow"/></svg></a>
+            <button class="button secondary" data-action="showroom"><svg class="icon"><use href="#i-cube"/></svg> Intră în showroom</button>
+          </div>
+          <div class="hero-note"><svg class="icon"><use href="#i-shield"/></svg> De la prima alegere până la montaj.</div>
+        </div>
+        <div class="car-stage">
+          <span class="stage-word" aria-hidden="true">YOUR NEXT LOOK</span>
+          <span class="scene-label">ONLYWHEELS / DESIGN CONCEPT</span>
+          <svg class="car-art" role="img" aria-label="Ilustrație originală: coupe argintiu cu jante multispită"><use href="#car-scene"/></svg>
+          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="car-caption"><span class="line"></span><div><b>Mai mult decât un detaliu.</b><small>Stilul tău, dintr-o nouă perspectivă.</small></div></div>
+        </div>
+      </div>
+      <div class="fitment" id="vehicle-search">
+        <div class="fitment-heading">
+          <div class="fitment-title"><svg class="icon"><use href="#i-car"/></svg> Totul începe cu mașina ta.</div>
+          <button class="text-link" data-action="garage">Garajul meu <svg class="icon"><use href="#i-arrow"/></svg></button>
+        </div>
+        <form class="fitment-form" id="fitment-form">
+          <label class="field">01 / Marca<select id="make" required><option value="">Alege marca</option><option>BMW</option><option>Audi</option><option>Volkswagen</option><option>Mercedes-Benz</option></select></label>
+          <label class="field">02 / Modelul<select id="model" required disabled><option value="">Alege modelul</option></select></label>
+          <label class="field">03 / Generația<select id="generation" required disabled><option value="">Alege generația</option></select></label>
+          <button class="button" type="submit"><svg class="icon"><use href="#i-grid"/></svg> Găsește jantele</button>
+        </form>
+        <p class="fitment-footer" id="vehicle-status">Alege marca, modelul și generația. Compatibilitatea reală va fi verificată de serviciul de fitment.</p>
+      </div>
+      <div class="benefits">
+        <div class="benefit"><svg class="icon"><use href="#i-shield"/></svg><div><b>Alegerea potrivită</b><small>Căutare după mașina ta</small></div></div>
+        <div class="benefit"><svg class="icon"><use href="#i-cube"/></svg><div><b>Vezi înainte să alegi</b><small>Showroom 3D & AI Studio</small></div></div>
+        <div class="benefit"><svg class="icon"><use href="#i-card"/></svg><div><b>Plata, în ritmul tău</b><small>Card și rate · în versiunea finală</small></div></div>
+        <div class="benefit"><svg class="icon"><use href="#i-tool"/></svg><div><b>Pregătit de drum</b><small>Montaj la service-uri partenere</small></div></div>
+      </div>
+    </section>
+
+    <section class="content container" aria-labelledby="category-title">
+      <div class="section-heading"><div><h2 id="category-title">Orice drum. Stilul tău.</h2><p>Tot ce ai nevoie, de la jante până la ultimul detaliu.</p></div></div>
+      <div class="category-grid">
+        <button class="category" data-category="wheels" aria-pressed="false"><span class="copy"><b>Jante aliaj</b><small>Design care se remarcă</small></span><span class="cat-visual" data-wheel="silver"></span><svg class="icon arrow"><use href="#i-arrow"/></svg></button>
+        <button class="category" data-category="tires" aria-pressed="false"><span class="copy"><b>Anvelope</b><small>Aderență. Fără compromis.</small></span><span class="tire-art" aria-hidden="true"></span><svg class="icon arrow"><use href="#i-arrow"/></svg></button>
+        <button class="category" data-category="sets" aria-pressed="false"><span class="copy"><b>Roți complete</b><small>Gata de următorul drum</small></span><span class="cat-visual" data-wheel="black"></span><svg class="icon arrow"><use href="#i-arrow"/></svg></button>
+        <button class="category" data-category="accessories" aria-pressed="false"><span class="copy"><b>Accesorii</b><small>Detaliile fac diferența</small></span><svg class="icon accessory"><use href="#i-tool"/></svg><svg class="icon arrow"><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="brand-strip" aria-label="Mărci prezentate în concept"><small>INSPIRAT DE PASIUNE.<br>DEFINIT DE CALITATE.</small><span>BBS</span><span>OZ RACING</span><span class="light">VOSSEN</span><span>BORBET</span><span class="light">AEZ</span><span>Continental</span></div>
+    </section>
+
+    <section class="content container" id="catalog" aria-labelledby="catalog-title">
+      <div class="section-heading"><div><h2 id="catalog-title">Următorul tău upgrade.</h2><p>O selecție pentru cei care nu aleg la întâmplare.</p></div><button class="text-link" id="view-all">Vezi tot catalogul <svg class="icon"><use href="#i-arrow"/></svg></button></div>
+      <div class="product-tools">
+        <div class="tabs" aria-label="Filtrează produsele"><button class="tab" data-filter="wheels" aria-pressed="true">Jante</button><button class="tab" data-filter="tires" aria-pressed="false">Anvelope</button><button class="tab" data-filter="sets" aria-pressed="false">Roți complete</button><button class="tab" data-filter="accessories" aria-pressed="false">Accesorii</button></div>
+        <label class="search"><input id="product-search" type="search" aria-label="Caută în produsele demo" placeholder="Caută un brand sau un model..."></label>
+      </div>
+      <p id="result-status" role="status" hidden></p>
+      <div class="product-grid" id="products"></div>
+      <p class="demo-caption">Selecție demonstrativă. Prețurile, stocul și specificațiile sunt fictive; nu reprezintă oferte sau recomandări de compatibilitate.</p>
+    </section>
+
+    <div class="container feature-grid">
+      <section class="feature" id="showroom" aria-labelledby="showroom-title">
+        <div class="eyebrow">Showroom 3D</div><h2 id="showroom-title">Nu doar îți imaginezi.<br>Îți vezi stilul.</h2><p>Explorează finisaje și dimensiuni, înainte să faci următorul pas.</p><button class="button" data-action="showroom">Explorează conceptul <svg class="icon"><use href="#i-arrow"/></svg></button><div class="feature-wheel" data-wheel="silver" aria-hidden="true"></div>
+      </section>
+      <section class="feature ai" id="ai-studio" aria-labelledby="ai-title">
+        <div class="eyebrow">AI Photo Studio</div><h2 id="ai-title">Mașina ta.<br>Într-o altă lumină.</h2><p>O fotografie. Jantele alese. O nouă perspectivă, cu ajutorul AI.</p><button class="button secondary" data-action="ai"><svg class="icon"><use href="#i-spark"/></svg> Descoperă AI Studio</button><div class="ai-visual" aria-hidden="true"><svg class="icon"><use href="#i-spark"/></svg></div>
+      </section>
+    </div>
+    <section class="container garage-banner" id="montaj" aria-labelledby="garage-title">
+      <div class="garage-copy"><div class="garage-icon"><svg class="icon"><use href="#i-tool"/></svg></div><div><h3 id="garage-title">Tu alegi jantele. De montaj ne ocupăm împreună.</h3><p>În versiunea finală, vei putea alege un service partener și programa montajul direct la checkout.</p></div></div>
+      <button class="button secondary" data-action="fitting"><svg class="icon"><use href="#i-pin"/></svg> Descoperă montajul</button>
+    </section>
+  </main>
+  <footer><div class="container footer-inner"><a class="logo" href="#"><img src="onlywheels-logo.svg" alt="" width="28" height="28">Only<span>Wheels</span></a><span>Conceput pentru pasiunea ta. © 2026 OnlyWheels · Prototip, nu magazin activ.</span><div class="footer-links"><a href="#vehicle-search">Mașina ta</a><a href="../architecture/ARCHITECTURE.html">Arhitectura proiectului</a></div></div></footer>
+  <nav class="mobile-nav" aria-label="Navigare mobilă"><a href="#" class="active" aria-current="page"><svg class="icon"><use href="#i-home"/></svg>Acasă</a><a href="#catalog"><svg class="icon"><use href="#i-grid"/></svg>Catalog</a><button data-action="showroom"><svg class="icon"><use href="#i-cube"/></svg>Showroom</button><button data-action="ai"><svg class="icon"><use href="#i-spark"/></svg>AI Studio</button><button data-action="cart"><svg class="icon"><use href="#i-cart"/></svg>Coș <span id="mobile-count">0</span></button></nav>
+
+  <dialog id="modal" aria-labelledby="modal-title"><div class="dialog-heading"><h2 id="modal-title"></h2><button class="icon-btn" id="close-modal" aria-label="Închide"><svg class="icon"><use href="#i-close"/></svg></button></div><div id="modal-content"></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script>
+    "use strict";
+    const $ = (selector) => document.querySelector(selector);
+    const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    const money = (value) => new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 0 }).format(value);
+    const catalog = [
+      { id:1, type:"wheels", brand:"BBS", name:"CH-R", meta:'19" · 8.5J · 5×112 · ET35', finish:"silver", price:1890, tag:"Bestseller" },
+      { id:2, type:"wheels", brand:"OZ RACING", name:"Ultraleggera", meta:'18" · 8J · 5×112 · ET45', finish:"black", price:1490, tag:"Selecția noastră" },
+      { id:3, type:"wheels", brand:"VOSSEN", name:"HF-5", meta:'20" · 9J · 5×112 · ET32', finish:"bronze", price:2450, tag:"Design nou" },
+      { id:4, type:"wheels", brand:"BORBET", name:"Y", meta:'18" · 8J · 5×112 · ET40', finish:"silver", price:890, tag:"Preț demo", sale:true },
+      { id:5, type:"tires", brand:"CONTINENTAL", name:"PremiumContact 7", meta:"225/45 R18 · 95Y · Vară", price:650, tag:"Vară" },
+      { id:6, type:"tires", brand:"MICHELIN", name:"Pilot Sport 5", meta:"235/40 R19 · 96Y · Vară", price:850, tag:"Sport" },
+      { id:7, type:"sets", brand:"ONLYWHEELS", name:"Urban Silver", meta:'4 jante 18" + 4 anvelope · Demo', finish:"silver", price:7200, tag:"Set complet" },
+      { id:8, type:"sets", brand:"ONLYWHEELS", name:"Sport Graphite", meta:'4 jante 19" + 4 anvelope · Demo', finish:"black", price:9800, tag:"Set complet" },
+      { id:9, type:"accessories", brand:"ONLYWHEELS", name:"Kit prezoane", meta:"20 bucăți · M14×1.5 · Demo", price:190, tag:"Accesorii" },
+      { id:10, type:"accessories", brand:"ONLYWHEELS", name:"Inele de centrare", meta:"Set 4 bucăți · Dimensiuni demo", price:80, tag:"Accesorii" }
+    ];
+    const vehicles = {
+      BMW: { "Seria 3": ["F30 / F31 (2012–2019)", "G20 / G21 (2019–prezent)"], "Seria 5": ["F10 / F11 (2010–2017)", "G30 / G31 (2017–2023)"] },
+      Audi: { A4: ["B8 (2008–2015)", "B9 (2015–2024)"], A5: ["F5 (2016–2024)"] },
+      Volkswagen: { Golf: ["VII (2012–2020)", "VIII (2020–prezent)"], Passat: ["B8 (2014–2023)"] },
+      "Mercedes-Benz": { "Clasa C": ["W205 (2014–2021)", "W206 (2021–prezent)"], "Clasa E": ["W213 (2016–2023)"] }
+    };
+    const cart = new Map();
+    const favorites = new Set();
+    let activeFilter = "wheels";
+    let savedVehicle = null;
+    let toastTimer;
+    let photoUrl = null;
+
+    function wheel(finish = "silver", design = 0) {
+      const gradient = finish === "bronze" ? "bronze" : finish === "black" ? "black-metal" : "metal";
+      const spokes = Array.from({length:design === 1 ? 6 : 10}, (_, i) => {
+        const angle = i * (design === 1 ? 60 : 36);
+        return `<g transform="rotate(${angle} 100 100)"><path d="M95 87 87 29 93 24 102 86Z" fill="url(#${gradient})"/><path d="m102 87 12-60 7 4-12 61Z" fill="url(#${gradient})"/></g>`;
+      }).join("");
+      return `<svg class="wheel-svg" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#080a0d" stroke="#3d424b" stroke-width="2"/><circle cx="100" cy="100" r="88" fill="url(#${gradient})"/><circle cx="100" cy="100" r="81" fill="#101318"/><circle cx="100" cy="100" r="66" fill="#252a31" stroke="#383e48" stroke-width="2"/><path d="M143 74v43" stroke="#a25137" stroke-width="9"/>${spokes}<circle cx="100" cy="100" r="18" fill="url(#${gradient})" stroke="#15171b" stroke-width="2"/><circle cx="100" cy="100" r="9" fill="#252b34"/><text x="100" y="103" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#c8cdd4">OW</text><circle cx="100" cy="100" r="85" fill="none" stroke="#d1d6dc" stroke-opacity=".5"/></svg>`;
+    }
+    document.querySelectorAll("[data-wheel]").forEach((element) => { element.innerHTML = wheel(element.dataset.wheel); });
+
+    function notify(message) {
+      clearTimeout(toastTimer);
+      $("#toast").textContent = message;
+      $("#toast").hidden = false;
+      toastTimer = setTimeout(() => { $("#toast").hidden = true; }, 4500);
+    }
+    function renderProducts() {
+      const query = $("#product-search").value.trim().toLocaleLowerCase("ro");
+      const products = catalog.filter((p) => (activeFilter === "all" || p.type === activeFilter) && `${p.brand} ${p.name} ${p.meta}`.toLocaleLowerCase("ro").includes(query));
+      $("#products").innerHTML = products.map((p) => {
+        const unit = p.type === "sets" ? "set de 4 roți" : p.type === "accessories" ? "kit" : "bucată";
+        const visual = p.finish ? wheel(p.finish, p.id === 2 ? 1 : 0) : p.type === "tires" ? '<div class="tire-art" aria-hidden="true"></div>' : icon("tool");
+        return `<article class="product"><div class="product-image"><span class="product-tag ${p.sale ? "sale" : ""}">${p.tag}</span><button class="favorite" data-favorite="${p.id}" aria-label="Favorit: ${p.brand} ${p.name}" aria-pressed="${favorites.has(p.id)}">${icon("heart")}</button>${visual}</div><div class="product-info"><div class="product-brand">${p.brand}</div><h3>${p.name}</h3><p class="product-meta">${p.meta}</p><div class="stock">Disponibilitate demonstrativă</div><div class="price-row"><div class="price">${money(p.price)} <small>RON</small><span class="price-unit">/ ${unit} · TVA inclus (demo)</span></div><button class="add-cart" data-add="${p.id}" aria-label="Adaugă ${p.type === "wheels" || p.type === "tires" ? "4 bucăți" : "1 set"} ${p.brand} ${p.name} în coș">${icon("cart")}</button></div></div></article>`;
+      }).join("");
+      if (!products.length) {
+        const empty = document.createElement("p");
+        empty.className = "dialog-copy";
+        empty.textContent = "Niciun produs demo găsit. Încearcă alt termen sau altă categorie.";
+        $("#products").append(empty);
+      }
+    }
+    function filterProducts(filter) {
+      activeFilter = filter;
+      document.querySelectorAll("[data-filter]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.filter === filter)));
+      document.querySelectorAll("[data-category]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.category === filter)));
+      renderProducts();
+    }
+    function setOptions(select, values, placeholder) {
+      select.replaceChildren(new Option(placeholder, ""), ...values.map((value) => new Option(value, value)));
+      select.disabled = values.length === 0;
+    }
+    $("#make").addEventListener("change", () => {
+      setOptions($("#model"), Object.keys(vehicles[$("#make").value] || {}), "Alege modelul");
+      setOptions($("#generation"), [], "Alege generația");
+    });
+    $("#model").addEventListener("change", () => setOptions($("#generation"), vehicles[$("#make").value]?.[$("#model").value] || [], "Alege generația"));
+    $("#fitment-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      savedVehicle = { make:$("#make").value, model:$("#model").value, generation:$("#generation").value };
+      const description = `${savedVehicle.make} ${savedVehicle.model} · ${savedVehicle.generation}`;
+      $("#vehicle-status").textContent = `${description} — selecție memorată doar în această pagină.`;
+      $("#result-status").textContent = `Mașina selectată: ${description}. Produsele de mai jos sunt demo, NU rezultate de compatibilitate. Verificarea PCD, alezaj, ET și diametru necesită API-ul de fitment.`;
+      $("#result-status").hidden = false;
+      $("#product-search").value = "";
+      filterProducts("wheels");
+      $("#catalog").scrollIntoView({behavior:"smooth"});
+    });
+    $("#product-search").addEventListener("input", renderProducts);
+    $("#view-all").addEventListener("click", () => { $("#product-search").value = ""; filterProducts("all"); });
+
+    const modal = $("#modal");
+    function openModal(title, content) {
+      $("#modal-title").textContent = title;
+      $("#modal-content").innerHTML = content;
+      modal.showModal();
+    }
+    $("#close-modal").addEventListener("click", () => modal.close());
+    modal.addEventListener("close", () => {
+      if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
+      $("#modal-content").replaceChildren();
+    });
+    function renderCart() {
+      const lines = [...cart].map(([id, quantity]) => {
+        const p = catalog.find((product) => product.id === id);
+        return `<div class="cart-line"><div><b>${p.brand} ${p.name}</b><small>${quantity} × ${money(p.price)} RON</small><button class="text-link" data-remove="${id}">Elimină</button></div><b>${money(p.price * quantity)} RON</b></div>`;
+      }).join("");
+      const total = [...cart].reduce((sum, [id, quantity]) => sum + catalog.find((p) => p.id === id).price * quantity, 0);
+      $("#modal-content").innerHTML = `${lines || '<p class="dialog-copy">Coșul tău demo este gol. Descoperă colecția și adaugă primul set.</p>'}<div class="cart-total"><span>Total demo</span><span>${money(total)} RON</span></div><div class="demo-notice">Coș demonstrativ, păstrat numai cât timp pagina este deschisă. Nu se rezervă stoc, nu se plasează comenzi și nu se procesează plăți. Livrarea și montajul vor fi calculate la checkout în aplicația finală.</div>`;
+    }
+    function updateCount() {
+      const count = [...cart.values()].reduce((sum, quantity) => sum + quantity, 0);
+      $("#cart-count").textContent = count;
+      $("#mobile-count").textContent = count;
+    }
+    const actions = {
+      cart() { openModal("Coșul tău · demo", ""); renderCart(); },
+      account() { openModal("Spațiul tău OnlyWheels", '<p class="dialog-copy">În aplicația finală: autentificare prin email sau Google, mașini salvate, favorite și urmărirea comenzilor.</p><div class="demo-notice">Autentificarea nu este conectată în acest prototip. Nu se colectează date de cont.</div>'); },
+      garage() {
+        openModal("Garajul meu", '<p id="saved-car" class="dialog-copy"></p><div class="demo-notice">Mașina este păstrată doar în memoria paginii. Compatibilitatea produselor nu este verificată în acest prototip.</div><button class="button" id="choose-car">Alege mașina ta</button>');
+        $("#saved-car").textContent = savedVehicle ? `${savedVehicle.make} ${savedVehicle.model} · ${savedVehicle.generation}` : "Garajul tău începe cu prima mașină. Alege marca, modelul și generația din formular.";
+        $("#choose-car").addEventListener("click", () => { modal.close(); $("#vehicle-search").scrollIntoView(); $("#make").focus({preventScroll:true}); });
+      },
+      showroom() {
+        openModal("Un prim look · showroom", '<div class="preview-stage"><svg role="img" aria-label="Previzualizare ilustrată a finisajului jantelor" viewBox="0 0 800 400"><use href="#car-scene"/></svg></div><div class="dialog-fields"><label class="field">Finisaj jante<select id="finish"><option value="#bcc3ca">Argintiu</option><option value="#555b65">Grafit</option><option value="#bb9366">Bronz</option></select></label><label class="field">Dimensiune ilustrativă<select id="wheel-size"><option>18"</option><option selected>19"</option><option>20"</option></select></label></div><div class="demo-notice">Aceasta este o ilustrație SVG 2D, nu un model 3D și nu o validare de compatibilitate. Versiunea finală va folosi modele GLB, rotire 360° și variante reale de produs. Dimensiunea aleasă este doar o preferință demo.</div>');
+        $("#finish").addEventListener("change", (event) => { document.querySelectorAll("#car-scene .car-spokes").forEach((spoke) => spoke.setAttribute("stroke", event.target.value)); });
+        $("#wheel-size").addEventListener("change", (event) => notify(`Preferință demo: ${event.target.value}. Geometria ilustrației nu este modificată.`));
+      },
+      ai() {
+        openModal("AI Studio · de la o fotografie", '<p class="dialog-copy">Încarcă o fotografie a mașinii pentru a explora primul pas al experienței. În aplicația finală vei alege jantele, scena și unghiul, apoi vei urmări generarea.</p><label class="field">Fotografia ta (JPEG, PNG sau WebP, maximum 10 MB)<input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp"></label><p id="photo-status" role="status" class="dialog-copy"></p><img class="photo-preview" id="photo-preview" alt="Previzualizarea locală a fotografiei alese" hidden><div class="demo-notice">Previzualizare locală: fotografia nu părăsește dispozitivul și nu este salvată. Nu se generează imagini AI; serviciul necesită backend, credite și un furnizor extern.</div>');
+        $("#photo-input").addEventListener("change", (event) => {
+          if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
+          const preview = $("#photo-preview");
+          preview.hidden = true;
+          preview.removeAttribute("src");
+          const file = event.target.files[0];
+          $("#photo-status").textContent = "";
+          if (!file) return;
+          if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) {
+            $("#photo-status").textContent = "Alege un fișier JPEG, PNG sau WebP de maximum 10 MB.";
+            event.target.value = "";
+            return;
+          }
+          preview.onload = () => { preview.hidden = false; $("#photo-status").textContent = "Fotografie încărcată doar în previzualizarea locală."; };
+          preview.onerror = () => { preview.hidden = true; $("#photo-status").textContent = "Fișierul nu poate fi afișat ca imagine. Alege altă fotografie."; };
+          photoUrl = URL.createObjectURL(file);
+          preview.src = photoUrl;
+        });
+      },
+      fitting() { openModal("De la alegere, direct la montaj", '<p class="dialog-copy">Experiența planificată la checkout:</p><ol class="dialog-copy"><li>Alegi livrarea la un service partener.</li><li>Verifici serviciile, costul și intervalele disponibile.</li><li>Selectezi data și ora montajului.</li><li>Primești confirmarea după plată și acceptarea programării.</li></ol><div class="demo-notice">Rețeaua de service-uri și calendarul nu sunt încă conectate. Acest prototip nu creează programări.</div>'); }
+    };
+    document.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]");
+      if (action) actions[action.dataset.action]();
+      const category = event.target.closest("[data-category]");
+      if (category) { $("#product-search").value = ""; filterProducts(category.dataset.category); $("#catalog").scrollIntoView(); }
+      const filter = event.target.closest("[data-filter]");
+      if (filter) filterProducts(filter.dataset.filter);
+      const favorite = event.target.closest("[data-favorite]");
+      if (favorite) {
+        const id = Number(favorite.dataset.favorite);
+        if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+        favorite.setAttribute("aria-pressed", String(favorites.has(id)));
+        notify(favorites.has(id) ? "Adăugat la favorite pentru această sesiune demo." : "Eliminat din favorite.");
+      }
+      const add = event.target.closest("[data-add]");
+      if (add) {
+        const id = Number(add.dataset.add);
+        const p = catalog.find((product) => product.id === id);
+        const quantity = p.type === "wheels" || p.type === "tires" ? 4 : 1;
+        cart.set(id, (cart.get(id) || 0) + quantity);
+        updateCount();
+        notify(`${p.name}: ${quantity === 4 ? "4 bucăți adăugate" : "1 set adăugat"} în coșul demo.`);
+      }
+      const remove = event.target.closest("[data-remove]");
+      if (remove) { cart.delete(Number(remove.dataset.remove)); updateCount(); renderCart(); }
+    });
+    renderProducts();
+  </script>
+</body>
+</html>

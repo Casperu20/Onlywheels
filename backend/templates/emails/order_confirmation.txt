@@ -1,0 +1,26 @@
+{% autoescape off %}Salut {{ order.full_name }},
+
+Îți mulțumim! Plata pentru comanda {{ order.number }} a fost confirmată.
+
+{% for item in items %}- {{ item.quantity }} × {{ item.product_name }} ({{ item.description }}) – {{ item.line_total }} RON
+{% endfor %}
+Subtotal: {{ order.subtotal }} RON{% if order.discount %}
+Reducere ({{ order.voucher_code }}): -{{ order.discount }} RON{% endif %}
+Livrare: {{ order.shipping }} RON{% if order.fitting %}
+Montaj: {{ order.fitting }} RON{% endif %}
+Total: {{ order.total }} RON (din care TVA {{ order.vat }} RON)
+{% if appointment %}
+Montaj la {{ appointment.garage.name }}, {{ appointment.garage.address }}, {{ appointment.garage.city }}
+Programare: {{ appointment.slot_start|date:"d.m.Y H:i" }}
+{% else %}
+Livrare prin curier la: {{ order.line1 }}{% if order.line2 %}, {{ order.line2 }}{% endif %}, {{ order.city }}, {{ order.county }}
+{% endif %}
+Detalii comandă: {{ order_url }}
+
+---
+
+Hi {{ order.full_name }}, thank you! Payment for order {{ order.number }} is confirmed.
+Total: {{ order.total }} RON. Details: {{ order_url }}
+
+— OnlyWheels
+{% endautoescape %}

@@ -1,0 +1,20 @@
+{% autoescape off %}Salut {{ order.full_name }},
+
+Comanda {{ order.number }} are un status nou: {{ order.get_status_display }}.
+{% if order.status == "cancelled" %}
+Comanda a fost anulată. Dacă ai plătit deja, suma va fi returnată pe card în câteva zile lucrătoare.
+{% elif order.status == "shipped" %}
+Coletul este pe drum. Vei fi contactat de curier.
+{% elif order.status == "ready_for_fitting" %}
+Produsele au ajuns la service: {{ appointment.garage.name }}, {{ appointment.garage.address }}.
+Programare: {{ appointment.slot_start|date:"d.m.Y H:i" }}
+{% endif %}
+Detalii comandă: {{ order_url }}
+
+---
+
+Hi {{ order.full_name }}, order {{ order.number }} is now: {{ order.get_status_display }}.
+Details: {{ order_url }}
+
+— OnlyWheels
+{% endautoescape %}

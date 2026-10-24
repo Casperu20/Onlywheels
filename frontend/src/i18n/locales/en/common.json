@@ -1,0 +1,374 @@
+{
+  "common": {
+    "loading": "Loading…"
+  },
+  "nav": {
+    "main": "Main navigation",
+    "mobile": "Mobile navigation",
+    "home": "Home",
+    "catalog": "Catalog",
+    "showroom": "3D Showroom",
+    "showroomShort": "Showroom",
+    "aiStudio": "AI Studio",
+    "fitting": "Partner fitting",
+    "cart": "Cart",
+    "cartWithCount": "Shopping cart ({{count}} items)",
+    "account": "My account",
+    "garage": "My garage",
+    "explore": "EXPLORE"
+  },
+  "announcement": {
+    "lead": "A new set. A new perspective.",
+    "strong": "Discover the OnlyWheels experience.",
+    "region": "Romania / RON"
+  },
+  "header": {
+    "language": "Language"
+  },
+  "footer": {
+    "tagline": "Built for your passion. © {{year}} OnlyWheels"
+  },
+  "home": {
+    "eyebrow": "For those who feel the difference",
+    "title1": "A new look.",
+    "title2": "The same",
+    "titleAccent": "passion.",
+    "lead": "The right wheels change everything. Find your style, see it on your car and transform every drive.",
+    "ctaCatalog": "Explore the collection",
+    "ctaShowroom": "Enter the showroom",
+    "benefits": {
+      "fit": { "title": "The right fit", "text": "Search by your car" },
+      "preview": { "title": "See before you choose", "text": "3D Showroom & AI Studio" },
+      "payment": { "title": "Pay your way", "text": "Secure online card payment" },
+      "fitting": { "title": "Road ready", "text": "Fitting at partner garages" }
+    },
+    "categoriesTitle": "Any road. Your style.",
+    "categoriesText": "Everything you need, down to the last detail.",
+    "categories": {
+      "wheel": "Design that stands out",
+      "tire": "Grip. No compromise.",
+      "set": "Ready for the next drive",
+      "accessory": "Details make the difference"
+    },
+    "featuredTitle": "Your next upgrade.",
+    "featuredText": "A selection for those who don't choose at random.",
+    "viewAll": "View full catalog"
+  },
+  "comingSoon": {
+    "badge": "Coming soon",
+    "back": "Back home"
+  },
+  "pages": {
+    "catalog": {
+      "eyebrow": "Catalog",
+      "title": "Your next upgrade.",
+      "description": "Wheels, tires, complete sets and accessories, filtered for your car."
+    },
+    "showroom": {
+      "eyebrow": "3D Showroom",
+      "title": "Don't just imagine it. See your style.",
+      "description": "Explore finishes and sizes right on the car before taking the next step."
+    },
+    "aiStudio": {
+      "eyebrow": "AI Photo Studio",
+      "title": "Your car. In a different light.",
+      "description": "One photo. Your chosen wheels. A new perspective, powered by AI."
+    },
+    "fitting": {
+      "eyebrow": "Partner fitting",
+      "title": "You choose the wheels. We handle the fitting together.",
+      "description": "Pick a partner garage and book the fitting right at checkout."
+    },
+    "cart": {
+      "eyebrow": "Cart",
+      "title": "Your cart",
+      "description": "Sets of 4, optional fitting and online payment."
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "confirmPassword": "Confirm password",
+    "newPassword": "New password",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Log in for orders, your garage and favorites.",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "Save your cars and favorites and track your orders.",
+    "submitLogin": "Log in",
+    "submitRegister": "Create account",
+    "noAccount": "No account yet?",
+    "registerLink": "Sign up",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Log in",
+    "forgotPassword": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We'll send you a link to choose a new password.",
+    "forgotSubmit": "Send link",
+    "forgotSent": "If an account exists for this email, you'll receive a reset link shortly.",
+    "backToLogin": "Back to login",
+    "resetTitle": "Choose a new password",
+    "resetSubmit": "Save password",
+    "resetDone": "Password changed. You can now log in.",
+    "resetInvalidLink": "The reset link is invalid or has expired.",
+    "or": "or",
+    "genericError": "Something went wrong. Please try again.",
+    "googleError": "Google sign-in failed."
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "passwordMin": "Password must be at least 8 characters.",
+    "passwordMatch": "Passwords don't match.",
+    "phone": "Enter a valid phone number.",
+    "postalCode": "Postal code must have 6 digits.",
+    "acceptTerms": "You must accept the terms and conditions."
+  },
+  "account": {
+    "eyebrow": "My account",
+    "greeting": "Hi, {{name}}!",
+    "memberSince": "Member since",
+    "logout": "Log out"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The link may be wrong or the page has moved.",
+    "back": "Back home"
+  },
+  "vehicle": {
+    "panelTitle": "It all starts with your car.",
+    "make": "Make",
+    "model": "Model",
+    "generation": "Generation",
+    "chooseMake": "Choose make",
+    "chooseModel": "Choose model",
+    "chooseGeneration": "Choose generation",
+    "present": "present",
+    "findWheels": "Find wheels",
+    "activeHint": "Active car: {{vehicle}}.",
+    "demoHint": "Fitment is checked by PCD, center bore, offset and size (demo data).",
+    "filteringFor": "Products that fit",
+    "removeFilter": "Show all",
+    "notFiltered": "Results are not filtered by car.",
+    "showFitting": "Only what fits {{vehicle}}"
+  },
+  "garage": {
+    "subtitle": "Your saved cars, for quick searches.",
+    "add": "Add a car",
+    "save": "Save to garage",
+    "saved": "Car saved to your garage.",
+    "empty": "You haven't saved any cars yet.",
+    "noFitment": "We don't have fitment data for this car yet.",
+    "shopFor": "Find wheels",
+    "remove": "Remove"
+  },
+  "catalog": {
+    "type": "Product type",
+    "all": "All",
+    "types": {
+      "wheel": "Wheels",
+      "tire": "Tires",
+      "set": "Complete sets",
+      "accessory": "Accessories"
+    },
+    "search": "Search",
+    "searchPlaceholder": "Search a brand, model or code…",
+    "filters": "Filters",
+    "brand": "Brand",
+    "diameter": "Diameter",
+    "finish": "Finish",
+    "finishes": {
+      "silver": "Silver",
+      "black": "Black",
+      "bronze": "Bronze",
+      "gunmetal": "Gunmetal",
+      "chrome": "Chrome",
+      "white": "White"
+    },
+    "price": "Price (RON)",
+    "min": "min",
+    "max": "max",
+    "priceMin": "Minimum price",
+    "priceMax": "Maximum price",
+    "inStockOnly": "In stock only",
+    "reset": "Reset filters",
+    "sort": "Sort",
+    "sortOptions": {
+      "recommended": "Recommended",
+      "price": "Price: low to high",
+      "-price": "Price: high to low",
+      "-newest": "Newest",
+      "-rating": "Top rated"
+    },
+    "results_one": "{{count}} product",
+    "results_other": "{{count}} products",
+    "inStock": "In stock",
+    "onOrder": "On order",
+    "from": "from",
+    "unit": {
+      "wheel": "/ pc",
+      "tire": "/ pc",
+      "set": "/ set",
+      "accessory": "/ pc"
+    },
+    "emptyTitle": "No products found",
+    "emptyText": "Try other filters or remove the car filter.",
+    "pagination": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}",
+    "demoNote": "Demo data: prices, stock and fitment are indicative."
+  },
+  "fitment": {
+    "fits": "Fits your car",
+    "fitsWithRings": "Fits (with hub-centric rings)",
+    "doesNotFit": "Doesn't fit",
+    "issues": {
+      "pcd_mismatch": "different PCD",
+      "center_bore_too_small": "center bore too small",
+      "offset_out_of_range": "offset out of range",
+      "diameter_out_of_range": "wrong diameter",
+      "width_out_of_range": "wrong width",
+      "tire_size_not_oem": "tire size not approved",
+      "thread_mismatch": "different thread"
+    }
+  },
+  "product": {
+    "back": "Back to catalog",
+    "checkedFor": "Fitment checked for {{vehicle}}.",
+    "chooseVariant": "Choose a variant",
+    "available_one": "{{count}} pc available",
+    "available_other": "{{count}} pcs available",
+    "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "total": "Total",
+    "addToCart": "Add to cart"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "loginRequired": "Log in to save favorite products.",
+    "emptyTitle": "No favorites yet",
+    "emptyText": "Tap the heart on any product to save it here."
+  },
+  "cart": {
+    "empty": "Your cart is empty.",
+    "shippingHint": "Free delivery over 1,000 RON. Garage fitting is chosen at checkout.",
+    "checkout": "Continue to checkout",
+    "loginHint": "You'll log in at the next step; your cart is kept.",
+    "lowStock_one": "Only {{count}} piece available",
+    "lowStock_other": "Only {{count}} pieces available",
+    "remove": "Remove from cart",
+    "added": "Added to cart.",
+    "view": "View cart"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "contact": "Contact details",
+    "phone": "Phone",
+    "fullName": "Full name",
+    "delivery": "Delivery or fitting",
+    "methods": {
+      "courier": { "title": "Courier delivery", "text": "Free over 1,000 RON, otherwise 25 RON." },
+      "garage_fitting": {
+        "title": "Fitting at a partner garage",
+        "text": "Products are delivered to the garage; you pick the fitting date and time."
+      }
+    },
+    "address": "Delivery address",
+    "billingAddress": "Billing address",
+    "line1": "Street and number",
+    "line2": "Building, apartment",
+    "city": "City",
+    "county": "County",
+    "postalCode": "Postal code",
+    "notes": "Notes (optional)",
+    "saveAddress": "Save this address to my account",
+    "summary": "Order summary",
+    "voucher": "Voucher code",
+    "apply": "Apply",
+    "chooseGarage": "Choose a garage to see the total.",
+    "chooseSlot": "Choose the garage, date and time for fitting.",
+    "acceptTerms": "I accept the terms and conditions and the privacy policy.",
+    "pay": "Pay online",
+    "payHint": "Payment happens on the processor's secure page. Stock is reserved for 30 minutes.",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Delivery",
+    "fitting": "Fitting",
+    "total": "Total",
+    "vatIncluded": "VAT included: {{vat}}",
+    "successTitle": "Thank you for your order!",
+    "successText": "Payment for order {{number}} is confirmed. We've emailed you the details.",
+    "waitingTitle": "Confirming your payment…",
+    "waitingText": "This can take a few seconds. The page updates automatically."
+  },
+  "garages": {
+    "perSet": "fitting + balancing / set",
+    "date": "Fitting date",
+    "slot": "Fitting time",
+    "noSlots": "No free times left on this day. Choose another date.",
+    "intro": "Choose your wheels online; mounting and balancing are done at one of our partner garages. You book the slot at checkout."
+  },
+  "orders": {
+    "title": "My orders",
+    "empty": "You don't have any orders yet.",
+    "pieces_one": "{{count}} piece",
+    "pieces_other": "{{count}} pieces",
+    "paymentCancelled": "Payment was cancelled. You can try again while the reservation is active.",
+    "fittingAt": "Fitting at {{garage}}",
+    "appointment": {
+      "held": "held (waiting for payment)",
+      "booked": "booked",
+      "confirmed": "confirmed by the garage",
+      "completed": "completed",
+      "cancelled": "cancelled"
+    },
+    "deliveryTo": "Deliver to",
+    "history": "History",
+    "reservedUntil": "Products are reserved until {{time}}.",
+    "cancel": "Cancel order",
+    "viewOrder": "View order",
+    "status": {
+      "pending_payment": "Awaiting payment",
+      "paid": "Paid",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "ready_for_fitting": "Ready for fitting",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "fakePay": {
+    "badge": "Demo mode",
+    "title": "Simulated payment",
+    "text": "In production this is the Stripe/Netopia page. No real card is used.",
+    "success": "Simulate successful payment",
+    "cancel": "Cancel payment"
+  },
+  "reviews": {
+    "title": "Customer reviews",
+    "count_one": "{{count}} review",
+    "count_other": "{{count}} reviews",
+    "verified": "Verified purchase",
+    "none": "No reviews yet. Be the first to write one!",
+    "loginToWrite": "to write a review.",
+    "pending": "Thank you! Your review will be published after moderation.",
+    "alreadyReviewed": "You've already reviewed this product.",
+    "chooseRating": "Choose a star rating.",
+    "write": "Write a review",
+    "rating": "Rating",
+    "reviewTitle": "Title (optional)",
+    "body": "Your review (optional)",
+    "submit": "Submit review",
+    "moderationHint": "Reviews are checked before they are published."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "text": "Reload the page. If the problem persists, come back later.",
+    "retry": "Reload"
+  }
+}
