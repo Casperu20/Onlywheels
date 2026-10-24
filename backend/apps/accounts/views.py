@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import AuthenticationFailed
@@ -18,6 +19,7 @@ from . import services
 from .models import Address
 from .serializers import (
     AddressSerializer,
+    DeleteAccountSerializer,
     GoogleLoginSerializer,
     LoginSerializer,
     PasswordChangeSerializer,
@@ -29,8 +31,15 @@ from .serializers import (
 from .tokens import clear_auth_cookies, login_response, set_auth_cookies
 
 
+class Unauthenticated401Mixin:
+    """Views without authentication classes would turn AuthenticationFailed into 403; keep it 401."""
+
+    def get_authenticate_header(self, request):
+        return 'Bearer realm="api"'
+
+
 @method_decorator(csrf_protect, name="dispatch")
-class PublicAuthView(APIView):
+class PublicAuthView(Unauthenticated401Mixin, APIView):
     """Endpoints used before the user is logged in: no auth, CSRF checked, rate limited."""
 
     permission_classes = (AllowAny,)
@@ -84,7 +93,7 @@ class GoogleLoginView(PublicAuthView):
 
 @method_decorator(csrf_protect, name="dispatch")
 @extend_schema(tags=["auth"])
-class RefreshView(APIView):
+class RefreshView(Unauthenticated401Mixin, APIView):
     """Rotates the refresh cookie and issues a new access cookie."""
 
     permission_classes = (AllowAny,)
@@ -144,6 +153,35 @@ class PasswordChangeView(APIView):
         request.user.set_password(serializer.validated_data["new_password"])
         request.user.save(update_fields=["password"])
         return login_response(Response(status=status.HTTP_204_NO_CONTENT), request.user)
+
+
+@extend_schema(tags=["auth"])
+class DataExportView(APIView):
+    """GDPR: download all personal data as JSON."""
+
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(responses={200: OpenApiTypes.OBJECT})
+    def get(self, request):
+        response = Response(services.export_user_data(request.user))
+        response["Content-Disposition"] = 'attachment; filename="onlywheels-data.json"'
+        return response
+
+
+@extend_schema(tags=["auth"])
+class DeleteAccountView(APIView):
+    """GDPR: erase personal data and log out. Orders are kept anonymised for accounting."""
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = "auth"
+
+    @extend_schema(request=DeleteAccountSerializer, responses={204: None})
+    def post(self, request):
+        serializer = DeleteAccountSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        services.delete_account(request.user)
+        return clear_auth_cookies(Response(status=status.HTTP_204_NO_CONTENT))
 
 
 @extend_schema(tags=["auth"])

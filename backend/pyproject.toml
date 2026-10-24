@@ -20,6 +20,15 @@ dependencies = [
     "google-auth>=2.40",
     "requests>=2.32",
     "stripe>=12.0",
+    # Production plumbing – all inactive until the matching env variables are set
+    "whitenoise>=6.8",
+    "django-storages[s3]>=1.14",
+    "django-redis>=5.4",
+    "django-anymail[resend]>=12.0",
+    "django-csp>=4.0",
+    "sentry-sdk[django,celery]>=2.20",
+    "structlog>=25.1",
+    "gunicorn>=23.0",
 ]
 
 [dependency-groups]
@@ -40,7 +49,7 @@ testpaths = ["apps", "tests"]
 addopts = "--reuse-db -ra"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 extend-exclude = ["**/migrations/*"]
 
@@ -52,3 +61,4 @@ ignore = ["S101"]
 "**/tests/**" = ["S105", "S106"]
 "tests/**" = ["S105", "S106"]
 "conftest.py" = ["S105"]
+"config/settings/test.py" = ["S105"]

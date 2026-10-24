@@ -17,13 +17,15 @@ function useRedirectAfterLogin() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const target = safeNextPath(params.get("next"));
-  return { target, go: () => navigate(target, { replace: true }) };
+  // Carried over when switching between the login and register pages.
+  const nextQuery = params.get("next") ? `?next=${encodeURIComponent(target)}` : "";
+  return { target, nextQuery, go: () => navigate(target, { replace: true }) };
 }
 
 export function LoginPage() {
   const { t } = useTranslation();
   const { data: user, isPending } = useMe();
-  const { target, go } = useRedirectAfterLogin();
+  const { target, nextQuery, go } = useRedirectAfterLogin();
 
   if (isPending) return <PageLoader />;
   if (user) return <Navigate to={target} replace />;
@@ -35,7 +37,7 @@ export function LoginPage() {
       footer={
         <>
           {t("auth.noAccount")}{" "}
-          <Link to="/register" className="text-primary hover:underline">
+          <Link to={`/register${nextQuery}`} className="text-primary hover:underline">
             {t("auth.registerLink")}
           </Link>
         </>
@@ -49,7 +51,7 @@ export function LoginPage() {
 export function RegisterPage() {
   const { t } = useTranslation();
   const { data: user, isPending } = useMe();
-  const { target, go } = useRedirectAfterLogin();
+  const { target, nextQuery, go } = useRedirectAfterLogin();
 
   if (isPending) return <PageLoader />;
   if (user) return <Navigate to={target} replace />;
@@ -61,7 +63,7 @@ export function RegisterPage() {
       footer={
         <>
           {t("auth.haveAccount")}{" "}
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to={`/login${nextQuery}`} className="text-primary hover:underline">
             {t("auth.loginLink")}
           </Link>
         </>

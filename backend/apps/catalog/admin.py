@@ -1,10 +1,10 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from simple_history.admin import SimpleHistoryAdmin
-from unfold.admin import ModelAdmin, TabularInline
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.contrib.import_export.forms import ExportForm, ImportForm
 
-from .models import Brand, Category, Product, ProductMedia, ProductVariant
+from .models import Brand, Category, Model3D, Product, ProductMedia, ProductVariant
 
 
 @admin.register(Brand)
@@ -50,6 +50,12 @@ class MediaInline(TabularInline):
     extra = 0
 
 
+class Model3DInline(StackedInline):
+    model = Model3D
+    extra = 0
+    max_num = 1
+
+
 @admin.register(Product)
 class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
     list_display = ("name", "brand", "type", "is_active", "is_featured", "rating_avg")
@@ -59,7 +65,7 @@ class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     list_select_related = ("brand",)
     readonly_fields = ("rating_avg", "rating_count")
-    inlines = (VariantInline, MediaInline)
+    inlines = (VariantInline, MediaInline, Model3DInline)
 
 
 @admin.register(ProductVariant)

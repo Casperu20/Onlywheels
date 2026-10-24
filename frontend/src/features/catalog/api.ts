@@ -72,6 +72,12 @@ export interface ProductDetail extends ProductListItem {
   category: { id: string; name: string; slug: string; product_type: ProductType } | null;
   media: { id: string; image: string; alt: string }[];
   variants: Variant[];
+  /** Phase 2 3D showroom; null until a GLB is uploaded in admin */
+  model_3d: {
+    glb_file: string;
+    thumbnail: string | null;
+    finish_materials: Record<string, { color?: string; metalness?: number; roughness?: number }>;
+  } | null;
 }
 
 export interface Paginated<T> {

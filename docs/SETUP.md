@@ -162,6 +162,23 @@ Stock is reserved for `ORDER_RESERVATION_MINUTES` (30). Expired orders are cance
 when new orders are placed; Celery Beat runs it every 5 minutes once Redis is used.
 Manually: `uv run python manage.py expire_orders`.
 
+## 9. Optional services (production plumbing)
+
+Everything below is already in the code and **off by default**; development needs none of it.
+Variables go in `backend/.env` (or `frontend/.env.local` for `VITE_*`); the full list is in the `.env.example` files.
+
+| Service | Variables | What changes |
+|---|---|---|
+| Sentry (errors) | `SENTRY_DSN`, `SENTRY_ENVIRONMENT`; frontend `VITE_SENTRY_DSN` | Django/Celery/React errors are reported; the browser SDK is only downloaded when the DSN is set |
+| Logs | `LOG_FORMAT=json` or `console`, `LOG_LEVEL` | One JSON object per line (default when `DJANGO_DEBUG=False`) |
+| Content-Security-Policy | `CSP_ENABLED=True` | CSP header on Django pages (admin, `/api/docs/`). Tests always run with it on. |
+| Redis | `CACHE_URL=rediscache://localhost:6379/1`, `CELERY_BROKER_URL=redis://localhost:6379/0`, `CELERY_TASK_ALWAYS_EAGER=False` | Shared cache/rate limits; run `celery -A config worker` and `celery -A config beat` |
+| Email (Resend) | `EMAIL_BACKEND=anymail.backends.resend.EmailBackend`, `RESEND_API_KEY` | Real emails instead of the console |
+| File storage (R2/S3/MinIO) | `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_CUSTOM_DOMAIN` | Uploads (product photos, GLB models) go to the bucket |
+
+PWA: `pnpm dev` does **not** register the service worker; use `pnpm build; pnpm preview` to test install/offline.
+After a new build the service worker updates itself on the next page load.
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -171,3 +188,5 @@ Manually: `uv run python manage.py expire_orders`.
 | `permission denied to create database` in tests | Give the DB user `CREATEDB` (step 2B). |
 | `relation "accounts_user" does not exist` | Run `makemigrations` (see step 3) then `migrate`. |
 | Catalog is empty | Run `uv run python manage.py seed_demo`. |
+| `pnpm preview` shows an old version | The service worker served the cached build; reload once more (or DevTools → Application → Service workers → Unregister). |
+| Admin/Swagger broken only with `CSP_ENABLED=True` | Browser console shows the blocked URL; add it to `CONTENT_SECURITY_POLICY` in `config/settings/base.py`. |

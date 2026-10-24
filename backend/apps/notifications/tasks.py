@@ -2,6 +2,7 @@ from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from apps.appointments.models import Appointment
 from apps.orders.models import Order
@@ -63,7 +64,8 @@ def send_order_confirmation(order_id: str) -> None:
         partner_emails = [u.email for u in garage.partner_users.all()]
         _send(
             "garage_booking",
-            f"OnlyWheels – programare nouă {appointment.slot_start:%d.%m.%Y %H:%M} ({order.number})",
+            f"OnlyWheels – programare nouă {timezone.localtime(appointment.slot_start):%d.%m.%Y %H:%M} "
+            f"({order.number})",
             context,
             [garage.email, *partner_emails],
         )

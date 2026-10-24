@@ -101,10 +101,10 @@ flowchart LR
 | 3D showroom | **Three.js** via **react-three-fiber** + **@react-three/drei**; models in **glTF/GLB** (Draco + KTX2 compressed) |
 | AR (later) | WebXR on web; **ARCore** via Capacitor plugin on Android |
 | i18n | **i18next** (ro default, en) |
-| PWA | **vite-plugin-pwa** (Workbox) – installable, offline catalog cache. **As built:** not added yet (roadmap) |
+| PWA | **vite-plugin-pwa** (Workbox) – installable, offline catalog cache. **As built:** manifest + icons, precached app shell, catalog API network-first, media cache-first, auto-update |
 | Native wrapper | **Capacitor** (Android; iOS possible later) + plugins: Camera, Push Notifications, Share, Filesystem, Preferences |
-| Analytics | **PostHog** (product analytics, feature flags) |
-| Errors | **Sentry** |
+| Analytics | **PostHog** (product analytics, feature flags). **As built:** not added |
+| Errors | **Sentry**. **As built:** `@sentry/react`, loaded on demand only when `VITE_SENTRY_DSN` is set |
 
 ### 3.2 Back-office (admin)
 
@@ -132,15 +132,15 @@ flowchart LR
 | Authorization | Groups/permissions: `customer`, `garage_partner`, `staff`, `admin` + DRF permission classes |
 | Background jobs | **Celery** (workers) + **Celery Beat** (scheduled jobs) with **Redis** broker. **As built:** in development Celery runs tasks inline (`CELERY_TASK_ALWAYS_EAGER`), so Redis is not needed yet |
 | Realtime updates | Polling for MVP → **Django Channels** (WebSocket) later for AI-job progress & order status |
-| Caching / rate-limit | Redis via `django-redis` + DRF throttling. **As built:** local-memory cache in development |
-| File storage | **django-storages** (S3 / Cloudflare R2) – pre-signed URLs for direct uploads. **As built:** local `media/` folder in development |
+| Caching / rate-limit | Redis via `django-redis` + DRF throttling. **As built:** local-memory cache in development; Redis when `CACHE_URL=rediscache://…` |
+| File storage | **django-storages** (S3 / Cloudflare R2) – pre-signed URLs for direct uploads. **As built:** local `media/` folder by default; R2/S3 when `AWS_STORAGE_BUCKET_NAME` is set (uploads go through Django, no pre-signed URLs yet) |
 | Images | **Pillow** + thumbnails via Cloudflare Images / imgproxy |
 | Search | PostgreSQL search → **Meilisearch** when the catalog grows. **As built:** name/brand `icontains` + exact SKU; Meilisearch plan in `apps/catalog/search_index.py` |
-| CORS / security | **django-cors-headers**, Django security middleware, CSP (`django-csp`) |
+| CORS / security | **django-cors-headers**, Django security middleware, CSP (`django-csp`). **As built:** CSP on Django pages when `CSP_ENABLED` (default in production); SPA CSP in `frontend/public/_headers` / nginx |
 | Config | **django-environ** (12-factor `.env`) |
-| Server | **Gunicorn** with Uvicorn workers (ASGI) |
+| Server | **Gunicorn** with Uvicorn workers (ASGI). **As built:** Gunicorn sync workers (WSGI) – nothing async yet; static files via **WhiteNoise** |
 | Dependency management | **uv** (fast, lockfile) |
-| Logging | **structlog** → Sentry / Grafana Loki |
+| Logging | **structlog** → Sentry / Grafana Loki. **As built:** structlog formatter for all Django logs, JSON in production; Sentry (`sentry-sdk`) when `SENTRY_DSN` is set |
 
 ### 3.4 AI photo studio (external APIs)
 
@@ -289,7 +289,7 @@ Key fields:
 | `Product` | `type (wheel/tire/set/accessory), brand, category, name, slug, style, description, badge, is_featured, rating_avg, rating_count` |
 | `ProductVariant` | `sku, price, old_price, finish, diameter_in, width_in, et_mm, pcd, center_bore_mm, tire_width_mm, tire_aspect, load_index, speed_rating, season, tire_size (computed), thread_size, label` |
 | `StockItem` | `variant (1:1), quantity, reserved` |
-| `Model3D` | `glb_file, thumbnail, finish_materials (JSONField)` – **not built yet** (3D showroom phase) |
+| `Model3D` | `glb_file, thumbnail, finish_materials (JSONField)` – **As built:** model + admin inline + `model_3d` in the product API; the 3D viewer itself is phase 2 |
 | `Order` | `number, status, delivery_method (courier/garage_fitting), contact + address snapshot, subtotal, discount, voucher, shipping, fitting, total, vat, reserved_until, paid_at` (installments: later) |
 | `Payment` | `order, provider (fake/stripe), session_id, amount, status, payment_reference` |
 | `Appointment` | `garage, order (1:1), slot_start, slot_end, status (held/booked/confirmed/completed/cancelled)` |
@@ -423,13 +423,13 @@ flowchart LR
 | Concern | Choice |
 |---|---|
 | Local dev | **Docker Compose**: PostgreSQL, Redis, MinIO, Mailpit; Django `runserver` + Vite dev server. **As built:** compose file has PostgreSQL only (optional – native PostgreSQL or Supabase also work); emails print to the console; no Redis/MinIO needed yet |
-| Containers | Dockerfiles: `backend` (Django/Gunicorn), `worker` (Celery), `beat` (Celery Beat) – same image, different command |
+| Containers | Dockerfiles: `backend` (Django/Gunicorn), `worker` (Celery), `beat` (Celery Beat) – same image, different command. **As built:** `infra/docker/backend.Dockerfile` (web/worker/beat), `infra/docker/frontend.Dockerfile` (SPA build + nginx), `infra/docker-compose.prod.yml` (+ PostgreSQL, Redis) – written, not yet run |
 | Hosting (MVP, low cost) | **Hetzner / DigitalOcean** VM with Docker + **Coolify**, or **Railway / Render** |
 | Hosting (scale) | **AWS**: ECS Fargate (web/worker), RDS PostgreSQL, ElastiCache Redis, S3 + CloudFront |
 | Frontend hosting | **Cloudflare Pages** / Vercel (static SPA + PWA) |
-| Static files (admin) | **WhiteNoise** or S3 |
+| Static files (admin) | **WhiteNoise** or S3. **As built:** WhiteNoise (compressed, hashed) |
 | CDN / WAF / DNS | **Cloudflare** |
-| CI/CD | **GitHub Actions**: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → `migrate` → deploy; Android build with Gradle → Play Console (internal track) |
+| CI/CD | **GitHub Actions**: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → `migrate` → deploy; Android build with Gradle → Play Console (internal track). **As built:** `.github/workflows/ci.yml` – ruff, migrations check, OpenAPI check, pytest on PostgreSQL; tsc, eslint, vitest, build; Docker image build. No mypy, no deploy job yet |
 | Secrets | GitHub Environments + cloud secret manager; never in repo |
 | Backups | Daily PostgreSQL dumps + PITR (managed DB), S3 versioning |
 | Monitoring | **Sentry** (React + Django + Celery), **Flower** (Celery dashboard), Grafana/Loki or Better Stack, uptime checks |
@@ -462,18 +462,22 @@ Environments: `local` → `staging` → `production`.
 
 ## 13. Implementation status (as built)
 
-State of the code in the repository. Code was written but **not yet run** (first install, migrations
-and test run happen on the development machine – see [SETUP.md](../SETUP.md)).
+State of the code in the repository. Tested in an isolated environment (SQLite, 147 backend + 34 frontend
+tests, browser end-to-end flow); first run on PostgreSQL happens on the development machine – see [SETUP.md](../SETUP.md).
 
 | Roadmap item | Status |
 |---|---|
-| Phase 0 – Foundation | ✅ Django project, custom User, JWT cookie auth, Google login, password reset, React shell + design system, i18n ro/en. ❌ Docker for the app, CI |
-| Phase 1 – MVP shop | ✅ Fitment search, catalog + filters, product page, cart (guest + account), checkout, vouchers, orders, admin, emails. Stripe test mode + simulated payment. ❌ Netopia |
-| Phase 2 – Experience | ✅ Reviews (moderated), favorites, partner garages + appointment slots. 🧱 Structure only: AI studio, SmartBill, courier AWB. ❌ 3D showroom, PWA |
-| Phase 3 – Android | 🧱 Native adapters (`frontend/src/lib/native/`) and Bearer-token auth ready. ❌ Capacitor project |
+| Phase 0 – Foundation | ✅ Django project, custom User, JWT cookie auth, Google login, password reset, React shell + design system, i18n ro/en, Dockerfiles + production compose, GitHub Actions CI (both written, not yet executed) |
+| Phase 1 – MVP shop | ✅ Fitment search, catalog + filters, product page, cart (guest + account), checkout, vouchers, orders, admin, emails. Stripe test mode + simulated payment. GDPR data export + account deletion. ❌ Netopia |
+| Phase 2 – Experience | ✅ Reviews (moderated), favorites, partner garages + appointment slots, PWA (installable, offline catalog), `Model3D` data model. 🧱 Structure only: AI studio, SmartBill, courier AWB. ❌ 3D viewer page |
+| Phase 3 – Android | 🧱 Native adapters (`frontend/src/lib/native/`), Bearer-token auth and `capacitor.config.json` ready. ❌ Android project (`npx cap add android`) |
 | Phase 4 – Scale | 🧱 Meilisearch plan (`catalog/search_index.py`). ❌ rest |
+| Operations | ✅ Sentry (Django, Celery, React), structlog JSON logs, CSP, WhiteNoise, R2/S3 storage, Redis cache, Resend email – each switched on by environment variables ([SETUP.md §9](../SETUP.md)) |
 
 ✅ implemented · 🧱 models/interfaces + design notes in code, raises `NotImplementedError` · ❌ not started
+
+Not prepared at all (only described in this document): Apple login, maps for the garage list, Wheel-Size API,
+Django Channels (realtime), PostHog analytics, Flower, mypy.
 
 ### Decisions that changed during implementation
 
@@ -491,5 +495,8 @@ and test run happen on the development machine – see [SETUP.md](../SETUP.md)).
 | API client | orval-generated | Hand-written `api.ts` per feature, orval config ready | Client can only be generated with the backend running |
 | Guest cart | Server cart | Browser cart for guests, merged into the server cart on login | No anonymous sessions in the API |
 | Garage partner portal | Later React portal | Django Admin restricted to the partner's garages | Covers FR9 with no extra UI |
+| App server | Gunicorn + Uvicorn workers (ASGI) | Gunicorn sync workers (WSGI) | No async views or WebSockets yet |
+| Production hosting | Coolify / Render | Two documented options: Docker Compose on one server, or Cloudflare Pages + hosted API | Cheapest for a demo; no extra platform to learn |
+| GDPR erasure | — | Anonymise the user, keep orders | Romanian accounting law requires keeping invoices/orders |
 
 Future steps, known limitations and the first-run checklist: [ROADMAP.md](../ROADMAP.md).

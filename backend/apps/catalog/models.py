@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -140,7 +141,7 @@ class ProductVariant(TimeStampedModel):
             for part in (
                 f'{self.diameter_in}"' if self.diameter_in else "",
                 f"{format(self.width_in.normalize(), 'f')}J" if self.width_in is not None else "",
-                self.pcd,
+                self.pcd.replace("x", "×"),
                 f"ET{self.et_mm}" if self.et_mm is not None else "",
             )
             if part
@@ -195,3 +196,26 @@ class ProductMedia(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.alt or self.image.name
+
+
+class Model3D(TimeStampedModel):
+    """Wheel model for the 3D showroom (phase 2). Finishes only swap materials in the browser."""
+
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name="model_3d")
+    glb_file = models.FileField(
+        upload_to="models3d/",
+        validators=[FileExtensionValidator(["glb"])],
+        help_text="glTF binary, Draco-compressed, wheel centred at the origin, 1 unit = 1 m",
+    )
+    thumbnail = models.ImageField(upload_to="models3d/thumbnails/", blank=True)
+    finish_materials = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Per finish, e.g. {"silver": {"color": "#c9ccd1", "metalness": 0.9, "roughness": 0.25}}',
+    )
+
+    class Meta:
+        verbose_name = "3D model"
+
+    def __str__(self) -> str:
+        return f"3D model of {self.product}"

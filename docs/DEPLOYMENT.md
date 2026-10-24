@@ -1,88 +1,125 @@
 # Deployment (own domain)
 
 Target: a small, cheap production setup for the project demo with a real domain, e.g. `onlywheels.ro`.
-Nothing here is automated yet (Docker/CI come later); this is the agreed plan.
+Two ways are prepared; pick one.
 
-## Topology
+| | Option A – one server with Docker | Option B – managed services |
+|---|---|---|
+| Frontend | nginx container (same domain) | Cloudflare Pages |
+| API | gunicorn container | Render / Railway / VPS |
+| Database | PostgreSQL container (or managed) | Managed PostgreSQL (Supabase, Neon…) |
+| Jobs | Redis + Celery worker + beat containers | Provider's Redis + worker/cron |
+| Effort | One `docker compose up`, you run backups | More dashboards, less server work |
+| Files | `infra/docker-compose.prod.yml`, `infra/docker/`, `infra/nginx/` | `frontend/public/_headers`, `_redirects` |
+
+> The Docker images and the compose file were written but **not yet built or run** (no Docker on the
+> development laptop). Build them once on a machine with Docker; the CI workflow also builds them.
+
+## 1. Domain and DNS (both options)
+
+1. Buy the domain (ROTLD registrar for `.ro`), set the nameservers to Cloudflare.
+2. Option A: `onlywheels.ro` (and `www`) → server IP, proxied (orange cloud).
+   Option B: `onlywheels.ro` → Cloudflare Pages project, `api` → API host.
+3. SSL/TLS mode **Full (strict)** (Cloudflare Origin Certificate on the server) and "Always use HTTPS".
+
+## 2. Option A – single server with Docker Compose
+
+```
+Cloudflare (TLS) ──► nginx container :80
+                       ├── /            React build (SPA, service worker)
+                       ├── /api/ /admin/ /static/ ──► web (gunicorn, Django, WhiteNoise)
+                       └── /media/      shared volume (or Cloudflare R2)
+                     worker + beat (Celery)  ──► redis
+                     postgres (volume postgres-data)
+```
+
+On a VPS (Ubuntu with Docker Engine + compose plugin):
+
+```bash
+git clone <repo> onlywheels && cd onlywheels
+cp infra/.env.prod.example infra/.env.prod          # fill in every value
+docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
+docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec web python manage.py createsuperuser
+docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec web python manage.py seed_demo   # demo only
+```
+
+- `web` runs `migrate` on every start, then gunicorn. `worker` and `beat` use the same image.
+- Static files are collected into the image at build time and served by WhiteNoise.
+- Uploads go to the `media` volume (served by nginx) unless `AWS_STORAGE_BUCKET_NAME` is set (R2).
+- Same origin for SPA and API → no CORS, `VITE_API_URL` stays empty, cookies are first-party.
+- TLS ends at Cloudflare; nginx forwards `X-Forwarded-Proto` so Django's HTTPS redirect does not loop.
+  Without Cloudflare, put Caddy or Traefik in front for certificates.
+- Update: `git pull` then the same `up -d --build` command.
+- Backups: `docker compose … exec postgres pg_dump -U onlywheels onlywheels > backup.sql` daily (cron),
+  copy off the server; test a restore.
+
+## 3. Option B – Cloudflare Pages + hosted API
 
 ```
 onlywheels.ro      → Cloudflare Pages      (frontend: static build of `frontend/`)
-api.onlywheels.ro  → VPS (Hetzner/DO) or Render/Railway   (Django + Gunicorn/Uvicorn)
-                     ├── PostgreSQL (managed: Supabase / Neon / provider DB)
-                     ├── Redis (Celery broker) + Celery worker + Celery Beat
-                     └── media → Cloudflare R2 (S3-compatible)
-DNS + TLS + WAF    → Cloudflare
+api.onlywheels.ro  → Render/Railway or VPS (Django + gunicorn, same Dockerfile as option A)
+                     ├── PostgreSQL (managed)
+                     ├── Redis + Celery worker + Celery Beat
+                     └── media → Cloudflare R2
 ```
 
-## 1. Domain and DNS
-
-1. Buy the domain (ROTLD registrar for `.ro`), set the nameservers to Cloudflare.
-2. DNS records: `onlywheels.ro` → Cloudflare Pages project, `api` → server IP (proxied, orange cloud).
-3. SSL/TLS mode **Full (strict)**; enable "Always use HTTPS".
-
-## 2. Backend
-
-Environment (`backend/.env` on the server, never in git):
+Backend environment: same values as `infra/.env.prod.example`, plus
 
 ```
 DJANGO_SETTINGS_MODULE=config.settings.prod
-DJANGO_SECRET_KEY=<long random>
 DJANGO_ALLOWED_HOSTS=api.onlywheels.ro
 DATABASE_URL=postgres://...?sslmode=require
-FRONTEND_URL=https://onlywheels.ro
-CORS_ALLOWED_ORIGINS=https://onlywheels.ro
-CSRF_TRUSTED_ORIGINS=https://onlywheels.ro
-CSRF_COOKIE_DOMAIN=.onlywheels.ro          # SPA must read the csrftoken cookie set by the API
-CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_BROKER_URL=redis://...
+CACHE_URL=rediscache://...
 CELERY_TASK_ALWAYS_EAGER=False
-EMAIL_BACKEND=anymail / SMTP provider (Resend, SendGrid…)
-PAYMENT_PROVIDER=stripe
-STRIPE_SECRET_KEY=sk_live_... (or sk_test_ for the demo)
-STRIPE_WEBHOOK_SECRET=whsec_...
-GOOGLE_OAUTH_CLIENT_ID=...
+CSRF_COOKIE_DOMAIN=.onlywheels.ro          # the SPA must read the csrftoken cookie set by the API
 ```
 
-Steps on a VPS (Ubuntu):
+- Build the API from `infra/docker/backend.Dockerfile` (context `backend/`). Start command:
+  `python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`.
+  Worker: `celery -A config worker -l info`; beat: `celery -A config beat -l info`.
+- Cloudflare Pages: root directory `frontend`, build command `pnpm install && pnpm build`, output `dist`;
+  environment `VITE_API_URL=https://api.onlywheels.ro`, `VITE_GOOGLE_CLIENT_ID`, `VITE_SENTRY_DSN`.
+- `frontend/public/_redirects` (SPA routing) and `frontend/public/_headers` (security headers + CSP) are
+  picked up by Pages automatically. **Edit the `connect-src` in `_headers`** if the API domain differs from
+  `https://api.onlywheels.ro`.
+- Cookies: `ow_access`/`ow_refresh` (httpOnly, Secure, SameSite=Lax) are set for `api.onlywheels.ro`; both
+  hosts are the same "site" (`onlywheels.ro`), so the browser sends them with the SPA's requests.
 
-1. `uv sync --no-dev`, `uv run python manage.py migrate`, `collectstatic`, `createsuperuser`.
-2. Processes (systemd units or Docker later):
-   - `gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker -w 3 -b 127.0.0.1:8000`
-   - `celery -A config worker -l info`
-   - `celery -A config beat -l info` (expires unpaid orders every 5 min)
-3. Nginx in front: TLS from Cloudflare Origin Certificate, `client_max_body_size 10m`,
-   proxy `/` to Gunicorn, serve `/static/` from `staticfiles/`.
-4. Media: add `django-storages[s3]` with Cloudflare R2 credentials (`AWS_S3_ENDPOINT_URL`, bucket, keys)
-   before allowing uploads in production.
-5. Stripe dashboard → Webhooks → `https://api.onlywheels.ro/api/v1/payments/webhook/stripe/`
-   with events `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-   `checkout.session.async_payment_failed`, `checkout.session.expired`.
-6. Google Cloud OAuth client: add `https://onlywheels.ro` to Authorized JavaScript origins.
+## 4. External services (both options)
 
-`config/settings/prod.py` already enforces HTTPS redirects, HSTS, secure cookies and refuses
-`PAYMENT_PROVIDER=fake`.
+| Service | What to do | Variables |
+|---|---|---|
+| Stripe | Dashboard → Webhooks → `https://<api host>/api/v1/payments/webhook/stripe/`, events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` | `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| Google login | OAuth client → add `https://onlywheels.ro` to Authorized JavaScript origins | `GOOGLE_OAUTH_CLIENT_ID`, `VITE_GOOGLE_CLIENT_ID` |
+| Resend (email) | Verify the domain (SPF/DKIM DNS records), create an API key | `EMAIL_BACKEND=anymail.backends.resend.EmailBackend`, `RESEND_API_KEY`, `DEFAULT_FROM_EMAIL` |
+| Cloudflare R2 | Create a bucket + API token; optional public custom domain `media.onlywheels.ro` | `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_CUSTOM_DOMAIN` |
+| Sentry | Two projects: Django and React | `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `VITE_SENTRY_DSN` (build-time) |
+| Uptime | Any monitor on `/api/v1/health/` | — |
 
-## 3. Frontend
+`config/settings/prod.py` enforces HTTPS redirects, HSTS, secure cookies, WhiteNoise compressed static files and
+refuses `PAYMENT_PROVIDER=fake`. With `DEBUG=False`, logs are JSON and the CSP header is on for Django pages.
 
-Cloudflare Pages project connected to the repository:
+## 5. CI
 
-- Root directory `frontend`, build command `pnpm install && pnpm build`, output `dist`.
-- Environment: `VITE_API_URL=https://api.onlywheels.ro`, `VITE_GOOGLE_CLIENT_ID=...`.
-- SPA routing: add `frontend/public/_redirects` with `/* /index.html 200`.
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
 
-Cookies: the API sets `ow_access`/`ow_refresh` (httpOnly, Secure, SameSite=Lax) for `api.onlywheels.ro`;
-both sites are the same "site" (`onlywheels.ro`), so Lax cookies are sent with the SPA's requests.
+- **backend** – PostgreSQL 16 service, `uv sync --locked`, ruff, `makemigrations --check`, strict OpenAPI
+  validation, pytest;
+- **frontend** – `pnpm install --frozen-lockfile`, typecheck, lint, Vitest, production build;
+- **docker** – builds both production images with `docker-compose.prod.yml`.
 
-## 4. Before going live (checklist)
+It needs the committed `uv.lock`, `pnpm-lock.yaml` and migrations ([ROADMAP.md](ROADMAP.md) step 1).
+Automatic deployment on merge (e.g. SSH + `docker compose up -d --build`, or the Render deploy hook) can be added
+as a fourth job once a server exists.
 
-- [ ] `DEBUG=False`, real `SECRET_KEY`, admin user with a strong password (+ 2FA later).
+## 6. Before going live (checklist)
+
+- [ ] `DEBUG=False`, real `DJANGO_SECRET_KEY` (50+ random characters), admin user with a strong password (+ 2FA later).
+- [ ] `python manage.py check --deploy` shows no warnings except HSTS preload (only enable preload when sure).
 - [ ] Database backups (daily dump + provider PITR) and a tested restore.
-- [ ] Sentry DSN for Django and React; uptime check on `/api/v1/health/`.
-- [ ] Legal pages: terms, privacy policy (GDPR), cookies, ANPC/SOL links (required in Romania).
+- [ ] Sentry DSNs set; uptime check on `/api/v1/health/`.
+- [ ] Open the site with the browser console: no CSP violations (admin, Swagger, Google login, Sentry).
+- [ ] Legal pages: terms, privacy policy (GDPR – the export/delete endpoints exist), cookies, ANPC/SOL links.
 - [ ] Replace demo fitment/catalog data and remove the "demo" labels.
 - [ ] Real invoicing (SmartBill, phase 2) before accepting real payments.
-
-## 5. Later: containers + CI
-
-`infra/docker-compose.yml` already defines PostgreSQL for development. Next steps:
-one `backend.Dockerfile` (web/worker/beat = same image, different command), GitHub Actions
-running `pytest` + `pnpm test` + `pnpm build` on every pull request, then deploy on merge to `main`.

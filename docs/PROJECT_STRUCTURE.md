@@ -16,17 +16,18 @@
 
 ```
 src/
-├── main.tsx                       # Mounts providers + router
+├── main.tsx                       # Mounts providers + router, starts Sentry (only if VITE_SENTRY_DSN)
 ├── app/
-│   ├── router.tsx                 # All routes (React Router 7), protected routes under <RequireAuth>
-│   ├── providers.tsx              # TanStack Query, toasts (sonner), devtools
+│   ├── router.tsx                 # All routes (React Router 7), pages lazy-loaded, protected routes under <RequireAuth>
+│   ├── providers.tsx              # TanStack Query, toasts (sonner), devtools (dev only, lazy)
 │   └── layout/                    # RootLayout, AnnouncementBar, Header, MobileNav, Footer, Logo,
 │                                  # LanguageSwitcher, navigation.ts (menu items)
 ├── routes/                        # Pages: Home, Catalog, Product, Cart, Checkout, OrderPages (orders,
 │                                  # order detail, success, fake pay, fitting), Auth, Account, AccountSubPages
 │                                  # (garage, favorites), Placeholder (showroom, AI), ErrorPages
 ├── features/                      # Each: api.ts (types + calls), hooks, components/, index.ts
-│   ├── auth/                      # Login/register/reset forms, Google button, RequireAuth, useMe
+│   ├── auth/                      # Login/register/reset forms, Google button, RequireAuth, useMe,
+│                                  # PrivacySection (GDPR export + delete account)
 │   ├── vehicle/                   # Make→model→generation selector, active vehicle store, garage hooks
 │   ├── catalog/                   # Filters (URL <-> API), product card/grid, wheel visual, fitment badge
 │   ├── favorites/                 # Heart button, favorites hooks
@@ -40,25 +41,32 @@ src/
 ├── api/                           # http.ts (axios: CSRF, token refresh, language), errors.ts,
 │                                  # queryClient.ts, generated/ (empty until `pnpm api:generate`)
 ├── components/                    # FormField, PageLoader, ComingSoon, ui/ (button, input, label, native-select)
-├── lib/                           # format.ts (RON), useLocale.ts, utils.ts (cn), native/ (camera, share,
-│                                  # push, storage adapters for Capacitor later)
+├── lib/                           # format.ts (RON), useLocale.ts, utils.ts (cn), sentry.ts, native/ (camera,
+│                                  # share, push, storage adapters for Capacitor later)
 ├── i18n/                          # i18next setup + locales/ro|en/common.json
 ├── styles/globals.css             # Tailwind 4 + brand tokens from the prototype
 └── types/google.d.ts              # Google Identity Services typings
-tests/unit/                        # Vitest: auth schemas, catalog filters/format, cart, checkout schema, Header
+tests/unit/                        # Vitest: auth schemas, catalog filters/format, cart, checkout schema, Header,
+                                   # PrivacySection
+public/                            # Logo, PWA icons (pwa-192/512, maskable, apple-touch-icon),
+                                   # _redirects + _headers (Cloudflare Pages: SPA routing, CSP)
+capacitor.config.json              # Android shell config (phase 3: `npx cap add android`)
+vite.config.ts                     # React, Tailwind, vite-plugin-pwa (manifest, Workbox caching), /api proxy
 ```
 
 ### 0.2 Backend (`backend/`)
 
 ```
-config/                # settings/{base,dev,prod,test}.py, urls.py, celery.py (Beat: expire orders)
+config/                # settings/{base,dev,prod,test}.py (base: logging, Sentry, CSP, storage switches;
+                       # prod: security headers, WhiteNoise), urls.py, celery.py (Beat: expire orders)
 apps/
 ├── core/              # TimeStampedModel (UUID), error format, pagination, health + csrf, seed_demo
-├── accounts/          # User (email), Address, cookie JWT auth, Google login, password reset
+├── accounts/          # User (email), Address, cookie JWT auth, Google login, password reset,
+│                      # GDPR export (me/export) + account deletion (me/delete)
 ├── vehicles/          # Make/Model/Generation, UserVehicle (garage), seed_vehicles
 ├── fitment/           # FitmentSpec, normalize.py, services.py (fit check + DB filter)
-├── catalog/           # Brand, Category, Product, ProductVariant, ProductMedia, filters, selectors,
-│                      # seed_catalog, search_index.py (Meilisearch plan)
+├── catalog/           # Brand, Category, Product, ProductVariant, ProductMedia, Model3D (GLB for the
+│                      # 3D showroom), filters, selectors, seed_catalog, search_index.py (Meilisearch plan)
 ├── inventory/         # StockItem (quantity, reserved), CSV import in admin
 ├── pricing/           # Voucher + validation/discount, seed_vouchers
 ├── cart/              # Cart, CartItem, merge
@@ -74,22 +82,35 @@ apps/
 templates/emails/      # password_reset, order_confirmation, order_status, garage_booking (.txt, ro + en)
 tests/                 # factories.py, test_health.py, test_seed.py (+ tests/ inside each app)
 conftest.py            # api_client, user, auth_client fixtures
+.dockerignore
 ```
 
-Other top-level items: `infra/docker-compose.yml` (PostgreSQL only), `docs/` (architecture, prototype,
-[SETUP](SETUP.md), [API conventions](api/CONVENTIONS.md), [DEPLOYMENT](DEPLOYMENT.md), [ROADMAP](ROADMAP.md)),
-`.gitignore`, `.editorconfig`, `.gitattributes`, `README.md`.
+Other top-level items:
+
+```
+infra/
+├── docker-compose.yml          # Development: PostgreSQL only (optional)
+├── docker-compose.prod.yml     # Production on one server: postgres, redis, web, worker, beat, nginx
+├── .env.prod.example           # Values for the production compose file
+├── docker/backend.Dockerfile   # Django image (web = gunicorn, worker/beat = celery), static files baked in
+├── docker/frontend.Dockerfile  # Builds the SPA, serves it with nginx
+└── nginx/default.conf          # SPA + proxy /api /admin /static to Django, /media from a volume, headers
+.github/workflows/ci.yml        # Backend (PostgreSQL service), frontend, Docker build
+```
+
+`docs/` (architecture, prototype, [SETUP](SETUP.md), [API conventions](api/CONVENTIONS.md),
+[DEPLOYMENT](DEPLOYMENT.md), [ROADMAP](ROADMAP.md)), `.gitignore`, `.dockerignore`, `.editorconfig`,
+`.gitattributes`, `README.md`.
 
 ### 0.3 Target items not created yet
 
 | Item | When |
 |---|---|
-| `.github/workflows/`, `scripts/`, Dockerfiles, `infra/nginx`, Redis/MinIO/Mailpit in compose | When Docker/CI are introduced |
-| `frontend/android/`, `capacitor.config.ts` | Phase 3 (Android) |
-| PWA (`vite-plugin-pwa`, manifest, icons) | Roadmap, see [ROADMAP.md](ROADMAP.md) |
+| `scripts/`, Redis/MinIO/Mailpit in the development compose file | When the team develops with Docker |
+| `frontend/android/` | Phase 3 (`npx cap add android`) |
 | `features/home`, `features/fitting`, `features/account` as separate folders | Not needed: home/fitting/account are pages in `routes/` |
 | Separate `search/` app | Replaced by `catalog/search_index.py` |
-| `lib/analytics.ts`, `lib/sentry.ts`, `tests/e2e/` (Playwright) | Before going live |
+| `lib/analytics.ts` (PostHog), `tests/e2e/` (Playwright) | Before going live |
 | `docs/adr/` | Decisions are recorded in [ARCHITECTURE.md §13](architecture/ARCHITECTURE.md#13-implementation-status-as-built) |
 
 ---

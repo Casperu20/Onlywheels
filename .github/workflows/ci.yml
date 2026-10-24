@@ -1,0 +1,73 @@
+# Runs on every push to main and on pull requests.
+# Needs the committed backend migrations and lock files (uv.lock, pnpm-lock.yaml) – see docs/ROADMAP.md, step 1.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: onlywheels
+          POSTGRES_USER: onlywheels
+          POSTGRES_PASSWORD: onlywheels
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U onlywheels"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-secret
+      DATABASE_URL: postgres://onlywheels:onlywheels@localhost:5432/onlywheels
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run python manage.py makemigrations --check --dry-run
+      - run: uv run python manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yml
+      - run: uv run pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  docker:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp infra/.env.prod.example infra/.env.prod
+      - run: docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod build

@@ -1,6 +1,7 @@
 {
   "common": {
-    "loading": "Se încarcă…"
+    "loading": "Se încarcă…",
+    "cancel": "Renunță"
   },
   "nav": {
     "main": "Navigare principală",
@@ -130,6 +131,17 @@
     "greeting": "Salut, {{name}}!",
     "memberSince": "Membru din",
     "logout": "Ieși din cont"
+  },
+  "privacy": {
+    "title": "Datele tale",
+    "text": "Poți descărca oricând datele personale pe care le păstrăm sau poți șterge contul (GDPR).",
+    "export": "Descarcă datele mele",
+    "delete": "Șterge contul",
+    "deleteWarning": "Adresele, mașinile salvate, favoritele și recenziile vor fi șterse definitiv. Comenzile rămân anonimizate, conform legii contabilității.",
+    "typeEmail": "Scrie adresa de email pentru confirmare",
+    "deleteConfirm": "Șterge definitiv",
+    "deleteWrong": "Confirmarea nu este corectă.",
+    "deleted": "Contul a fost șters."
   },
   "notFound": {
     "title": "Pagina nu există",

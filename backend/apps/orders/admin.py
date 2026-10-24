@@ -54,9 +54,28 @@ class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
         "paid_at",
     )
     fieldsets = (
-        (None, {"fields": ("number", "user", "status", "delivery_method", "paid_at", "reserved_until")}),
-        ("Contact & address", {"fields": ("email", "full_name", "phone", "line1", "line2", "city", "county", "postal_code", "notes")}),
-        ("Totals (RON, VAT included)", {"fields": ("subtotal", "discount", "voucher", "voucher_code", "shipping", "fitting", "total", "vat")}),
+        (
+            None,
+            {"fields": ("number", "user", "status", "delivery_method", "paid_at", "reserved_until")},
+        ),
+        (
+            "Contact & address",
+            {
+                "fields": (
+                    "email", "full_name", "phone", "line1", "line2",
+                    "city", "county", "postal_code", "notes",
+                )
+            },
+        ),
+        (
+            "Totals (RON, VAT included)",
+            {
+                "fields": (
+                    "subtotal", "discount", "voucher", "voucher_code",
+                    "shipping", "fitting", "total", "vat",
+                )
+            },
+        ),
     )
     actions = ("mark_processing", "mark_shipped", "mark_ready_for_fitting", "mark_completed", "cancel_orders")
 

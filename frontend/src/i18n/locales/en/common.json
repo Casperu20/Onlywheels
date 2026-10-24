@@ -1,6 +1,7 @@
 {
   "common": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "cancel": "Cancel"
   },
   "nav": {
     "main": "Main navigation",
@@ -130,6 +131,17 @@
     "greeting": "Hi, {{name}}!",
     "memberSince": "Member since",
     "logout": "Log out"
+  },
+  "privacy": {
+    "title": "Your data",
+    "text": "You can download the personal data we keep or delete your account at any time (GDPR).",
+    "export": "Download my data",
+    "delete": "Delete account",
+    "deleteWarning": "Addresses, saved cars, favorites and reviews are deleted permanently. Orders are kept anonymised, as required by accounting law.",
+    "typeEmail": "Type your email address to confirm",
+    "deleteConfirm": "Delete permanently",
+    "deleteWrong": "The confirmation is not correct.",
+    "deleted": "Your account has been deleted."
   },
   "notFound": {
     "title": "Page not found",

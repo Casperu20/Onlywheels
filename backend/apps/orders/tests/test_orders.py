@@ -232,6 +232,9 @@ def test_paid_garage_order_books_appointment_and_notifies_garage(user, cart, dja
 
     assert Appointment.objects.get(order=order).status == "booked"
     assert {tuple(m.to) for m in mail.outbox} == {("ana@example.com",), ("garage@example.com",)}
+    garage_mail = next(m for m in mail.outbox if m.to == ["garage@example.com"])
+    local_start = timezone.localtime(Appointment.objects.get(order=order).slot_start)
+    assert f"{local_start:%H:%M}" in garage_mail.subject
 
 
 def test_payment_after_expiry_still_marks_paid(user, variant, cart):
@@ -243,7 +246,8 @@ def test_payment_after_expiry_still_marks_paid(user, variant, cart):
     order.refresh_from_db()
     assert order.status == "paid"
     assert stock_of(variant).quantity == 6
-    assert "expired" in order.status_changes.last().note
+    # Looked up by status: on Windows the three changes can share the same created_at timestamp.
+    assert "expired" in order.status_changes.get(status="paid").note
 
 
 def test_staff_status_transitions(user, cart, django_capture_on_commit_callbacks):

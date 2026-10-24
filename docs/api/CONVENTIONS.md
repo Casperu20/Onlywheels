@@ -22,7 +22,9 @@ Agreed between frontend and backend. Every new endpoint follows these rules.
 - Endpoints are **private by default**; public ones explicitly use `AllowAny`.
 
 Auth endpoints (`/api/v1/auth/`): `register/`, `login/`, `google/`, `refresh/`, `logout/`, `me/`,
-`password/change/`, `password/reset/`, `password/reset/confirm/`.
+`password/change/`, `password/reset/`, `password/reset/confirm/`, and GDPR: `me/export/` (GET, JSON with all
+personal data) and `me/delete/` (POST `{"password"}`, or `{"confirm_email"}` for Google-only accounts –
+`has_password` in `me/` tells which; anonymises the user, keeps orders, clears the cookies, `204`).
 
 ## Main endpoints
 

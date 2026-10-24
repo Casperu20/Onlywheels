@@ -14,7 +14,7 @@ def product_base() -> QuerySet[Product]:
     """Active products with everything the list/detail serializers need, without N+1 queries."""
     return (
         Product.objects.filter(is_active=True)
-        .select_related("brand", "category")
+        .select_related("brand", "category", "model_3d")
         .prefetch_related(
             Prefetch(
                 "variants",

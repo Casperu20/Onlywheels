@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from google.auth.transport import requests as google_requests
@@ -82,3 +83,84 @@ def reset_password(*, uid: str, token: str, new_password: str) -> User:
     user.set_password(new_password)
     user.save(update_fields=["password"])
     return user
+
+
+# --- GDPR ------------------------------------------------------------------
+
+
+def export_user_data(user: User) -> dict:
+    """Everything we store about the user (GDPR art. 15/20), as JSON-serialisable data."""
+    from apps.orders.models import Order
+
+    orders = []
+    for order in Order.objects.filter(user=user):
+        orders.append(
+            {
+                **{f.attname: getattr(order, f.attname) for f in order._meta.concrete_fields},
+                "items": list(order.items.values()),
+            }
+        )
+    return {
+        "exported_at": timezone.now(),
+        "profile": {
+            "id": user.pk,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone": user.phone,
+            "preferred_language": user.preferred_language,
+            "google_login": bool(user.google_sub),
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
+        },
+        "addresses": list(user.addresses.values()),
+        "vehicles": list(
+            user.vehicles.values(
+                "id",
+                "nickname",
+                "generation__model__make__name",
+                "generation__model__name",
+                "generation__name",
+                "created_at",
+            )
+        ),
+        "favorites": list(user.favorites.values("product__name", "product__slug", "created_at")),
+        "reviews": list(
+            user.reviews.values("product__name", "rating", "title", "body", "status", "created_at")
+        ),
+        "orders": orders,
+    }
+
+
+@transaction.atomic
+def delete_account(user: User) -> None:
+    """GDPR art. 17. Personal data is removed; orders stay (accounting law) but point to an anonymous user."""
+    from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
+    from apps.cart.models import Cart
+    from apps.reviews.services import recalculate_rating
+
+    reviewed = [review.product for review in user.reviews.select_related("product")]
+    user.reviews.all().delete()
+    for product in reviewed:
+        recalculate_rating(product)
+
+    user.addresses.all().delete()
+    user.vehicles.all().delete()
+    user.favorites.all().delete()
+    user.ai_generations.all().delete()
+    Cart.objects.filter(user=user).delete()
+    user.partner_garages.clear()
+    user.groups.clear()
+    user.user_permissions.clear()
+
+    for token in OutstandingToken.objects.filter(user=user):
+        BlacklistedToken.objects.get_or_create(token=token)
+
+    user.history.all().delete()  # audit trail holds old emails/names
+    user.email = f"deleted-{user.pk}@deleted.invalid"
+    user.first_name = user.last_name = user.phone = ""
+    user.google_sub = None
+    user.is_active = user.is_staff = user.is_superuser = False
+    user.set_unusable_password()
+    user.save()

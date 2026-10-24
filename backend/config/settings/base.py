@@ -3,6 +3,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import environ
+import structlog
+from csp.constants import NONE, SELF, UNSAFE_EVAL, UNSAFE_INLINE
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "simple_history",
     "import_export",
+    "csp",
     # local
     "apps.core",
     "apps.accounts",
@@ -58,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -96,6 +100,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Auth -------------------------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
+# Only Django's own login (the admin) uses this; Unfold's login form has no "next" field when opened directly.
+LOGIN_REDIRECT_URL = "/admin/"
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
@@ -137,6 +143,7 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[FRONTEND_URL])
 # The SPA reads this cookie and sends it back in the X-CSRFToken header.
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 # --- REST framework / OpenAPI ----------------------------------------------
 REST_FRAMEWORK = {
@@ -176,6 +183,13 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+",
+    # Stable enum names for the generated TypeScript client.
+    "ENUM_NAME_OVERRIDES": {
+        "OrderStatusEnum": "apps.orders.models.Order.Status",
+        "AppointmentStatusEnum": "apps.appointments.models.Appointment.Status",
+        "ReviewStatusEnum": "apps.reviews.models.Review.Status",
+        "ProductTypeEnum": "apps.catalog.models.ProductType",
+    },
 }
 
 # --- Celery -----------------------------------------------------------------
@@ -190,10 +204,12 @@ CACHES = {
 }
 
 # --- Email ------------------------------------------------------------------
+# Production: EMAIL_BACKEND=anymail.backends.resend.EmailBackend + RESEND_API_KEY
 EMAIL_BACKEND = env(
     "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
 )
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="OnlyWheels <no-reply@onlywheels.local>")
+ANYMAIL = {"RESEND_API_KEY": env("RESEND_API_KEY", default="")}
 
 # --- i18n / time ------------------------------------------------------------
 LANGUAGE_CODE = "ro"
@@ -207,6 +223,92 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+# Uploads go to S3-compatible storage (Cloudflare R2, AWS S3, MinIO) when a bucket is configured.
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
+if AWS_STORAGE_BUCKET_NAME:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "endpoint_url": env("AWS_S3_ENDPOINT_URL", default=None),
+            "access_key": env("AWS_ACCESS_KEY_ID", default=None),
+            "secret_key": env("AWS_SECRET_ACCESS_KEY", default=None),
+            "region_name": env("AWS_S3_REGION_NAME", default="auto"),
+            "custom_domain": env("AWS_S3_CUSTOM_DOMAIN", default=None),
+            "querystring_auth": False,
+            "file_overwrite": False,
+        },
+    }
+
+# --- Security headers: Content Security Policy (django-csp) ----------------
+# Applies to HTML served by Django (admin, API docs). The SPA gets its CSP from frontend/public/_headers.
+CSP_ENABLED = env.bool("CSP_ENABLED", default=not DEBUG)
+if CSP_ENABLED:
+    MIDDLEWARE.append("csp.middleware.CSPMiddleware")
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": [SELF],
+        # unfold (Alpine.js) needs eval; Swagger UI is loaded from jsDelivr
+        "script-src": [SELF, UNSAFE_INLINE, UNSAFE_EVAL, "https://cdn.jsdelivr.net"],
+        "style-src": [SELF, UNSAFE_INLINE, "https://cdn.jsdelivr.net"],
+        "img-src": [SELF, "data:", "blob:", "https:"],
+        "font-src": [SELF, "data:"],
+        "connect-src": [SELF],
+        "object-src": [NONE],
+        "base-uri": [SELF],
+        "form-action": [SELF],
+        "frame-ancestors": [NONE],
+    }
+}
+
+# --- Observability: Sentry + structured logs ------------------------------
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=env("SENTRY_ENVIRONMENT", default="production"),
+        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.1),
+        send_default_pii=False,
+    )
+
+LOG_FORMAT = env("LOG_FORMAT", default="console" if DEBUG else "json")  # json → Loki, Better Stack…
+_LOG_PROCESSORS = [
+    structlog.contextvars.merge_contextvars,
+    structlog.stdlib.add_log_level,
+    structlog.stdlib.add_logger_name,
+    structlog.processors.TimeStamper(fmt="iso"),
+]
+_LOG_RENDERER = (
+    [structlog.processors.format_exc_info, structlog.processors.JSONRenderer()]
+    if LOG_FORMAT == "json"
+    else [structlog.dev.ConsoleRenderer(colors=False)]
+)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "structured": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processors": [structlog.stdlib.ProcessorFormatter.remove_processors_meta, *_LOG_RENDERER],
+            "foreign_pre_chain": _LOG_PROCESSORS,
+        }
+    },
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "structured"}},
+    "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
+    "loggers": {"django.db.backends": {"level": "WARNING"}},
+}
+structlog.configure(
+    processors=[*_LOG_PROCESSORS, structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
 
 # --- Admin (django-unfold) --------------------------------------------------
 UNFOLD = {

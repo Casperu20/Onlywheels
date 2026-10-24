@@ -10,10 +10,11 @@ studio and fitting at partner garages. University project (MSA).
 ## Repository
 
 ```
-frontend/   React app (web, later Android via Capacitor)
+frontend/   React app (installable PWA, later Android via Capacitor)
 backend/    Django API + admin back-office
-infra/      docker-compose for local services (PostgreSQL)
-docs/       architecture, prototype, setup, API conventions
+infra/      docker-compose for local PostgreSQL, production Docker images + compose + nginx
+docs/       architecture, prototype, setup, API conventions, deployment, roadmap
+.github/    CI workflow (backend, frontend, Docker build)
 ```
 
 Details: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) · Architecture: [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) · **Next steps: [docs/ROADMAP.md](docs/ROADMAP.md)**
@@ -21,7 +22,7 @@ Details: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) · Architecture:
 ## Getting started
 
 Follow [docs/SETUP.md](docs/SETUP.md) and the first-run checklist in [docs/ROADMAP.md §1](docs/ROADMAP.md#1-first-run-on-the-development-machine-do-this-first)
-(the code has not been run yet). Short version:
+(tested in an isolated environment on SQLite; not yet on PostgreSQL). Short version:
 
 ```powershell
 # backend
@@ -54,3 +55,4 @@ Open http://localhost:5173.
 | E | Cart (guest + account), checkout, vouchers, Stripe / simulated payment, orders, stock reservation, garage fitting slots | done (needs first run) |
 | F | Reviews with moderation, order/garage emails, admin actions (orders, appointments, reviews), partner garage access | done (needs first run) |
 | G | Phase-2 structure: shipping (Sameday/Fan Courier), invoicing (SmartBill), AI studio, Netopia, push, Meilisearch, 3D showroom, native adapters, [deployment notes](docs/DEPLOYMENT.md) | structure + design notes |
+| H | Production readiness: Sentry, structlog, CSP, WhiteNoise, R2/S3, Redis cache, Resend email (all env-switched), PWA, lazy routes, GDPR export/delete, `Model3D`, Dockerfiles + production compose + nginx, GitHub Actions CI, Capacitor config | done; Docker/CI not yet executed |

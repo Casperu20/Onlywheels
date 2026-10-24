@@ -186,6 +186,27 @@ def test_google_login_rejected_when_not_configured(api_client, settings):
     assert response.status_code == 401
 
 
+def test_csrf_is_enforced_with_json_error(user):
+    from rest_framework.test import APIClient
+
+    client = APIClient(enforce_csrf_checks=True)
+    response = client.post("/api/v1/auth/login/", {"email": user.email, "password": PASSWORD}, format="json")
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "csrf_failed"
+
+    client.get("/api/v1/csrf/")
+    response = client.post(
+        "/api/v1/auth/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert response.status_code == 200
+
+    # Cookie-authenticated requests also need the token.
+    assert client.patch("/api/v1/auth/me/", {"phone": "0700000000"}, format="json").status_code == 403
+
+
 def test_login_is_rate_limited(api_client, user):
     for _ in range(10):
         api_client.post("/api/v1/auth/login/", {"email": user.email, "password": "x"}, format="json")

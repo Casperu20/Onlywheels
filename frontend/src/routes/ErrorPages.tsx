@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, isRouteErrorResponse, useRouteError } from "react-router";
 
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/sentry";
 
 export function NotFoundPage() {
   const { t } = useTranslation();
@@ -20,7 +22,11 @@ export function NotFoundPage() {
 export function ErrorPage() {
   const { t } = useTranslation();
   const error = useRouteError();
-  if (isRouteErrorResponse(error) && error.status === 404) return <NotFoundPage />;
+  const notFound = isRouteErrorResponse(error) && error.status === 404;
+  useEffect(() => {
+    if (!notFound) reportError(error);
+  }, [error, notFound]);
+  if (notFound) return <NotFoundPage />;
 
   return (
     <section className="container-page py-24 text-center">

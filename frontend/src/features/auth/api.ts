@@ -9,6 +9,13 @@ export interface User {
   phone: string;
   preferred_language: "ro" | "en";
   date_joined: string;
+  /** false for accounts created with Google only */
+  has_password: boolean;
+}
+
+export interface DeleteAccountPayload {
+  password?: string;
+  confirm_email?: string;
 }
 
 export interface LoginPayload {
@@ -41,4 +48,7 @@ export const authApi = {
     apiClient<void>({ url: `${AUTH}/password/reset/`, method: "POST", data: { email } }),
   confirmPasswordReset: (data: PasswordResetConfirmPayload) =>
     apiClient<void>({ url: `${AUTH}/password/reset/confirm/`, method: "POST", data }),
+  exportData: () => apiClient<Record<string, unknown>>({ url: `${AUTH}/me/export/`, method: "GET" }),
+  deleteAccount: (data: DeleteAccountPayload) =>
+    apiClient<void>({ url: `${AUTH}/me/delete/`, method: "POST", data }),
 };

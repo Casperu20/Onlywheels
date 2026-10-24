@@ -1,0 +1,11 @@
+{
+  "appId": "ro.onlywheels.app",
+  "appName": "OnlyWheels",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -1,8 +1,9 @@
 from decimal import Decimal
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-from apps.catalog.models import ProductType
+from apps.catalog.models import Model3D, ProductType
 from apps.reviews.models import Favorite
 from tests.factories import make_generation, make_product, make_tire, make_variant
 
@@ -149,6 +150,21 @@ def test_detail_unknown_slug_is_404(api_client):
     response = api_client.get(f"{URL}does-not-exist/")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "not_found"
+
+
+def test_detail_model_3d_is_optional(api_client):
+    product = make_product()
+    make_variant(product)
+    assert api_client.get(f"{URL}{product.slug}/").json()["model_3d"] is None
+
+    Model3D.objects.create(
+        product=product,
+        glb_file=SimpleUploadedFile("wheel.glb", b"glTF"),
+        finish_materials={"silver": {"color": "#c9ccd1"}},
+    )
+    data = api_client.get(f"{URL}{product.slug}/").json()["model_3d"]
+    assert data["glb_file"].endswith(".glb")
+    assert data["finish_materials"]["silver"]["color"] == "#c9ccd1"
 
 
 def test_list_has_no_n_plus_one(api_client, django_assert_max_num_queries):

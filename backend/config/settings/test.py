@@ -13,3 +13,11 @@ REST_FRAMEWORK = {
     **REST_FRAMEWORK,  # noqa: F405
     "DEFAULT_THROTTLE_CLASSES": [],
 }
+STORAGES = {
+    **STORAGES,  # noqa: F405
+    "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+}
+# Same as production, whatever DJANGO_DEBUG says in the local .env
+CSP_ENABLED = True
+if "csp.middleware.CSPMiddleware" not in MIDDLEWARE:  # noqa: F405
+    MIDDLEWARE.append("csp.middleware.CSPMiddleware")  # noqa: F405

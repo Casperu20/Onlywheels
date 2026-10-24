@@ -93,7 +93,7 @@ li { margin:4px 0; }
   <div class="intro">
   <p class="tagline">Online shop for wheels, tires and complete sets, with vehicle-fitment search, a 3D showroom, an AI photo studio and fitting at partner garages.</p>
   <p><strong style="color:#fff">Strategy:</strong> web-first (PWA) → Android app from the same codebase via Capacitor.</p>
-  <div class="meta">Version 1.2 · Stack: React · Django · PostgreSQL · Redis · Celery · S3 · Capacitor · rows marked <b>As built</b> reflect the implementation (see §13)</div>
+  <div class="meta">Version 1.3 · Stack: React · Django · PostgreSQL · Redis · Celery · S3 · Capacitor · rows marked <b>As built</b> reflect the implementation (see §13)</div>
     </div>
     <div class="cover-stack">
       <div><small>Frontend</small><b>React + Vite</b></div>
@@ -237,7 +237,7 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>PWA</td>
-<td><strong>vite-plugin-pwa</strong> (Workbox) – installable, offline catalog cache. <strong>As built:</strong> not added yet (roadmap)</td>
+<td><strong>vite-plugin-pwa</strong> (Workbox) – installable, offline catalog cache. <strong>As built:</strong> manifest + icons, precached app shell, catalog API network-first, media cache-first, auto-update</td>
 </tr>
 <tr>
 <td>Native wrapper</td>
@@ -245,11 +245,11 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>Analytics</td>
-<td><strong>PostHog</strong> (product analytics, feature flags)</td>
+<td><strong>PostHog</strong> (product analytics, feature flags). <strong>As built:</strong> not added</td>
 </tr>
 <tr>
 <td>Errors</td>
-<td><strong>Sentry</strong></td>
+<td><strong>Sentry</strong>. <strong>As built:</strong> <code>@sentry/react</code>, loaded on demand only when <code>VITE_SENTRY_DSN</code> is set</td>
 </tr>
 </tbody>
 </table>
@@ -338,11 +338,11 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>Caching / rate-limit</td>
-<td>Redis via <code>django-redis</code> + DRF throttling. <strong>As built:</strong> local-memory cache in development</td>
+<td>Redis via <code>django-redis</code> + DRF throttling. <strong>As built:</strong> local-memory cache in development; Redis when <code>CACHE_URL=rediscache://…</code></td>
 </tr>
 <tr>
 <td>File storage</td>
-<td><strong>django-storages</strong> (S3 / Cloudflare R2) – pre-signed URLs for direct uploads. <strong>As built:</strong> local <code>media/</code> folder in development</td>
+<td><strong>django-storages</strong> (S3 / Cloudflare R2) – pre-signed URLs for direct uploads. <strong>As built:</strong> local <code>media/</code> folder by default; R2/S3 when <code>AWS_STORAGE_BUCKET_NAME</code> is set (uploads go through Django, no pre-signed URLs yet)</td>
 </tr>
 <tr>
 <td>Images</td>
@@ -354,7 +354,7 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>CORS / security</td>
-<td><strong>django-cors-headers</strong>, Django security middleware, CSP (<code>django-csp</code>)</td>
+<td><strong>django-cors-headers</strong>, Django security middleware, CSP (<code>django-csp</code>). <strong>As built:</strong> CSP on Django pages when <code>CSP_ENABLED</code> (default in production); SPA CSP in <code>frontend/public/_headers</code> / nginx</td>
 </tr>
 <tr>
 <td>Config</td>
@@ -362,7 +362,7 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>Server</td>
-<td><strong>Gunicorn</strong> with Uvicorn workers (ASGI)</td>
+<td><strong>Gunicorn</strong> with Uvicorn workers (ASGI). <strong>As built:</strong> Gunicorn sync workers (WSGI); static files via <strong>WhiteNoise</strong></td>
 </tr>
 <tr>
 <td>Dependency management</td>
@@ -370,7 +370,7 @@ li { margin:4px 0; }
 </tr>
 <tr>
 <td>Logging</td>
-<td><strong>structlog</strong> → Sentry / Grafana Loki</td>
+<td><strong>structlog</strong> → Sentry / Grafana Loki. <strong>As built:</strong> structlog formatter for all Django logs, JSON in production; Sentry when <code>SENTRY_DSN</code> is set</td>
 </tr>
 </tbody>
 </table>
@@ -572,7 +572,7 @@ plus shared infrastructure and CI/CD configuration.</p>
 </tr>
 <tr>
 <td><code>Model3D</code></td>
-<td><code>glb_file, thumbnail, finish_materials (JSONField)</code> – <strong>not built yet</strong> (3D showroom phase)</td>
+<td><code>glb_file, thumbnail, finish_materials (JSONField)</code> – <strong>As built:</strong> model + admin inline + <code>model_3d</code> in the product API; the 3D viewer itself is phase 2</td>
 </tr>
 <tr>
 <td><code>Order</code></td>
@@ -771,7 +771,7 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 </tr>
 <tr>
 <td>Containers</td>
-<td>Dockerfiles: <code>backend</code> (Django/Gunicorn), <code>worker</code> (Celery), <code>beat</code> (Celery Beat) – same image, different command</td>
+<td>Dockerfiles: <code>backend</code> (Django/Gunicorn), <code>worker</code> (Celery), <code>beat</code> (Celery Beat) – same image, different command. <strong>As built:</strong> <code>infra/docker/backend.Dockerfile</code>, <code>infra/docker/frontend.Dockerfile</code> (SPA + nginx), <code>infra/docker-compose.prod.yml</code> – written, not yet run</td>
 </tr>
 <tr>
 <td>Hosting (MVP, low cost)</td>
@@ -787,7 +787,7 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 </tr>
 <tr>
 <td>Static files (admin)</td>
-<td><strong>WhiteNoise</strong> or S3</td>
+<td><strong>WhiteNoise</strong> or S3. <strong>As built:</strong> WhiteNoise (compressed, hashed)</td>
 </tr>
 <tr>
 <td>CDN / WAF / DNS</td>
@@ -795,7 +795,7 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 </tr>
 <tr>
 <td>CI/CD</td>
-<td><strong>GitHub Actions</strong>: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → <code>migrate</code> → deploy; Android build with Gradle → Play Console (internal track)</td>
+<td><strong>GitHub Actions</strong>: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → <code>migrate</code> → deploy; Android build with Gradle → Play Console (internal track). <strong>As built:</strong> <code>.github/workflows/ci.yml</code> – ruff, migrations check, OpenAPI check, pytest on PostgreSQL; tsc, eslint, vitest, build; Docker image build. No mypy, no deploy job yet</td>
 </tr>
 <tr>
 <td>Secrets</td>
@@ -855,20 +855,22 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 </table>
 <hr>
 <h2 id="13-implementation-status-as-built">13. Implementation status (as built)</h2>
-<p>State of the code in the repository. Code was written but <strong>not yet run</strong> (first install, migrations and test run happen on the development machine – see <code>docs/SETUP.md</code>). Future steps and known limitations: <code>docs/ROADMAP.md</code>.</p>
+<p>State of the code in the repository. Tested in an isolated environment (SQLite, 147 backend + 34 frontend tests, browser end-to-end flow); first run on PostgreSQL happens on the development machine – see <code>docs/SETUP.md</code>. Future steps and known limitations: <code>docs/ROADMAP.md</code>.</p>
 <table>
 <thead>
 <tr><th>Roadmap item</th><th>Status</th></tr>
 </thead>
 <tbody>
-<tr><td>Phase 0 – Foundation</td><td>✅ Django project, custom User, JWT cookie auth, Google login, password reset, React shell + design system, i18n ro/en. ❌ Docker for the app, CI</td></tr>
-<tr><td>Phase 1 – MVP shop</td><td>✅ Fitment search, catalog + filters, product page, cart (guest + account), checkout, vouchers, orders, admin, emails. Stripe test mode + simulated payment. ❌ Netopia</td></tr>
-<tr><td>Phase 2 – Experience</td><td>✅ Reviews (moderated), favorites, partner garages + appointment slots. 🧱 Structure only: AI studio, SmartBill, courier AWB. ❌ 3D showroom, PWA</td></tr>
-<tr><td>Phase 3 – Android</td><td>🧱 Native adapters and Bearer-token auth ready. ❌ Capacitor project</td></tr>
+<tr><td>Phase 0 – Foundation</td><td>✅ Django project, custom User, JWT cookie auth, Google login, password reset, React shell + design system, i18n ro/en, Dockerfiles + production compose, GitHub Actions CI (both written, not yet executed)</td></tr>
+<tr><td>Phase 1 – MVP shop</td><td>✅ Fitment search, catalog + filters, product page, cart (guest + account), checkout, vouchers, orders, admin, emails. Stripe test mode + simulated payment. GDPR data export + account deletion. ❌ Netopia</td></tr>
+<tr><td>Phase 2 – Experience</td><td>✅ Reviews (moderated), favorites, partner garages + appointment slots, PWA (installable, offline catalog), <code>Model3D</code> data model. 🧱 Structure only: AI studio, SmartBill, courier AWB. ❌ 3D viewer page</td></tr>
+<tr><td>Phase 3 – Android</td><td>🧱 Native adapters, Bearer-token auth and <code>capacitor.config.json</code> ready. ❌ Android project</td></tr>
 <tr><td>Phase 4 – Scale</td><td>🧱 Meilisearch plan. ❌ rest</td></tr>
+<tr><td>Operations</td><td>✅ Sentry (Django, Celery, React), structlog JSON logs, CSP, WhiteNoise, R2/S3 storage, Redis cache, Resend email – each switched on by environment variables (<code>docs/SETUP.md</code> §9)</td></tr>
 </tbody>
 </table>
 <p>✅ implemented · 🧱 models/interfaces + design notes in code · ❌ not started</p>
+<p>Not prepared at all (only described in this document): Apple login, maps for the garage list, Wheel-Size API, Django Channels, PostHog analytics, Flower, mypy.</p>
 <h3 id="131-decisions-changed">13.1 Decisions that changed during implementation</h3>
 <table>
 <thead>
@@ -887,6 +889,9 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 <tr><td>API client</td><td>orval-generated</td><td>Hand-written <code>api.ts</code>, orval config ready</td><td>Generation needs the running backend</td></tr>
 <tr><td>Guest cart</td><td>Server cart</td><td>Browser cart, merged on login</td><td>No anonymous sessions in the API</td></tr>
 <tr><td>Garage partner portal</td><td>Later React portal</td><td>Django Admin restricted to the partner's garages</td><td>Covers FR9 without extra UI</td></tr>
+<tr><td>App server</td><td>Gunicorn + Uvicorn workers (ASGI)</td><td>Gunicorn sync workers (WSGI)</td><td>No async views or WebSockets yet</td></tr>
+<tr><td>Production hosting</td><td>Coolify / Render</td><td>Docker Compose on one server, or Cloudflare Pages + hosted API</td><td>Cheapest for a demo</td></tr>
+<tr><td>GDPR erasure</td><td>—</td><td>Anonymise the user, keep orders</td><td>Accounting law requires keeping orders</td></tr>
 </tbody>
 </table>
 </main>

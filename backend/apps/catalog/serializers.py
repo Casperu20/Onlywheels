@@ -5,7 +5,7 @@ from rest_framework import serializers
 from apps.fitment.services import check_variant
 from apps.inventory.models import available_for
 
-from .models import Brand, Category, Product, ProductMedia, ProductVariant
+from .models import Brand, Category, Model3D, Product, ProductMedia, ProductVariant
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -30,6 +30,12 @@ class ProductMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductMedia
         fields = ("id", "image", "alt")
+
+
+class Model3DSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Model3D
+        fields = ("glb_file", "thumbnail", "finish_materials")
 
 
 class FitmentResultSerializer(serializers.Serializer):
@@ -145,6 +151,12 @@ class ProductDetailSerializer(ProductListSerializer):
     category = CategorySerializer(read_only=True)
     media = ProductMediaSerializer(many=True, read_only=True)
     variants = VariantSerializer(many=True, read_only=True)
+    model_3d = serializers.SerializerMethodField()
 
     class Meta(ProductListSerializer.Meta):
-        fields = (*ProductListSerializer.Meta.fields, "description", "category", "media", "variants")
+        fields = (*ProductListSerializer.Meta.fields, "description", "category", "media", "variants", "model_3d")
+
+    @extend_schema_field(Model3DSerializer(allow_null=True))
+    def get_model_3d(self, obj: Product):
+        model = getattr(obj, "model_3d", None)  # reverse one-to-one raises when missing; getattr catches it
+        return Model3DSerializer(model, context=self.context).data if model else None

@@ -42,15 +42,22 @@ export function useGoogleLogin() {
 }
 
 export function useLogout() {
+  const clearSession = useClearSession();
+  return useMutation({ mutationFn: authApi.logout, onSettled: clearSession });
+}
+
+export function useDeleteAccount() {
+  const clearSession = useClearSession();
+  return useMutation({ mutationFn: authApi.deleteAccount, onSuccess: clearSession });
+}
+
+function useClearSession() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: authApi.logout,
-    onSettled: () => {
-      // Drop every cached response that belonged to the previous user.
-      queryClient.clear();
-      queryClient.setQueryData(meQueryKey, null);
-    },
-  });
+  return () => {
+    // Drop every cached response that belonged to the previous user.
+    queryClient.clear();
+    queryClient.setQueryData(meQueryKey, null);
+  };
 }
 
 export function useRequestPasswordReset() {

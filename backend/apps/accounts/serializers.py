@@ -13,6 +13,8 @@ def validate_new_password(password: str, user: User, field: str) -> None:
 
 
 class UserSerializer(serializers.ModelSerializer):
+    has_password = serializers.BooleanField(source="has_usable_password", read_only=True)
+
     class Meta:
         model = User
         fields = (
@@ -23,8 +25,27 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "preferred_language",
             "date_joined",
+            "has_password",
         )
         read_only_fields = ("id", "email", "date_joined")
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    """Password for normal accounts; Google-only accounts confirm by typing their email."""
+
+    password = serializers.CharField(
+        required=False, allow_blank=True, write_only=True, style={"input_type": "password"}
+    )
+    confirm_email = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if user.has_usable_password():
+            if not user.check_password(attrs.get("password") or ""):
+                raise serializers.ValidationError({"password": ["Incorrect password."]})
+        elif (attrs.get("confirm_email") or "").strip().lower() != user.email.lower():
+            raise serializers.ValidationError({"confirm_email": ["Type your email address to confirm."]})
+        return attrs
 
 
 class RegisterSerializer(serializers.Serializer):

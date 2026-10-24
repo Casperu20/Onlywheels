@@ -13,3 +13,11 @@ def test_csrf_endpoint_sets_cookie(api_client):
 def test_openapi_schema_is_generated(api_client, db):
     response = api_client.get("/api/schema/")
     assert response.status_code == 200
+
+
+def test_admin_pages_send_content_security_policy(client, db):
+    response = client.get("/admin/login/")
+    assert response.status_code == 200
+    policy = response["Content-Security-Policy"]
+    assert "default-src 'self'" in policy
+    assert "frame-ancestors 'none'" in policy

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import TimeStampedModel
 from apps.garages.models import Garage
@@ -26,4 +27,4 @@ class Appointment(TimeStampedModel):
         indexes = [models.Index(fields=["garage", "slot_start"])]
 
     def __str__(self) -> str:
-        return f"{self.garage} – {self.slot_start:%Y-%m-%d %H:%M}"
+        return f"{self.garage} – {timezone.localtime(self.slot_start):%Y-%m-%d %H:%M}"

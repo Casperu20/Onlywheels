@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
-import { useLogout, useMe } from "@/features/auth";
+import { PrivacySection, useLogout, useMe } from "@/features/auth";
+import { useLocale } from "@/lib/useLocale";
 
 export function AccountPage() {
   const { t } = useTranslation();
+  const locale = useLocale();
   const navigate = useNavigate();
   const { data: user } = useMe();
   const logout = useLogout();
@@ -26,7 +28,7 @@ export function AccountPage() {
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">{t("account.memberSince")}</dt>
-          <dd>{new Date(user.date_joined).toLocaleDateString()}</dd>
+          <dd>{new Date(user.date_joined).toLocaleDateString(locale)}</dd>
         </div>
       </dl>
       <nav aria-label={t("account.eyebrow")} className="mt-6 grid max-w-xl gap-3 sm:grid-cols-3">
@@ -57,6 +59,7 @@ export function AccountPage() {
       >
         <LogOut aria-hidden /> {t("account.logout")}
       </Button>
+      <PrivacySection user={user} />
     </section>
   );
 }

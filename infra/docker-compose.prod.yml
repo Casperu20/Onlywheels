@@ -1,0 +1,75 @@
+# Single-server production stack (VPS). See docs/DEPLOYMENT.md.
+#   cp infra/.env.prod.example infra/.env.prod   # then fill it in
+#   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
+#   docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec web python manage.py createsuperuser
+
+x-backend: &backend
+  build:
+    context: ../backend
+    dockerfile: ../infra/docker/backend.Dockerfile
+  image: onlywheels-api
+  env_file: .env.prod
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    DATABASE_URL: postgres://onlywheels:${POSTGRES_PASSWORD}@postgres:5432/onlywheels
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CACHE_URL: rediscache://redis:6379/1
+    CELERY_TASK_ALWAYS_EAGER: "False"
+  volumes:
+    - media:/app/media
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_started
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: onlywheels
+      POSTGRES_USER: onlywheels
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env.prod}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onlywheels"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  web:
+    <<: *backend
+    command: sh -c "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile -"
+
+  worker:
+    <<: *backend
+    command: celery -A config worker --loglevel INFO
+
+  beat:
+    <<: *backend
+    command: celery -A config beat --loglevel INFO --schedule /tmp/celerybeat-schedule
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - media:/srv/media:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  media:
