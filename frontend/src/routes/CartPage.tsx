@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { MAX_QUANTITY, useCart, useCartActions, type CartLine } from "@/features/cart";
-import { WheelVisual, variantSummary } from "@/features/catalog";
+import { ProductPhoto, variantSummary } from "@/features/catalog";
 import { formatPrice } from "@/lib/format";
 import { useLocale } from "@/lib/useLocale";
 
@@ -18,7 +18,7 @@ export function CartPage() {
 
   return (
     <section className="container-page flex flex-col gap-8 py-10" aria-labelledby="cart-title">
-      <h1 id="cart-title" className="text-3xl font-extrabold tracking-tight">
+      <h1 id="cart-title" className="text-4xl font-extrabold md:text-5xl">
         {t("pages.cart.title")}
       </h1>
 
@@ -64,7 +64,7 @@ function CartLineRow({ line }: { line: CartLine }) {
 
   return (
     <li className="flex flex-wrap items-center gap-4 rounded-2xl border border-border p-4">
-      <WheelVisual type={line.product.type} finish={line.variant.finish} className="w-16 shrink-0" />
+      <ProductPhoto src={line.product.image} className="size-16 shrink-0 rounded-lg" />
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-bold tracking-[1.5px] text-muted-foreground uppercase">{line.product.brand}</p>
         <Link to={`/catalog/${line.product.slug}`} className="font-semibold hover:underline">

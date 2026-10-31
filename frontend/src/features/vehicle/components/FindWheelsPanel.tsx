@@ -24,45 +24,47 @@ export function FindWheelsPanel() {
   return (
     <div
       id="vehicle-search"
-      className="mt-7 rounded-2xl border border-[#34363b] bg-linear-to-r from-[#222429] to-card p-6"
+      className="relative mt-8 rounded-3xl bg-linear-to-r from-primary/70 via-white/10 to-electric/50 p-px shadow-[0_30px_80px_-40px_rgb(255_100_45/0.6)]"
     >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold">{t("vehicle.panelTitle")}</h2>
-        <Link to="/account/garage" className="text-xs text-primary hover:underline">
-          {t("nav.garage")} →
-        </Link>
+      <div className="rounded-[calc(1.5rem-1px)] bg-[#121418]/95 p-6 backdrop-blur md:p-7">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="heading-display text-2xl md:text-3xl">{t("vehicle.panelTitle")}</h2>
+          <Link to="/account/garage" className="text-xs font-semibold text-primary hover:underline">
+            {t("nav.garage")} →
+          </Link>
+        </div>
+        <VehicleSelector
+          submitLabel={t("vehicle.findWheels")}
+          submitIcon={<Grid3x3 aria-hidden />}
+          onSelect={(generation) => {
+            setActive({ id: generation.id, label: vehicleLabel(generation, t("vehicle.present")) });
+            navigate(`/catalog?type=wheel&vehicle=${generation.id}`);
+          }}
+          extraActions={(generation) =>
+            user && generation ? (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={addVehicle.isPending}
+                onClick={() =>
+                  addVehicle.mutate(
+                    { generation_id: generation.id },
+                    {
+                      onSuccess: () => toast.success(t("garage.saved")),
+                      onError: (error) => toast.error(getErrorMessage(error, t("auth.genericError"))),
+                    },
+                  )
+                }
+              >
+                <Save aria-hidden /> {t("garage.save")}
+              </Button>
+            ) : null
+          }
+        />
+        <p className="mt-3 text-xs text-muted-foreground">
+          {active ? t("vehicle.activeHint", { vehicle: active.label }) : t("vehicle.demoHint")}
+        </p>
       </div>
-      <VehicleSelector
-        submitLabel={t("vehicle.findWheels")}
-        submitIcon={<Grid3x3 aria-hidden />}
-        onSelect={(generation) => {
-          setActive({ id: generation.id, label: vehicleLabel(generation, t("vehicle.present")) });
-          navigate(`/catalog?type=wheel&vehicle=${generation.id}`);
-        }}
-        extraActions={(generation) =>
-          user && generation ? (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={addVehicle.isPending}
-              onClick={() =>
-                addVehicle.mutate(
-                  { generation_id: generation.id },
-                  {
-                    onSuccess: () => toast.success(t("garage.saved")),
-                    onError: (error) => toast.error(getErrorMessage(error, t("auth.genericError"))),
-                  },
-                )
-              }
-            >
-              <Save aria-hidden /> {t("garage.save")}
-            </Button>
-          ) : null
-        }
-      />
-      <p className="mt-3 text-xs text-muted-foreground">
-        {active ? t("vehicle.activeHint", { vehicle: active.label }) : t("vehicle.demoHint")}
-      </p>
     </div>
   );
 }

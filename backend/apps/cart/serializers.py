@@ -14,6 +14,14 @@ class CartProductSerializer(serializers.Serializer):
     name = serializers.CharField()
     type = serializers.CharField()
     brand = serializers.CharField(source="brand.name")
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj) -> str | None:
+        media = obj.media.first()
+        if not media:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(media.image.url) if request else media.image.url
 
 
 class CartItemSerializer(serializers.ModelSerializer):

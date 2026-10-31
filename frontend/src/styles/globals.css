@@ -1,33 +1,42 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Self-hosted fonts (no Google Fonts request, allowed by the CSP). */
+@import "@fontsource-variable/inter";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/800.css";
+@import "@fontsource/barlow-condensed/800-italic.css";
 
-/* Brand tokens taken from docs/prototype/index.html (dark-only theme). */
+/* Brand tokens: prototype colours (docs/prototype/index.html) pushed to a more saturated, motorsport palette. */
 :root {
   color-scheme: dark;
-  --radius: 0.625rem;
-  --background: #101113;
-  --foreground: #f5f5f6;
-  --card: #191b1f;
-  --card-foreground: #f5f5f6;
+  --radius: 0.75rem;
+  --background: #0c0d10;
+  --foreground: #f6f6f7;
+  --card: #16181d;
+  --card-foreground: #f6f6f7;
   --popover: #191b1f;
-  --popover-foreground: #f5f5f6;
+  --popover-foreground: #f6f6f7;
   --primary: #ff642d;
-  --primary-foreground: #111111;
-  --secondary: #24262b;
+  --primary-foreground: #140a05;
+  --hot: #ff2e55;
+  --amber: #ffb547;
+  --electric: #38d6ff;
+  --secondary: #23262c;
   --secondary-foreground: #efeff1;
-  --muted: #1b1c20;
-  --muted-foreground: #a2a4ac;
-  --accent: #292b30;
+  --muted: #1b1d22;
+  --muted-foreground: #a5a8b1;
+  --accent: #2a2d33;
   --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --success: #a8d8b6;
-  --border: #2b2d32;
-  --input: #383a41;
+  --destructive: #ff4d5e;
+  --success: #4ade80;
+  --border: #2a2d33;
+  --input: #383b43;
   --ring: #ffad80;
 }
 
 @theme inline {
-  --font-sans: Inter, "Segoe UI", Arial, sans-serif;
+  --font-sans: "Inter Variable", Inter, "Segoe UI", Arial, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -40,6 +49,9 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-hot: var(--hot);
+  --color-amber: var(--amber);
+  --color-electric: var(--electric);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -62,6 +74,20 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(1100px 520px at 88% -8%, rgb(255 100 45 / 0.13), transparent 62%),
+      radial-gradient(900px 520px at -12% 18%, rgb(56 214 255 / 0.06), transparent 60%);
+    background-repeat: no-repeat;
+  }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  h1 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
   }
   :focus-visible {
     @apply outline-3 outline-offset-4 outline-ring;
@@ -71,4 +97,55 @@
 @utility container-page {
   width: min(1240px, calc(100% - 2.5rem));
   margin-inline: auto;
+}
+
+/* Big condensed motorsport headings */
+@utility heading-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.92;
+}
+
+@utility text-gradient {
+  background: linear-gradient(95deg, var(--amber), var(--primary) 45%, var(--hot));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-brand-gradient {
+  background-image: linear-gradient(100deg, #ff8a3d, var(--primary) 45%, var(--hot));
+}
+
+/* Thin outlined text for oversized background words */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgb(255 255 255 / 0.14);
+}
+
+/* Diagonal racing stripes */
+@utility racing-stripes {
+  background-image: repeating-linear-gradient(
+    -55deg,
+    rgb(255 255 255 / 0.07) 0 10px,
+    transparent 10px 22px
+  );
+}
+
+/* Faint blueprint grid, fading out towards the edges */
+@utility bg-blueprint {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 60% 40%, black 30%, transparent 75%);
+}
+
+/* Product "photo studio": spotlight from above + floor */
+@utility bg-studio {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 38%, rgb(255 255 255 / 0.09), transparent 70%),
+    linear-gradient(180deg, #1d2026 0%, #121418 100%);
 }

@@ -2,6 +2,8 @@
 # Build context: repository root   (see infra/docker-compose.prod.yml)
 FROM node:22-alpine AS build
 WORKDIR /app
+# Corepack installs the pnpm version pinned in package.json ("packageManager") without asking
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 
 COPY frontend/package.json frontend/pnpm-lock.yaml* ./

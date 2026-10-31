@@ -20,16 +20,18 @@ src/
 ├── app/
 │   ├── router.tsx                 # All routes (React Router 7), pages lazy-loaded, protected routes under <RequireAuth>
 │   ├── providers.tsx              # TanStack Query, toasts (sonner), devtools (dev only, lazy)
-│   └── layout/                    # RootLayout, AnnouncementBar, Header, MobileNav, Footer, Logo,
+│   └── layout/                    # RootLayout, Header, MobileNav, Footer, Logo,
 │                                  # LanguageSwitcher, navigation.ts (menu items)
 ├── routes/                        # Pages: Home, Catalog, Product, Cart, Checkout, OrderPages (orders,
 │                                  # order detail, success, fake pay, fitting), Auth, Account, AccountSubPages
-│                                  # (garage, favorites), Placeholder (showroom, AI), ErrorPages
+│                                  # (garage, favorites, profile & addresses), InfoPages (legal: terms, privacy,
+│                                  # cookies; contact), Placeholder (showroom, AI), ErrorPages
 ├── features/                      # Each: api.ts (types + calls), hooks, components/, index.ts
 │   ├── auth/                      # Login/register/reset forms, Google button, RequireAuth, useMe,
 │                                  # PrivacySection (GDPR export + delete account)
 │   ├── vehicle/                   # Make→model→generation selector, active vehicle store, garage hooks
-│   ├── catalog/                   # Filters (URL <-> API), product card/grid, wheel visual, fitment badge
+│   ├── catalog/                   # Filters (URL <-> API), product card/grid, badges, WheelVisual (SVG product
+│   │                              # artwork from spoke style + finish, used until photos are uploaded), fitment badge
 │   ├── favorites/                 # Heart button, favorites hooks
 │   ├── cart/                      # Guest store (browser), server cart hooks, merge after login
 │   ├── checkout/                  # Quote (preview), create order, zod schema, saved addresses
@@ -63,7 +65,7 @@ apps/
 ├── core/              # TimeStampedModel (UUID), error format, pagination, health + csrf, seed_demo
 ├── accounts/          # User (email), Address, cookie JWT auth, Google login, password reset,
 │                      # GDPR export (me/export) + account deletion (me/delete)
-├── vehicles/          # Make/Model/Generation, UserVehicle (garage), seed_vehicles
+├── vehicles/          # Make/Model/Generation, UserVehicle (garage), seed_vehicles, wheelsize.py
 ├── fitment/           # FitmentSpec, normalize.py, services.py (fit check + DB filter)
 ├── catalog/           # Brand, Category, Product, ProductVariant, ProductMedia, Model3D (GLB for the
 │                      # 3D showroom), filters, selectors, seed_catalog, search_index.py (Meilisearch plan)
@@ -161,7 +163,6 @@ frontend/
 │   │   ├── router.tsx           # React Router 7 route tree
 │   │   ├── providers.tsx        # QueryClientProvider, theme, i18n, auth context
 │   │   └── layout/              # Page shell seen in the demo
-│   │       ├── AnnouncementBar.tsx   # Top strip ("Un nou set. O nouă perspectivă…")
 │   │       ├── Header.tsx            # Logo, desktop nav, garage/account/cart buttons + cart count
 │   │       ├── MobileNav.tsx         # Bottom tab bar: Acasă, Catalog, Showroom, AI Studio, Coș
 │   │       └── Footer.tsx
@@ -240,7 +241,7 @@ frontend/
 
 | Demo element ([prototype/index.html](prototype/index.html)) | Frontend location |
 |---|---|
-| Announcement bar, header, footer, mobile bottom nav | `src/app/layout/` |
+| Header, footer, mobile bottom nav | `src/app/layout/` |
 | Hero, benefits, category cards, brand strip | `src/features/home/` |
 | Make / Model / Generation form, "Garajul meu" | `src/features/vehicle/` |
 | Product tabs, search, product grid & cards | `src/features/catalog/` |
@@ -277,9 +278,9 @@ backend/
 │   ├── core/                    # Base models (UUID pk, timestamps), permissions, pagination,
 │   │                            # exceptions, shared utils
 │   ├── accounts/                # Custom User, profile, addresses, roles, auth endpoints (simplejwt cookies + Google ID token)
-│   ├── vehicles/                # Makes, models, generations, user's saved vehicles ("Garajul meu")
-│   ├── fitment/                 # FitmentSpec + compatibility engine (PCD, center bore, ET, diameter),
-│   │                            # Wheel-Size API sync task
+│   ├── vehicles/                # Makes, models, generations, user's saved vehicles ("Garajul meu");
+│   │                            # wheelsize.py = Wheel-Size API import (fetched on first use, stored in DB)
+│   ├── fitment/                 # FitmentSpec + compatibility engine (PCD, center bore, ET, diameter)
 │   ├── catalog/                 # Brands, categories, products, variants, media, 3D models (GLB);
 │   │                            # search (as built: catalog/filters.py + search_index.py, no search/ app)
 │   ├── pricing/                 # Promotions, vouchers, old/new price rules
@@ -332,25 +333,29 @@ catalog/
 
 ## 4. Infrastructure (`infra/`)
 
+How these files work together (images, compose services, operations): [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ```
 infra/
-├── docker-compose.yml           # Local: postgres, redis, minio, mailpit, (meilisearch)
-├── docker-compose.prod.yml      # Prod-like stack: web, worker, beat, nginx
+├── docker-compose.yml           # Local: postgres (built) – redis, minio, mailpit, meilisearch later
+├── docker-compose.prod.yml      # Production on one server: postgres, redis, web, worker, beat, nginx (built)
+├── .env.prod.example            # Values for docker-compose.prod.yml (built)
 ├── docker/
-│   ├── backend.Dockerfile       # One image → run as web (Gunicorn/Uvicorn), worker or beat
-│   └── frontend.Dockerfile      # Optional: static build served by Nginx (if not on Cloudflare Pages)
+│   ├── backend.Dockerfile       # One image → web (gunicorn, WSGI), worker or beat (built)
+│   └── frontend.Dockerfile      # SPA build served by nginx; not needed with Cloudflare Pages (built)
 ├── nginx/
-│   └── default.conf             # Reverse proxy, TLS, gzip/brotli, caching for static files
-└── monitoring/                  # Flower, Grafana/Loki config, uptime checks
+│   └── default.conf             # SPA, proxy /api /admin /static, /media, caching, security headers (built;
+│                                # TLS terminates before nginx, at Cloudflare or Caddy)
+└── monitoring/                  # Flower, Grafana/Loki config, uptime checks (planned)
 ```
 
-| Service | Role |
-|---|---|
-| `postgres` | Main database (source of truth) |
-| `redis` | Cache, Celery broker, rate limiting |
-| `minio` | Local S3 replacement for images, GLB models, AI results, invoices |
-| `mailpit` | Catches outgoing emails locally |
-| `meilisearch` | Catalog search (phase 4) |
+| Service | Role | Status |
+|---|---|---|
+| `postgres` | Main database (source of truth) | Development + production compose |
+| `redis` | Cache, Celery broker, rate limiting | Production compose |
+| `minio` | Local S3 replacement for images, GLB models, AI results, invoices | Planned (R2/S3 supported via env) |
+| `mailpit` | Catches outgoing emails locally | Planned (emails print to the console) |
+| `meilisearch` | Catalog search (phase 4) | Planned |
 
 ---
 
@@ -366,7 +371,7 @@ docs/
 │   └── app_concept.html
 ├── api/CONVENTIONS.md           # API conventions, endpoints, error format
 ├── SETUP.md                     # Development setup on a new machine
-├── DEPLOYMENT.md                # Production plan (own domain)
+├── DEPLOYMENT.md                # Environments, Docker images, production stack, CI pipeline, CD options
 ├── ROADMAP.md                   # First-run checklist, known limitations, next steps, task split
 └── PROJECT_STRUCTURE.md         # This file
 ```
@@ -375,17 +380,31 @@ docs/
 
 ## 6. CI/CD (`.github/workflows/`)
 
-| Workflow | What it does |
+Built: one workflow, `ci.yml` – details, failure fixes and the deploy-job sketch in
+[DEPLOYMENT.md §6–7](DEPLOYMENT.md#6-ci--githubworkflowsciyml).
+
+| Job in `ci.yml` | What it does |
 |---|---|
-| `backend.yml` | `ruff` + `mypy` + `pytest` (with PostgreSQL & Redis services), checks for missing migrations |
-| `frontend.yml` | `eslint` + `tsc` + `vitest`, verifies the generated API client is up to date |
-| `e2e.yml` | Playwright tests against a full Docker Compose stack |
-| `deploy.yml` | Build images → run `migrate` → deploy to staging, then production (manual approval) |
+| `backend` | `uv sync --locked`, `ruff`, missing-migrations check, strict OpenAPI validation, `pytest` on a PostgreSQL 16 service |
+| `frontend` | `pnpm install --frozen-lockfile`, `tsc`, `eslint`, `vitest`, production build |
+| `docker` | Builds both production images (after `backend` and `frontend` pass) |
+
+Planned later (not created):
+
+| Workflow / job | What it would do |
+|---|---|
+| `mypy` step | Static type checks for the backend |
+| API client check | Verify `src/api/generated` matches the schema |
+| `e2e.yml` | Playwright tests against the Docker Compose stack |
+| `deploy` job | After `docker` on `main`: deploy to the server (manual approval via GitHub Environments) |
 | `android.yml` | `npx cap sync` + Gradle build → Play Console internal track (phase 3) |
+| `dependabot.yml` | Weekly dependency update pull requests |
 
 ---
 
 ## 7. Scripts (`scripts/`)
+
+Planned, not created yet – the commands are documented in [SETUP.md](SETUP.md) instead.
 
 | Script | Purpose |
 |---|---|

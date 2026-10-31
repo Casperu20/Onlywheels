@@ -476,7 +476,7 @@ tests, browser end-to-end flow); first run on PostgreSQL happens on the developm
 
 ✅ implemented · 🧱 models/interfaces + design notes in code, raises `NotImplementedError` · ❌ not started
 
-Not prepared at all (only described in this document): Apple login, maps for the garage list, Wheel-Size API,
+Not prepared at all (only described in this document): Apple login, maps for the garage list,
 Django Channels (realtime), PostHog analytics, Flower, mypy.
 
 ### Decisions that changed during implementation
@@ -489,7 +489,7 @@ Django Channels (realtime), PostHog analytics, Flower, mypy.
 | Stock reservation | 15 min | 30 min | Minimum Stripe Checkout session length |
 | Payments in dev | Stripe test | Simulated provider by default + Stripe test | Demo without any account; production refuses `fake` |
 | Background jobs (dev) | Celery + Redis | Celery in eager mode | No Docker/Redis on dev machines yet |
-| Fitment data | Wheel-Size API | 13 hand-curated demo generations (`seed_demo`) | No free dataset; API is paid |
+| Fitment data | Wheel-Size API, synced by Celery Beat | Wheel-Size API fetched **on first use** and stored (`vehicles/wheelsize.py`); 13 demo generations when no key is set | Free Sandbox key = 300 requests/day, enough when every make/model/generation is fetched once; a full sync would not fit |
 | Fitment storage | `oem_sizes` ArrayField | `tire_sizes` JSONField + diameter/width ranges | Simpler admin editing, range checks |
 | Search | PostgreSQL full-text + trigram | `icontains` on name/brand + exact SKU | Enough for the demo catalog |
 | API client | orval-generated | Hand-written `api.ts` per feature, orval config ready | Client can only be generated with the backend running |

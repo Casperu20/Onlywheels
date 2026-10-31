@@ -10,7 +10,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label={t("nav.mobile")}
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/[0.08] bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       {mobileNav.map(({ to, labelKey, icon: Icon }) => (
         <NavLink

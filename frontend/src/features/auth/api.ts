@@ -38,6 +38,8 @@ const AUTH = "/api/v1/auth";
 
 export const authApi = {
   me: () => apiClient<User>({ url: `${AUTH}/me/`, method: "GET" }),
+  updateMe: (data: Partial<Pick<User, "first_name" | "last_name" | "phone" | "preferred_language">>) =>
+    apiClient<User>({ url: `${AUTH}/me/`, method: "PATCH", data }),
   login: (data: LoginPayload) => apiClient<User>({ url: `${AUTH}/login/`, method: "POST", data }),
   register: (data: RegisterPayload) =>
     apiClient<User>({ url: `${AUTH}/register/`, method: "POST", data }),

@@ -8,7 +8,7 @@ export function LanguageSwitcher() {
   const current = i18n.resolvedLanguage ?? "ro";
 
   return (
-    <div role="group" aria-label={t("header.language")} className="flex rounded-[10px] border border-border p-0.5">
+    <div role="group" aria-label={t("header.language")} className="flex rounded-[10px] border border-white/10 p-0.5">
       {SUPPORTED_LANGUAGES.map((lng) => (
         <button
           key={lng}
@@ -16,8 +16,8 @@ export function LanguageSwitcher() {
           onClick={() => void i18n.changeLanguage(lng)}
           aria-pressed={current === lng}
           className={cn(
-            "rounded-lg px-2 py-1 text-[11px] font-bold uppercase",
-            current === lng ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
+            "rounded-lg px-1.5 py-1 text-[11px] font-bold uppercase sm:px-2",
+            current === lng ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {lng}

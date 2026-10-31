@@ -31,7 +31,7 @@ export function CatalogPage() {
     <section className="container-page flex flex-col gap-6 py-10" aria-labelledby="catalog-title">
       <div>
         <p className="text-[10px] font-bold tracking-[2px] text-primary uppercase">{t("pages.catalog.eyebrow")}</p>
-        <h1 id="catalog-title" className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">
+        <h1 id="catalog-title" className="mt-2 text-4xl font-extrabold md:text-5xl">
           {t("pages.catalog.title")}
         </h1>
       </div>
@@ -67,8 +67,6 @@ export function CatalogPage() {
           }}
         />
       )}
-
-      <p className="text-center text-xs text-muted-foreground">{t("catalog.demoNote")}</p>
     </section>
   );
 }

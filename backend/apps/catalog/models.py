@@ -29,6 +29,26 @@ class Season(models.TextChoices):
     ALL_SEASON = "all_season", "All season"
 
 
+class WheelStyle(models.TextChoices):
+    FIVE_SPOKE = "five_spoke", "5-spoke"
+    SPLIT_SPOKE = "split_spoke", "Split 5-spoke"
+    Y_SPOKE = "y_spoke", "Y-spoke"
+    MULTI_SPOKE = "multi_spoke", "Multi-spoke"
+    MESH = "mesh", "Mesh / cross-spoke"
+
+
+class Badge(models.TextChoices):
+    BESTSELLER = "bestseller", "Bestseller"
+    NEW = "new", "New design"
+    OUR_PICK = "our_pick", "Our pick"
+    OFFER = "offer", "Offer"
+    SUMMER = "summer", "Summer"
+    WINTER = "winter", "Winter"
+    SPORT = "sport", "Sport"
+    COMPLETE_SET = "set", "Complete set"
+    ACCESSORY = "accessory", "Accessory"
+
+
 class Brand(TimeStampedModel):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
@@ -64,9 +84,15 @@ class Product(TimeStampedModel):
     )
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=170, unique=True)
-    style = models.CharField(max_length=60, blank=True, help_text="e.g. multi-spoke, mesh, Y-spoke")
-    description = models.TextField(blank=True)
-    badge = models.CharField(max_length=40, blank=True, help_text='Short label, e.g. "Bestseller"')
+    style = models.CharField(
+        max_length=20,
+        choices=WheelStyle.choices,
+        blank=True,
+        help_text="Spoke design; also used for the drawn wheel shown until photos are uploaded",
+    )
+    description = models.TextField("Description (Romanian)", blank=True)
+    description_en = models.TextField("Description (English)", blank=True)
+    badge = models.CharField(max_length=20, choices=Badge.choices, blank=True)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     # Denormalized, updated by the reviews app.
@@ -189,6 +215,8 @@ class ProductMedia(TimeStampedModel):
     image = models.ImageField(upload_to="products/")
     alt = models.CharField(max_length=150, blank=True)
     position = models.PositiveSmallIntegerField(default=0)
+    credit = models.CharField(max_length=200, blank=True, help_text="Author + licence, required for CC photos")
+    credit_url = models.URLField(blank=True)
 
     class Meta:
         ordering = ("position", "created_at")

@@ -18,16 +18,17 @@
     "garage": "My garage",
     "explore": "EXPLORE"
   },
-  "announcement": {
-    "lead": "A new set. A new perspective.",
-    "strong": "Discover the OnlyWheels experience.",
-    "region": "Romania / RON"
-  },
   "header": {
     "language": "Language"
   },
   "footer": {
-    "tagline": "Built for your passion. © {{year}} OnlyWheels"
+    "tagline": "Built for your passion. © {{year}} OnlyWheels",
+    "about": "Wheels, tires and complete sets, checked for your car and fitted at partner garages.",
+    "shop": "Shop",
+    "help": "Help",
+    "legal": "Legal",
+    "contact": "Contact",
+    "anpc": "ANPC – alternative dispute resolution (SAL)"
   },
   "home": {
     "eyebrow": "For those who feel the difference",
@@ -53,7 +54,28 @@
     },
     "featuredTitle": "Your next upgrade.",
     "featuredText": "A selection for those who don't choose at random.",
-    "viewAll": "View full catalog"
+    "viewAll": "View full catalog",
+    "stats": {
+      "fit": { "value": "100%", "label": "fitment checked for your car" },
+      "fitting": { "value": "24h", "label": "to your fitting appointment" },
+      "delivery": { "value": "0 RON", "label": "delivery over 1,000 RON" }
+    },
+    "hud": {
+      "fits": "5×112 · fits BMW 3 Series G20",
+      "price": "from 2,250 RON / pc"
+    },
+    "promo": {
+      "label": "Services",
+      "fittingEyebrow": "Partner fitting",
+      "fittingTitle": "Bolt-on ready.",
+      "fittingText": "Pick a partner garage at checkout. Your wheels arrive there – you just drive in.",
+      "fittingCta": "See partner garages",
+      "showroomTitle": "3D Showroom",
+      "showroomText": "Spin, zoom and switch finishes in real time.",
+      "aiTitle": "AI Studio",
+      "aiText": "A photo of your car, with the wheels you chose.",
+      "soon": "Soon"
+    }
   },
   "comingSoon": {
     "badge": "Coming soon",
@@ -143,6 +165,66 @@
     "deleteWrong": "The confirmation is not correct.",
     "deleted": "Your account has been deleted."
   },
+  "profile": {
+    "title": "Profile & addresses",
+    "subtitle": "Your details and the addresses used at checkout.",
+    "details": "Personal details",
+    "language": "Preferred language (emails)",
+    "save": "Save changes",
+    "saved": "Profile saved.",
+    "addresses": "Saved addresses",
+    "addAddress": "Add address",
+    "default": "Default",
+    "makeDefault": "Use as default",
+    "edit": "Edit",
+    "deleted": "Address deleted.",
+    "noAddresses": "No saved addresses yet. You can also save one at checkout.",
+    "saveAddress": "Save address",
+    "addressSaved": "Address saved."
+  },
+  "legal": {
+    "draft": "Draft text for the university demo – not legal advice. Have it reviewed by a lawyer before taking real customers.",
+    "updated": "Last updated: October 2026 (draft).",
+    "terms": {
+      "title": "Terms and conditions",
+      "sections": [
+        { "title": "Who we are", "text": "OnlyWheels is a university demo shop (MSA project). No real orders are delivered and no real payments are taken." },
+        { "title": "Orders and prices", "text": "Prices are in RON and include 21% VAT. An order is confirmed once the payment is received; stock is reserved for 30 minutes while you pay." },
+        { "title": "Delivery and fitting", "text": "Courier delivery is free over 1,000 RON, otherwise 25 RON. With partner fitting, the products are delivered to the garage and you choose the date and time at checkout." },
+        { "title": "Returns", "text": "Consumers may withdraw within 14 days of receiving the products (GEO 34/2014), except for products that have been mounted or used." },
+        { "title": "Complaints", "text": "Write to contact@onlywheels.ro. You can also contact ANPC or use alternative dispute resolution (SAL)." }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "sections": [
+        { "title": "Data we collect", "text": "Account details (name, email, phone), addresses, saved cars, favorites, reviews and orders." },
+        { "title": "Why we use it", "text": "To process orders and fitting appointments, send order emails and keep your account. Legal basis: the contract and our legal obligations (accounting)." },
+        { "title": "How long we keep it", "text": "Account data until you delete your account; orders and invoices for the period required by accounting law." },
+        { "title": "Your rights", "text": "Access, rectification, erasure, portability and objection. In My account → Your data you can download your data or delete your account. You can complain to ANSPDCP." },
+        { "title": "Processors", "text": "Payment processor (Stripe), email provider and hosting. Data is stored in the EU." }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie policy",
+      "sections": [
+        { "title": "Essential cookies", "text": "Login session (ow_access, ow_refresh) and security (csrftoken). They are required for the shop to work and need no consent." },
+        { "title": "Local storage", "text": "Your language, guest cart and selected car are kept in your browser." },
+        { "title": "Analytics", "text": "This demo uses no analytics or advertising cookies. If they are added later, they will only run after your consent." }
+      ]
+    }
+  },
+  "contact": {
+    "intro": "Questions about fitment, orders or fitting? Our team answers on working days.",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "addressValue": "Str. Exemplu 1, Cluj-Napoca (demo)",
+    "hours": "Hours",
+    "hoursValue": "Mon–Fri, 9:00–18:00",
+    "company": "OnlyWheels – university demo project (MSA). Company details will be added before launch.",
+    "anpc": "Consumer protection:"
+  },
   "notFound": {
     "title": "Page not found",
     "text": "The link may be wrong or the page has moved.",
@@ -159,7 +241,7 @@
     "present": "present",
     "findWheels": "Find wheels",
     "activeHint": "Active car: {{vehicle}}.",
-    "demoHint": "Fitment is checked by PCD, center bore, offset and size (demo data).",
+    "demoHint": "Fitment is checked by PCD, center bore, offset and size.",
     "filteringFor": "Products that fit",
     "removeFilter": "Show all",
     "notFiltered": "Results are not filtered by car.",
@@ -230,7 +312,17 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{page}} of {{pages}}",
-    "demoNote": "Demo data: prices, stock and fitment are indicative."
+    "badges": {
+      "bestseller": "Bestseller",
+      "new": "New design",
+      "our_pick": "Our pick",
+      "offer": "Offer",
+      "summer": "Summer",
+      "winter": "Winter",
+      "sport": "Sport",
+      "set": "Complete set",
+      "accessory": "Accessory"
+    }
   },
   "fitment": {
     "fits": "Fits your car",
@@ -248,6 +340,7 @@
   },
   "product": {
     "back": "Back to catalog",
+    "photo": "Photo: {{credit}}",
     "checkedFor": "Fitment checked for {{vehicle}}.",
     "chooseVariant": "Choose a variant",
     "available_one": "{{count}} pc available",
@@ -310,6 +403,7 @@
     "subtotal": "Subtotal",
     "discount": "Discount",
     "shipping": "Delivery",
+    "free": "Free",
     "fitting": "Fitting",
     "total": "Total",
     "vatIncluded": "VAT included: {{vat}}",

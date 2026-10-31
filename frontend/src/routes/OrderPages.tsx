@@ -33,7 +33,7 @@ export function OrdersPage() {
     <section className="container-page flex flex-col gap-6 py-10">
       <div>
         <p className="text-[10px] font-bold tracking-[2px] text-primary uppercase">{t("account.eyebrow")}</p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight">{t("orders.title")}</h1>
+        <h1 className="mt-2 text-4xl font-extrabold md:text-5xl">{t("orders.title")}</h1>
       </div>
       {isPending ? (
         <PageLoader />
@@ -82,7 +82,7 @@ export function OrderDetailPage() {
     <section className="container-page grid gap-8 py-10 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-extrabold tracking-tight">{order.number}</h1>
+          <h1 className="text-4xl font-extrabold md:text-5xl">{order.number}</h1>
           <OrderStatusBadge status={order.status} />
         </div>
         {params.get("payment") === "cancelled" && order.status === "pending_payment" && (
@@ -199,7 +199,7 @@ export function CheckoutSuccessPage() {
       ) : (
         <Clock className="size-14 animate-pulse text-primary" aria-hidden />
       )}
-      <h1 className="mt-6 text-3xl font-extrabold tracking-tight">
+      <h1 className="mt-6 text-4xl font-extrabold md:text-5xl">
         {paid ? t("checkout.successTitle") : t("checkout.waitingTitle")}
       </h1>
       <p className="mt-3 max-w-md text-muted-foreground">
@@ -262,7 +262,7 @@ export function FittingPage() {
     <section className="container-page flex flex-col gap-6 py-10">
       <div>
         <p className="text-[10px] font-bold tracking-[2px] text-primary uppercase">{t("pages.fitting.eyebrow")}</p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">{t("pages.fitting.title")}</h1>
+        <h1 className="mt-2 text-4xl font-extrabold md:text-5xl">{t("pages.fitting.title")}</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">{t("garages.intro")}</p>
       </div>
       {isPending ? (

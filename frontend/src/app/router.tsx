@@ -16,6 +16,7 @@ function page<M>(load: () => Promise<M>, name: keyof M) {
 const auth = () => import("@/routes/AuthPages");
 const orders = () => import("@/routes/OrderPages");
 const accountSub = () => import("@/routes/AccountSubPages");
+const info = () => import("@/routes/InfoPages");
 const placeholder = (which: "showroom" | "aiStudio") => async () => {
   const { PlaceholderPage } = await import("@/routes/PlaceholderPage");
   return { element: <PlaceholderPage page={which} /> };
@@ -40,6 +41,8 @@ export const router = createBrowserRouter([
       { path: "register", lazy: page(auth, "RegisterPage") },
       { path: "forgot-password", lazy: page(auth, "ForgotPasswordPage") },
       { path: "reset-password", lazy: page(auth, "ResetPasswordPage") },
+      { path: "legal/:doc", lazy: page(info, "LegalPage") },
+      { path: "contact", lazy: page(info, "ContactPage") },
       {
         element: <RequireAuth />,
         children: [
@@ -48,6 +51,7 @@ export const router = createBrowserRouter([
           { path: "checkout/fake-pay", lazy: page(orders, "FakePayPage") },
           { path: "account", lazy: page(() => import("@/routes/AccountPage"), "AccountPage") },
           { path: "account/garage", lazy: page(accountSub, "GaragePage") },
+          { path: "account/profile", lazy: page(accountSub, "ProfilePage") },
           { path: "account/favorites", lazy: page(accountSub, "FavoritesPage") },
           { path: "account/orders", lazy: page(orders, "OrdersPage") },
           { path: "account/orders/:number", lazy: page(orders, "OrderDetailPage") },

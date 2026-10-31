@@ -18,16 +18,17 @@
     "garage": "Garajul meu",
     "explore": "EXPLORE"
   },
-  "announcement": {
-    "lead": "Un nou set. O nouă perspectivă.",
-    "strong": "Descoperă experiența OnlyWheels.",
-    "region": "România / RON"
-  },
   "header": {
     "language": "Limbă"
   },
   "footer": {
-    "tagline": "Conceput pentru pasiunea ta. © {{year}} OnlyWheels"
+    "tagline": "Conceput pentru pasiunea ta. © {{year}} OnlyWheels",
+    "about": "Jante, anvelope și roți complete, verificate pentru mașina ta și montate la service-uri partenere.",
+    "shop": "Magazin",
+    "help": "Ajutor",
+    "legal": "Informații legale",
+    "contact": "Contact",
+    "anpc": "ANPC – soluționarea alternativă a litigiilor (SAL)"
   },
   "home": {
     "eyebrow": "Pentru cei care simt diferența",
@@ -53,7 +54,28 @@
     },
     "featuredTitle": "Următorul tău upgrade.",
     "featuredText": "O selecție pentru cei care nu aleg la întâmplare.",
-    "viewAll": "Vezi tot catalogul"
+    "viewAll": "Vezi tot catalogul",
+    "stats": {
+      "fit": { "value": "100%", "label": "compatibilitate verificată" },
+      "fitting": { "value": "24h", "label": "până la programarea la montaj" },
+      "delivery": { "value": "0 RON", "label": "livrare peste 1.000 RON" }
+    },
+    "hud": {
+      "fits": "5×112 · compatibil BMW Seria 3 G20",
+      "price": "de la 2.250 RON / buc"
+    },
+    "promo": {
+      "label": "Servicii",
+      "fittingEyebrow": "Montaj partener",
+      "fittingTitle": "Gata de drum.",
+      "fittingText": "Alegi un service partener la checkout. Jantele ajung acolo – tu doar vii cu mașina.",
+      "fittingCta": "Vezi service-urile partenere",
+      "showroomTitle": "Showroom 3D",
+      "showroomText": "Rotește, mărește și schimbă finisajul în timp real.",
+      "aiTitle": "AI Studio",
+      "aiText": "O fotografie a mașinii tale, cu jantele alese.",
+      "soon": "În curând"
+    }
   },
   "comingSoon": {
     "badge": "În curând",
@@ -143,6 +165,66 @@
     "deleteWrong": "Confirmarea nu este corectă.",
     "deleted": "Contul a fost șters."
   },
+  "profile": {
+    "title": "Profil și adrese",
+    "subtitle": "Datele tale și adresele folosite la checkout.",
+    "details": "Date personale",
+    "language": "Limba preferată (emailuri)",
+    "save": "Salvează modificările",
+    "saved": "Profilul a fost salvat.",
+    "addresses": "Adrese salvate",
+    "addAddress": "Adaugă adresă",
+    "default": "Implicită",
+    "makeDefault": "Folosește ca implicită",
+    "edit": "Modifică",
+    "deleted": "Adresa a fost ștearsă.",
+    "noAddresses": "Nu ai încă adrese salvate. Poți salva una și la checkout.",
+    "saveAddress": "Salvează adresa",
+    "addressSaved": "Adresa a fost salvată."
+  },
+  "legal": {
+    "draft": "Text provizoriu pentru demo-ul universitar – nu reprezintă consultanță juridică. Verificați-l cu un avocat înainte de clienți reali.",
+    "updated": "Ultima actualizare: octombrie 2026 (draft).",
+    "terms": {
+      "title": "Termeni și condiții",
+      "sections": [
+        { "title": "Cine suntem", "text": "OnlyWheels este un magazin demonstrativ realizat în cadrul unui proiect universitar (MSA). Nu se livrează comenzi reale și nu se încasează plăți reale." },
+        { "title": "Comenzi și prețuri", "text": "Prețurile sunt în RON și includ TVA 21%. Comanda este confirmată după încasarea plății; stocul este rezervat 30 de minute cât timp plătești." },
+        { "title": "Livrare și montaj", "text": "Livrarea prin curier este gratuită peste 1.000 RON, altfel 25 RON. La montajul partener, produsele sunt livrate la service, iar data și ora le alegi la checkout." },
+        { "title": "Retur", "text": "Consumatorii se pot retrage în 14 zile de la primirea produselor (OUG 34/2014), cu excepția produselor montate sau folosite." },
+        { "title": "Reclamații", "text": "Scrie-ne la contact@onlywheels.ro. Te poți adresa și ANPC sau poți folosi soluționarea alternativă a litigiilor (SAL)." }
+      ]
+    },
+    "privacy": {
+      "title": "Politica de confidențialitate",
+      "sections": [
+        { "title": "Ce date colectăm", "text": "Datele contului (nume, email, telefon), adrese, mașini salvate, favorite, recenzii și comenzi." },
+        { "title": "De ce le folosim", "text": "Pentru procesarea comenzilor și a programărilor la montaj, emailurile despre comandă și păstrarea contului. Temei legal: contractul și obligațiile legale (contabilitate)." },
+        { "title": "Cât timp le păstrăm", "text": "Datele contului până la ștergerea contului; comenzile și facturile pe durata cerută de legea contabilității." },
+        { "title": "Drepturile tale", "text": "Acces, rectificare, ștergere, portabilitate și opoziție. Din Contul meu → Datele tale poți descărca datele sau șterge contul. Te poți adresa ANSPDCP." },
+        { "title": "Persoane împuternicite", "text": "Procesatorul de plăți (Stripe), furnizorul de email și hostingul. Datele sunt stocate în UE." }
+      ]
+    },
+    "cookies": {
+      "title": "Politica de cookies",
+      "sections": [
+        { "title": "Cookies esențiale", "text": "Sesiunea de autentificare (ow_access, ow_refresh) și securitatea (csrftoken). Sunt necesare pentru funcționarea magazinului și nu necesită consimțământ." },
+        { "title": "Stocare locală", "text": "Limba, coșul de vizitator și mașina selectată sunt păstrate în browserul tău." },
+        { "title": "Analiză", "text": "Acest demo nu folosește cookies de analiză sau publicitate. Dacă vor fi adăugate, vor rula doar după acordul tău." }
+      ]
+    }
+  },
+  "contact": {
+    "intro": "Întrebări despre compatibilitate, comenzi sau montaj? Echipa noastră răspunde în zilele lucrătoare.",
+    "email": "Email",
+    "phone": "Telefon",
+    "address": "Adresă",
+    "addressValue": "Str. Exemplu 1, Cluj-Napoca (demo)",
+    "hours": "Program",
+    "hoursValue": "Luni–Vineri, 9:00–18:00",
+    "company": "OnlyWheels – proiect universitar demonstrativ (MSA). Datele firmei vor fi adăugate înainte de lansare.",
+    "anpc": "Protecția consumatorilor:"
+  },
   "notFound": {
     "title": "Pagina nu există",
     "text": "Linkul poate fi greșit sau pagina a fost mutată.",
@@ -159,7 +241,7 @@
     "present": "prezent",
     "findWheels": "Găsește jantele",
     "activeHint": "Mașina activă: {{vehicle}}.",
-    "demoHint": "Compatibilitatea se verifică după PCD, alezaj, ET și dimensiuni (date demonstrative).",
+    "demoHint": "Compatibilitatea se verifică după PCD, alezaj, ET și dimensiuni.",
     "filteringFor": "Produse compatibile cu",
     "removeFilter": "Arată tot",
     "notFiltered": "Rezultatele nu sunt filtrate după mașină.",
@@ -231,7 +313,17 @@
     "previous": "Înapoi",
     "next": "Înainte",
     "pageOf": "Pagina {{page}} din {{pages}}",
-    "demoNote": "Date demonstrative: prețurile, stocul și compatibilitățile sunt orientative."
+    "badges": {
+      "bestseller": "Bestseller",
+      "new": "Design nou",
+      "our_pick": "Selecția noastră",
+      "offer": "Ofertă",
+      "summer": "Vară",
+      "winter": "Iarnă",
+      "sport": "Sport",
+      "set": "Set complet",
+      "accessory": "Accesoriu"
+    }
   },
   "fitment": {
     "fits": "Compatibil cu mașina ta",
@@ -249,6 +341,7 @@
   },
   "product": {
     "back": "Înapoi la catalog",
+    "photo": "Foto: {{credit}}",
     "checkedFor": "Compatibilitate verificată pentru {{vehicle}}.",
     "chooseVariant": "Alege varianta",
     "available_one": "{{count}} buc. disponibilă",
@@ -313,6 +406,7 @@
     "subtotal": "Subtotal",
     "discount": "Reducere",
     "shipping": "Livrare",
+    "free": "Gratuită",
     "fitting": "Montaj",
     "total": "Total",
     "vatIncluded": "TVA inclus: {{vat}}",

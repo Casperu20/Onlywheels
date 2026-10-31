@@ -24,6 +24,7 @@ htmlcov/
 # Django
 backend/media/
 backend/staticfiles/
+backend/schema.yml
 
 # Node / frontend
 node_modules/

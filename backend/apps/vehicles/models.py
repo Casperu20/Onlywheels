@@ -7,6 +7,7 @@ from apps.core.models import TimeStampedModel
 class VehicleMake(TimeStampedModel):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
+    synced_at = models.DateTimeField(null=True, blank=True, help_text="Models last imported from Wheel-Size")
 
     class Meta:
         ordering = ("name",)
@@ -19,6 +20,7 @@ class VehicleModel(TimeStampedModel):
     make = models.ForeignKey(VehicleMake, on_delete=models.CASCADE, related_name="models")
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100)
+    synced_at = models.DateTimeField(null=True, blank=True, help_text="Generations last imported from Wheel-Size")
 
     class Meta:
         ordering = ("make__name", "name")
@@ -35,6 +37,8 @@ class VehicleGeneration(TimeStampedModel):
     name = models.CharField(max_length=100, help_text='Chassis code(s), e.g. "G20 / G21"')
     year_from = models.PositiveSmallIntegerField()
     year_to = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Empty = still produced")
+    external_id = models.CharField(max_length=40, blank=True, db_index=True, help_text="Wheel-Size generation slug")
+    fitment_checked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ("model__make__name", "model__name", "-year_from")

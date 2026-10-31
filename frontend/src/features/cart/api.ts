@@ -8,6 +8,7 @@ export interface CartProduct {
   name: string;
   type: ProductType;
   brand: string;
+  image?: string | null;
 }
 
 export interface ServerCartItem {

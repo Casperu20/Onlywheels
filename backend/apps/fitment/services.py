@@ -99,4 +99,10 @@ def compatible_variants_q(spec: FitmentSpec) -> Q:
 
 
 def get_spec(generation_id) -> FitmentSpec | None:
-    return FitmentSpec.objects.filter(generation_id=generation_id).first()
+    spec = FitmentSpec.objects.filter(generation_id=generation_id).first()
+    if spec is None:
+        from apps.vehicles import wheelsize
+
+        wheelsize.ensure_fitment(generation_id)
+        spec = FitmentSpec.objects.filter(generation_id=generation_id).first()
+    return spec

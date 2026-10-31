@@ -1,3 +1,4 @@
+from django.utils.translation import get_language
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -29,7 +30,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductMedia
-        fields = ("id", "image", "alt")
+        fields = ("id", "image", "alt", "credit", "credit_url")
 
 
 class Model3DSerializer(serializers.ModelSerializer):
@@ -151,10 +152,17 @@ class ProductDetailSerializer(ProductListSerializer):
     category = CategorySerializer(read_only=True)
     media = ProductMediaSerializer(many=True, read_only=True)
     variants = VariantSerializer(many=True, read_only=True)
+    description = serializers.SerializerMethodField()
     model_3d = serializers.SerializerMethodField()
 
     class Meta(ProductListSerializer.Meta):
         fields = (*ProductListSerializer.Meta.fields, "description", "category", "media", "variants", "model_3d")
+
+    def get_description(self, obj: Product) -> str:
+        """In the request language (Accept-Language); falls back to Romanian."""
+        if (get_language() or "").startswith("en") and obj.description_en:
+            return obj.description_en
+        return obj.description
 
     @extend_schema_field(Model3DSerializer(allow_null=True))
     def get_model_3d(self, obj: Product):

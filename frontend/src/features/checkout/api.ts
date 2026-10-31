@@ -54,6 +54,10 @@ export const checkoutApi = {
   addresses: () => apiClient<Address[]>({ url: "/api/v1/accounts/addresses/", method: "GET" }),
   saveAddress: (data: Omit<Address, "id" | "country">) =>
     apiClient<Address>({ url: "/api/v1/accounts/addresses/", method: "POST", data }),
+  updateAddress: ({ id, ...data }: Partial<Address> & { id: string }) =>
+    apiClient<Address>({ url: `/api/v1/accounts/addresses/${id}/`, method: "PATCH", data }),
+  deleteAddress: (id: string) =>
+    apiClient<void>({ url: `/api/v1/accounts/addresses/${id}/`, method: "DELETE" }),
 };
 
 export function useQuote(request: QuoteRequest, enabled: boolean) {

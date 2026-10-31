@@ -21,3 +21,5 @@ STORAGES = {
 CSP_ENABLED = True
 if "csp.middleware.CSPMiddleware" not in MIDDLEWARE:  # noqa: F405
     MIDDLEWARE.append("csp.middleware.CSPMiddleware")  # noqa: F405
+# Tests serve no static files; avoids WhiteNoise's "No directory at staticfiles/" warning.
+MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405

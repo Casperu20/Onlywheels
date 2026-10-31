@@ -3,18 +3,23 @@ import { Link } from "react-router";
 import { cn } from "@/lib/utils";
 
 export function Logo({ small = false }: { small?: boolean }) {
-  const size = small ? 28 : 37;
   return (
     <Link
       to="/"
       aria-label="OnlyWheels"
       className={cn(
-        "flex items-center gap-2 font-extrabold tracking-[-1.2px] whitespace-nowrap",
-        small ? "text-lg" : "text-[23px]",
+        "group flex shrink-0 items-center gap-2 font-display font-extrabold tracking-tight whitespace-nowrap uppercase italic",
+        small ? "text-xl" : "text-[22px] sm:text-[27px]",
       )}
     >
-      <img src="/onlywheels-logo.svg" alt="" width={size} height={size} />
-      Only<span className="text-primary">Wheels</span>
+      <img
+        src="/onlywheels-logo.svg"
+        alt=""
+        className={cn("shrink-0", small ? "size-8" : "size-9 sm:size-11")}
+      />
+      <span>
+        Only<span className="text-gradient pr-0.5">Wheels</span>
+      </span>
     </Link>
   );
 }

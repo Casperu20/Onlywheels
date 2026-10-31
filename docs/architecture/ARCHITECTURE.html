@@ -870,7 +870,7 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 </tbody>
 </table>
 <p>✅ implemented · 🧱 models/interfaces + design notes in code · ❌ not started</p>
-<p>Not prepared at all (only described in this document): Apple login, maps for the garage list, Wheel-Size API, Django Channels, PostHog analytics, Flower, mypy.</p>
+<p>Not prepared at all (only described in this document): Apple login, maps for the garage list, Django Channels, PostHog analytics, Flower, mypy.</p>
 <h3 id="131-decisions-changed">13.1 Decisions that changed during implementation</h3>
 <table>
 <thead>
@@ -883,7 +883,7 @@ primary keys as <strong>UUID</strong>; custom <code>User</code> model from day o
 <tr><td>Stock reservation</td><td>15 min</td><td>30 min</td><td>Minimum Stripe Checkout session length</td></tr>
 <tr><td>Payments in dev</td><td>Stripe test</td><td>Simulated provider by default + Stripe test</td><td>Demo without any account; production refuses it</td></tr>
 <tr><td>Background jobs (dev)</td><td>Celery + Redis</td><td>Celery eager mode</td><td>No Docker/Redis on dev machines yet</td></tr>
-<tr><td>Fitment data</td><td>Wheel-Size API</td><td>13 hand-curated demo generations</td><td>No free dataset</td></tr>
+<tr><td>Fitment data</td><td>Wheel-Size API, synced by Celery Beat</td><td>Wheel-Size API fetched on first use and stored; 13 demo generations when no key is set</td><td>Free Sandbox key = 300 requests/day, enough when each car is fetched once</td></tr>
 <tr><td>Fitment storage</td><td><code>oem_sizes</code> ArrayField</td><td><code>tire_sizes</code> JSON + diameter/width ranges</td><td>Simpler editing, range checks</td></tr>
 <tr><td>Search</td><td>Full-text + trigram</td><td><code>icontains</code> + exact SKU</td><td>Enough for the demo catalog</td></tr>
 <tr><td>API client</td><td>orval-generated</td><td>Hand-written <code>api.ts</code>, orval config ready</td><td>Generation needs the running backend</td></tr>

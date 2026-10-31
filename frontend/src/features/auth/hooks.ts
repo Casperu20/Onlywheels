@@ -41,6 +41,11 @@ export function useGoogleLogin() {
   return useMutation({ mutationFn: authApi.google, onSuccess: setSession });
 }
 
+export function useUpdateMe() {
+  const setSession = useSetSession();
+  return useMutation({ mutationFn: authApi.updateMe, onSuccess: setSession });
+}
+
 export function useLogout() {
   const clearSession = useClearSession();
   return useMutation({ mutationFn: authApi.logout, onSettled: clearSession });

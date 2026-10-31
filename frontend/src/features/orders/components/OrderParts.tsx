@@ -50,7 +50,14 @@ export function TotalsTable({
       {row(t("checkout.subtotal"), totals.subtotal)}
       {Number(totals.discount) > 0 &&
         row(`${t("checkout.discount")}${totals.voucher_code ? ` (${totals.voucher_code})` : ""}`, totals.discount, true)}
-      {row(t("checkout.shipping"), totals.shipping)}
+      {Number(totals.shipping) > 0 ? (
+        row(t("checkout.shipping"), totals.shipping)
+      ) : (
+        <div className="flex justify-between gap-4">
+          <dt className="text-muted-foreground">{t("checkout.shipping")}</dt>
+          <dd className="font-semibold text-success">{t("checkout.free")}</dd>
+        </div>
+      )}
       {Number(totals.fitting) > 0 && row(t("checkout.fitting"), totals.fitting)}
       <div className="mt-2 flex justify-between gap-4 border-t border-border pt-3 text-base font-extrabold">
         <dt>{t("checkout.total")}</dt>

@@ -3,6 +3,26 @@
 Everything below runs on the **development machine**. This repository only contains source and config;
 nothing has to be installed globally except the tools in step 1.
 
+## 0. Preparing a new laptop – the whole sequence
+
+Do the steps in this order; each links to the details. The order matters: lock files and migrations must exist
+before the first push, otherwise the first CI run fails.
+
+| # | What | Details | Result |
+|---|---|---|---|
+| 1 | Install the tools, create a GitHub account | [§1](#1-tools-one-time) | `git`, `uv`, `node`, `pnpm` work |
+| 2 | Get the code: extract `onlywheels.zip` (e.g. to `C:\dev\`) or `git clone` the repository | [§10.1](#101-first-commit-from-the-zip) | Folder `onlywheels/` |
+| 3 | PostgreSQL | [§2](#2-postgresql--pick-one-option) | A `DATABASE_URL` |
+| 4 | Backend first run: `.env`, `uv sync`, `makemigrations`, `migrate`, `seed_demo`, tests | [§3](#3-backend-django) | API on :8000, `uv.lock` + migrations created |
+| 5 | Frontend first run (second terminal, Django keeps running): `.env.local`, `pnpm install`, checks, `pnpm api:generate` | [§4](#4-frontend-react--vite) | App on :5173, `pnpm-lock.yaml` + generated client created |
+| 6 | `git init` and commit everything (incl. the generated files) | [§10.1](#101-first-commit-from-the-zip) | Clean `git status` |
+| 7 | Create the GitHub repository and push | [§10.2](#102-github-repository-and-the-first-ci-run) | CI runs and is green |
+| 8 | Add the teammate, protect `main` | [§10.3](#103-teammate-and-branch-protection) | Changes only via reviewed pull requests |
+| 9 | Optional: Google login, Stripe test mode, Docker | [§5](#5-google-login-optional-until-needed), [§6](#6-payments), [DEPLOYMENT.md §3.5](DEPLOYMENT.md#35-trying-the-production-stack-locally) | — |
+
+The second developer only does steps 1, 3, 4 and 5 after cloning (`git clone`, no `git init`), without
+`makemigrations` (the migrations are already committed).
+
 ## 1. Tools (one time)
 
 | Tool | Version | Windows install |
@@ -11,11 +31,15 @@ nothing has to be installed globally except the tools in step 1.
 | Python | 3.12+ | `winget install Python.Python.3.12` |
 | uv (Python packages) | latest | `winget install astral-sh.uv` |
 | Node.js | 20.19+ / 22 LTS | `winget install OpenJS.NodeJS.LTS` |
-| pnpm | 10+ | `corepack enable pnpm` (run after installing Node) |
+| pnpm | 10 (pinned) | `corepack enable pnpm` (run after installing Node) – then `pnpm` automatically uses the version pinned in `frontend/package.json` (`packageManager`), the same one CI and Docker use. Without corepack: `npm install -g pnpm@10` |
 | PostgreSQL | 16 | see step 2 |
 | Stripe CLI | latest | needed from phase E – `winget install Stripe.StripeCLI` |
+| Docker Desktop | optional | `winget install Docker.DockerDesktop` – only for PostgreSQL option A or to try the production stack (free for personal and education use) |
 
 Check: `git --version`, `uv --version`, `node --version`, `pnpm --version`.
+
+Also needed: a free **GitHub account** (students: apply for the free
+[GitHub Student Developer Pack](https://education.github.com/pack), which includes GitHub Pro).
 
 Recommended VS Code extensions: Python, Pylance, Ruff, ESLint, Tailwind CSS IntelliSense.
 
@@ -63,7 +87,7 @@ Copy-Item .env.example .env          # then edit DATABASE_URL and DJANGO_SECRET_
 uv sync                              # creates .venv and installs dependencies
 uv run python manage.py makemigrations   # first time only (creates migrations for all apps), then commit
 uv run python manage.py migrate
-uv run python manage.py seed_demo    # demo cars + fitment, products + stock, garages, vouchers (safe to re-run)
+uv run python manage.py seed_demo    # demo cars + fitment, products + photos + stock, garages, vouchers (safe to re-run)
 uv run python manage.py createsuperuser
 uv run python manage.py runserver
 ```
@@ -77,13 +101,16 @@ Generate a secret key: `uv run python -c "import secrets; print(secrets.token_ur
 | http://127.0.0.1:8000/api/schema/ | OpenAPI schema (input for orval) |
 | http://127.0.0.1:8000/api/v1/health/ | Health check |
 
-Checks:
+Checks (the same ones CI runs):
 
 ```powershell
-uv run pytest
 uv run ruff check .
-uv run ruff format --check .
+uv run python manage.py makemigrations --check --dry-run
+uv run python manage.py spectacular --validate --fail-on-warn --file schema.yml
+uv run pytest
 ```
+
+`uv run ruff format .` formats the code; it is not enforced by CI.
 
 ## 4. Frontend (React + Vite)
 
@@ -94,12 +121,13 @@ pnpm install
 pnpm dev                 # http://localhost:5173  (proxies /api and /media to Django)
 ```
 
-Checks:
+Checks (the same ones CI runs):
 
 ```powershell
 pnpm typecheck
 pnpm lint
 pnpm test
+pnpm build
 ```
 
 ### Generated API client
@@ -131,6 +159,23 @@ pnpm dlx shadcn@latest add dialog select tabs sheet
    - `frontend/.env.local` → `VITE_GOOGLE_CLIENT_ID=...`
 
 The “Continue with Google” button only appears when `VITE_GOOGLE_CLIENT_ID` is set.
+
+### Real car database – all European cars (optional)
+
+Without a key the car selector only has the 13 demo cars from `seed_demo`. With a free
+[Wheel-Size](https://developer.wheel-size.com/) key it lists every make/model/generation sold in Europe,
+with real factory fitment (PCD, center bore, offsets, OEM tyre sizes).
+
+1. Sign up at https://developer.wheel-size.com/ and request the **Sandbox** plan (free, approved manually within a few hours).
+2. `backend/.env` → `WHEEL_SIZE_API_KEY=<your key>` and restart Django.
+
+How it works (`backend/apps/vehicles/wheelsize.py`): nothing is downloaded in bulk. The first time somebody opens
+a make, model or generation, the backend asks Wheel-Size once and stores the answer in our tables; afterwards it is
+served from the database (refreshed after 30 days). This keeps us inside the Sandbox limit of **300 requests/day**.
+If the API is down or the quota is used up, the shop keeps working with what is already stored.
+Imported data is visible (and editable) in the admin under Vehicles.
+
+> The Sandbox licence is for development/testing only – a public shop needs a paid plan.
 
 ## 6. Payments
 
@@ -178,6 +223,86 @@ Variables go in `backend/.env` (or `frontend/.env.local` for `VITE_*`); the full
 
 PWA: `pnpm dev` does **not** register the service worker; use `pnpm build; pnpm preview` to test install/offline.
 After a new build the service worker updates itself on the next page load.
+
+## 10. Git, GitHub and CI (one time)
+
+### 10.1 First commit from the zip
+
+After the backend and frontend first runs (§3, §4), so the generated files exist:
+
+```powershell
+git config --global user.name "Your Name"            # once per laptop, otherwise the commit fails
+git config --global user.email "you@example.com"     # use the email of your GitHub account
+cd C:\dev\onlywheels                 # the folder extracted from onlywheels.zip
+git init -b main
+git status                           # .env, .env.local, .venv, node_modules must NOT be listed
+git add .
+git commit -m "Initial import of OnlyWheels"
+```
+
+The commit must contain these files created on the first run – CI depends on them:
+
+| File(s) | Created by |
+|---|---|
+| `backend/uv.lock` | `uv sync` |
+| `backend/apps/*/migrations/0001_initial.py` | `makemigrations` |
+| `frontend/pnpm-lock.yaml` | `pnpm install` |
+| `frontend/src/api/generated/` | `pnpm api:generate` |
+
+Secrets stay out of Git automatically (`.gitignore`): `backend/.env`, `frontend/.env.local`, `infra/.env.prod`.
+
+### 10.2 GitHub repository and the first CI run
+
+1. github.com → **New repository** → name `onlywheels`, Private or Public (see §10.4), **no** README,
+   `.gitignore` or license (the project has them).
+2. Push:
+
+   ```powershell
+   git remote add origin https://github.com/<your-user>/onlywheels.git
+   git push -u origin main
+   ```
+
+   The first push opens a browser window to log in to GitHub (Git Credential Manager).
+3. Repository → **Actions** tab: the **CI** workflow starts by itself (no setup needed – GitHub picks up
+   `.github/workflows/ci.yml`). Jobs: `backend` and `frontend` in parallel, then `docker`.
+4. Red job → open it, read the failing step, fix locally, commit, push again. Common causes and fixes:
+   [DEPLOYMENT.md §6.5](DEPLOYMENT.md#65-when-ci-fails).
+
+What each step checks: [DEPLOYMENT.md §6](DEPLOYMENT.md#6-ci--githubworkflowsciyml).
+
+### 10.3 Teammate and branch protection
+
+1. Repository → **Settings → Collaborators → Add people** → the other developer (write access).
+2. After CI was green once: **Settings → Branches → Add branch protection rule** (or **Rules → Rulesets**) for
+   `main`: require a pull request with 1 approval and require the status checks `backend`, `frontend`, `docker`.
+3. Daily work: `git switch -c feat/<name>` → commit → `git push -u origin feat/<name>` → open a pull request
+   → CI runs → the other developer reviews → merge.
+
+### 10.4 Does CI cost anything?
+
+For this project: **no**, as long as nothing paid is enabled. GitHub's rules (checked October 2026):
+
+| Repository | GitHub Actions on standard Linux runners (what `ci.yml` uses) |
+|---|---|
+| **Public** | Free, unlimited |
+| **Private**, GitHub Free account | $12 of usage included per month ≈ **2,000 minutes** ($0.006/min) |
+| **Private**, GitHub Pro (free with the Student Developer Pack) | $18 included ≈ **3,000 minutes** |
+
+- One CI run of this project takes roughly 8–12 runner minutes in total (three jobs, estimate – check the real
+  number in the Actions tab after the first runs). That is about 150–350 runs per month on a private repository.
+- **Without a payment method on the account, GitHub cannot charge you**: when the included usage is used up,
+  workflows simply stop until the next month. Don't add a card, or set the Actions budget to $0.
+- Minutes are counted for the **repository owner** (your account), also when the teammate pushes.
+- Storage: the pnpm cache uses the included 10 GB cache per repository; the workflow uploads no artifacts or
+  packages, so there is no storage cost.
+- Already built in to save minutes: a new push cancels the older run of the same branch, and every job stops
+  after 15 minutes if something hangs.
+- If minutes ever get tight on a private repository: run the `docker` job only after merges to `main`
+  (add `if: github.event_name == 'push'` to that job) – it is the slowest job.
+- Usage: GitHub → your avatar → **Settings → Billing and licensing → Usage**.
+
+A public repository is fine for a university project as long as no secrets are committed (they are ignored by
+`.gitignore`), but check whether your course requires the code to be private.
 
 ## Troubleshooting
 

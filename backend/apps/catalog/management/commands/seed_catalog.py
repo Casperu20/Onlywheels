@@ -1,13 +1,18 @@
+import json
 from decimal import Decimal
+from pathlib import Path
 
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils.text import slugify
 
-from apps.catalog.models import Brand, Category, Product, ProductType, ProductVariant
+from apps.catalog.models import Brand, Category, Product, ProductMedia, ProductType, ProductVariant
 from apps.inventory.models import StockItem
 
 # DEMO DATA – fictional prices and stock (same spirit as docs/prototype/index.html).
+# Photos: Wikimedia Commons (CC0 / CC BY / CC BY-SA), they only illustrate the product type.
+PHOTOS = Path(__file__).resolve().parents[2] / "demo_media"
 
 BRANDS = ["BBS", "OZ Racing", "Vossen", "Borbet", "AEZ", "Continental", "Michelin", "OnlyWheels"]
 
@@ -50,39 +55,44 @@ def accessory(sku, label, price, stock, thread=""):
 PRODUCTS = [
     {
         "type": ProductType.WHEEL, "brand": "BBS", "category": "jante-aliaj", "name": "CH-R",
-        "style": "multi-spoke", "badge": "Bestseller", "featured": True,
+        "style": "mesh", "badge": "bestseller", "featured": True, "photo": "bbs-ch-r",
         "description": "Jantă turnată cu design multispiță, inspirată din motorsport.",
+        "description_en": "Cast wheel with a motorsport-inspired cross-spoke design.",
         "variants": [
-            wheel("BBS-CHR-18-80-35-5112", "silver", 18, "8.0", 35, "5x112", "82.0", "1690", 12),
-            wheel("BBS-CHR-19-85-35-5112", "silver", 19, "8.5", 35, "5x112", "82.0", "1890", 16),
-            wheel("BBS-CHR-19-85-35-5120", "silver", 19, "8.5", 35, "5x120", "82.0", "1890", 8),
+            wheel("BBS-CHR-18-80-35-5112", "black", 18, "8.0", 35, "5x112", "82.0", "1690", 12),
+            wheel("BBS-CHR-19-85-35-5112", "black", 19, "8.5", 35, "5x112", "82.0", "1890", 16),
+            wheel("BBS-CHR-19-85-35-5120", "black", 19, "8.5", 35, "5x120", "82.0", "1890", 8),
         ],
     },
     {
         "type": ProductType.WHEEL, "brand": "OZ Racing", "category": "jante-aliaj",
-        "name": "Ultraleggera", "style": "Y-spoke", "badge": "Selecția noastră", "featured": True,
-        "description": "Jantă ușoară, cu spițe în Y, pentru un look sport.",
+        "name": "Ultraleggera", "style": "multi_spoke", "badge": "our_pick", "featured": True,
+        "photo": "oz-ultraleggera",
+        "description": "Jantă ușoară, cu spițe subțiri, pentru un look sport.",
+        "description_en": "Lightweight wheel with slim spokes for a sporty look.",
         "variants": [
-            wheel("OZ-ULT-17-75-45-5112", "black", 17, "7.5", 45, "5x112", "75.0", "1290", 20),
-            wheel("OZ-ULT-18-80-45-5112", "black", 18, "8.0", 45, "5x112", "75.0", "1490", 16),
-            wheel("OZ-ULT-18-80-35-5112", "black", 18, "8.0", 35, "5x112", "75.0", "1490", 12),
-            wheel("OZ-ULT-18-80-35-5120", "black", 18, "8.0", 35, "5x120", "79.0", "1490", 8),
+            wheel("OZ-ULT-17-75-45-5112", "bronze", 17, "7.5", 45, "5x112", "75.0", "1290", 20),
+            wheel("OZ-ULT-18-80-45-5112", "bronze", 18, "8.0", 45, "5x112", "75.0", "1490", 16),
+            wheel("OZ-ULT-18-80-35-5112", "bronze", 18, "8.0", 35, "5x112", "75.0", "1490", 12),
+            wheel("OZ-ULT-18-80-35-5120", "bronze", 18, "8.0", 35, "5x120", "79.0", "1490", 8),
         ],
     },
     {
         "type": ProductType.WHEEL, "brand": "Vossen", "category": "jante-aliaj", "name": "HF-5",
-        "style": "split-spoke", "badge": "Design nou", "featured": True,
+        "style": "split_spoke", "badge": "new", "featured": True, "photo": "vossen-hf-5",
         "description": "Design hibrid forjat, pentru mașini premium.",
+        "description_en": "Hybrid forged design for premium cars.",
         "variants": [
-            wheel("VOS-HF5-19-85-35-5112", "bronze", 19, "8.5", 35, "5x112", "66.6", "2250", 8),
-            wheel("VOS-HF5-20-90-32-5112", "bronze", 20, "9.0", 32, "5x112", "66.6", "2450", 8),
+            wheel("VOS-HF5-19-85-35-5112", "silver", 19, "8.5", 35, "5x112", "66.6", "2250", 8),
+            wheel("VOS-HF5-20-90-32-5112", "silver", 20, "9.0", 32, "5x112", "66.6", "2450", 8),
             wheel("VOS-HF5-20-90-32-5112-GM", "gunmetal", 20, "9.0", 32, "5x112", "66.6", "2450", 4),
         ],
     },
     {
         "type": ProductType.WHEEL, "brand": "Borbet", "category": "jante-aliaj", "name": "Y",
-        "style": "Y-spoke", "badge": "Ofertă", "featured": True,
+        "style": "y_spoke", "badge": "offer", "featured": True, "photo": "borbet-y",
         "description": "Clasic, robust și accesibil.",
+        "description_en": "Classic, sturdy and affordable.",
         "variants": [
             wheel("BOR-Y-17-75-45-5112", "silver", 17, "7.5", 45, "5x112", "57.1", "790", 24, old="920"),
             wheel("BOR-Y-18-80-40-5112", "silver", 18, "8.0", 40, "5x112", "66.6", "890", 24, old="1050"),
@@ -91,26 +101,29 @@ PRODUCTS = [
     },
     {
         "type": ProductType.WHEEL, "brand": "AEZ", "category": "jante-aliaj", "name": "Steam",
-        "style": "5-spoke",
-        "description": "Cinci spițe late, finisaj gunmetal.",
+        "style": "five_spoke", "photo": "aez-steam",
+        "description": "Cinci spițe late, finisaj argintiu.",
+        "description_en": "Five wide spokes in a silver finish.",
         "variants": [
-            wheel("AEZ-STM-18-80-45-5112", "gunmetal", 18, "8.0", 45, "5x112", "66.5", "990", 16),
-            wheel("AEZ-STM-19-85-40-5112", "gunmetal", 19, "8.5", 40, "5x112", "66.5", "1150", 12),
+            wheel("AEZ-STM-18-80-45-5112", "silver", 18, "8.0", 45, "5x112", "66.5", "990", 16),
+            wheel("AEZ-STM-19-85-40-5112", "silver", 19, "8.5", 40, "5x112", "66.5", "1150", 12),
         ],
     },
     {
         "type": ProductType.WHEEL, "brand": "OZ Racing", "category": "jante-aliaj",
-        "name": "Superturismo GT", "style": "multi-spoke",
+        "name": "Superturismo GT", "style": "multi_spoke", "featured": True, "photo": "oz-superturismo-gt",
         "description": "Inspirată din competițiile de turisme.",
+        "description_en": "Inspired by touring car racing.",
         "variants": [
-            wheel("OZ-STG-17-70-45-5112", "white", 17, "7.0", 45, "5x112", "75.0", "1090", 8),
-            wheel("OZ-STG-18-80-48-5112", "black", 18, "8.0", 48, "5x112", "75.0", "1190", 12),
+            wheel("OZ-STG-17-70-45-5112", "gunmetal", 17, "7.0", 45, "5x112", "75.0", "1090", 8),
+            wheel("OZ-STG-18-80-48-5112", "gunmetal", 18, "8.0", 48, "5x112", "75.0", "1190", 12),
         ],
     },
     {
         "type": ProductType.TIRE, "brand": "Continental", "category": "anvelope-vara",
-        "name": "PremiumContact 7", "badge": "Vară", "featured": True,
+        "name": "PremiumContact 7", "badge": "summer", "featured": True, "photo": "conti-premiumcontact-7",
         "description": "Anvelopă de vară confortabilă, cu frânare scurtă pe ud.",
+        "description_en": "Comfortable summer tire with short braking distances in the wet.",
         "variants": [
             tire("CON-PC7-2055516", 205, 55, 16, 91, "V", "summer", "420", 40),
             tire("CON-PC7-2255017", 225, 50, 17, 98, "Y", "summer", "560", 32),
@@ -120,8 +133,9 @@ PRODUCTS = [
     },
     {
         "type": ProductType.TIRE, "brand": "Michelin", "category": "anvelope-vara",
-        "name": "Pilot Sport 5", "badge": "Sport",
+        "name": "Pilot Sport 5", "badge": "sport", "featured": True, "photo": "michelin-pilot-sport-5",
         "description": "Aderență sportivă și durată de viață mare.",
+        "description_en": "Sporty grip and a long service life.",
         "variants": [
             tire("MIC-PS5-2254517", 225, 45, 17, 94, "Y", "summer", "640", 24),
             tire("MIC-PS5-2254018", 225, 40, 18, 92, "Y", "summer", "720", 24),
@@ -131,8 +145,9 @@ PRODUCTS = [
     },
     {
         "type": ProductType.TIRE, "brand": "Continental", "category": "anvelope-iarna",
-        "name": "WinterContact TS 870 P",
+        "name": "WinterContact TS 870 P", "badge": "winter", "photo": "conti-wintercontact",
         "description": "Anvelopă de iarnă pentru zăpadă și drumuri reci.",
+        "description_en": "Winter tire for snow and cold roads.",
         "variants": [
             tire("CON-TS870-2055516", 205, 55, 16, 91, "H", "winter", "390", 32),
             tire("CON-TS870-2255017", 225, 50, 17, 98, "V", "winter", "480", 24),
@@ -141,8 +156,9 @@ PRODUCTS = [
     },
     {
         "type": ProductType.TIRE, "brand": "Michelin", "category": "anvelope-iarna",
-        "name": "Pilot Alpin 5",
+        "name": "Pilot Alpin 5", "badge": "winter", "photo": "michelin-pilot-alpin-5",
         "description": "Anvelopă de iarnă performantă pentru mașini puternice.",
+        "description_en": "High-performance winter tire for powerful cars.",
         "variants": [
             tire("MIC-PA5-2454518", 245, 45, 18, 100, "V", "winter", "890", 8),
             tire("MIC-PA5-2254019", 225, 40, 19, 93, "V", "winter", "930", 8),
@@ -150,37 +166,41 @@ PRODUCTS = [
     },
     {
         "type": ProductType.SET, "brand": "OnlyWheels", "category": "roti-complete",
-        "name": "Urban Silver", "badge": "Set complet", "featured": True,
+        "name": "Urban Silver", "style": "y_spoke", "badge": "set", "featured": True, "photo": "set-urban-silver",
         "description": "4 jante 18\" + 4 anvelope de vară, montate și echilibrate.",
+        "description_en": "4 × 18\" wheels + 4 summer tires, mounted and balanced.",
         "variants": [
             wheel_set("OW-SET-URB-18", "silver", 18, "8.0", 40, "5x112", "66.6", 225, 45, "7200", 4),
         ],
     },
     {
         "type": ProductType.SET, "brand": "OnlyWheels", "category": "roti-complete",
-        "name": "Sport Graphite", "badge": "Set complet",
+        "name": "Sport Graphite", "style": "split_spoke", "badge": "set", "photo": "set-sport-graphite",
         "description": "4 jante 19\" + 4 anvelope de vară, montate și echilibrate.",
+        "description_en": "4 × 19\" wheels + 4 summer tires, mounted and balanced.",
         "variants": [
             wheel_set("OW-SET-SPG-19", "black", 19, "8.5", 35, "5x112", "66.6", 225, 40, "9800", 3),
         ],
     },
     {
         "type": ProductType.ACCESSORY, "brand": "OnlyWheels", "category": "prezoane",
-        "name": "Kit prezoane", "badge": "Accesorii",
+        "name": "Kit prezoane", "badge": "accessory", "photo": "kit-prezoane",
         "description": "Set de 20 prezoane cu cap conic 60°.",
+        "description_en": "Set of 20 wheel bolts with a 60° conical seat.",
         "variants": [
-            accessory("OW-BOLT-M14150", "20 buc · M14×1.5", "190", 50, thread="M14x1.5"),
-            accessory("OW-BOLT-M14125", "20 buc · M14×1.25", "190", 50, thread="M14x1.25"),
+            accessory("OW-BOLT-M14150", "20 × M14×1.5", "190", 50, thread="M14x1.5"),
+            accessory("OW-BOLT-M14125", "20 × M14×1.25", "190", 50, thread="M14x1.25"),
         ],
     },
     {
         "type": ProductType.ACCESSORY, "brand": "OnlyWheels", "category": "inele-centrare",
-        "name": "Inele de centrare", "badge": "Accesorii",
+        "name": "Inele de centrare", "badge": "accessory", "photo": "inele-centrare",
         "description": "Set de 4 inele pentru jante cu alezaj mai mare decât butucul.",
+        "description_en": "Set of 4 hub-centric rings for wheels with a larger centre bore than the hub.",
         "variants": [
-            accessory("OW-RING-820-666", "Set 4 · 82.0 → 66.6 mm", "80", 30),
-            accessory("OW-RING-750-571", "Set 4 · 75.0 → 57.1 mm", "80", 30),
-            accessory("OW-RING-726-666", "Set 4 · 72.6 → 66.6 mm", "80", 30),
+            accessory("OW-RING-820-666", "4 × 82.0 → 66.6 mm", "80", 30),
+            accessory("OW-RING-750-571", "4 × 75.0 → 57.1 mm", "80", 30),
+            accessory("OW-RING-726-666", "4 × 72.6 → 66.6 mm", "80", 30),
         ],
     },
 ]
@@ -214,6 +234,7 @@ class Command(BaseCommand):
                     "style": data.get("style", ""),
                     "badge": data.get("badge", ""),
                     "description": data.get("description", ""),
+                    "description_en": data.get("description_en", ""),
                     "is_featured": data.get("featured", False),
                     "is_active": True,
                 },
@@ -227,7 +248,21 @@ class Command(BaseCommand):
                 )
                 StockItem.objects.update_or_create(variant=variant, defaults={"quantity": stock})
                 variant_count += 1
+            if data.get("photo") and not product.media.exists():
+                attach_photo(product, data["photo"])
 
         self.stdout.write(
             self.style.SUCCESS(f"Seeded {len(PRODUCTS)} products with {variant_count} variants.")
+        )
+
+
+def attach_photo(product: Product, name: str) -> None:
+    credit = json.loads((PHOTOS / "credits.json").read_text(encoding="utf-8"))[name]
+    with (PHOTOS / f"{name}.jpg").open("rb") as fh:
+        ProductMedia.objects.create(
+            product=product,
+            image=File(fh, name=f"{product.slug}.jpg"),
+            alt=f"{product.brand.name} {product.name}",
+            credit=f"{credit['author']} / Wikimedia Commons, {credit['license']} (cropped)"[:200],
+            credit_url=credit["source"],
         )

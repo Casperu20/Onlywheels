@@ -5,5 +5,5 @@ export { ForgotPasswordForm, ResetPasswordForm } from "./components/PasswordRese
 export { PrivacySection } from "./components/PrivacySection";
 export { RegisterForm } from "./components/RegisterForm";
 export { RequireAuth } from "./components/RequireAuth";
-export { meQueryKey, useLogout, useMe } from "./hooks";
+export { meQueryKey, useLogout, useMe, useUpdateMe } from "./hooks";
 export { safeNextPath } from "./schemas";

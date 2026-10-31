@@ -6,7 +6,7 @@ What to do next, in order. Background: [ARCHITECTURE.md §13](architecture/ARCHI
 > **Status:** phases A–G of the implementation plan plus the **production-readiness batch** (§3.1) are written and
 > were **tested in a temporary, isolated environment** (Python 3.11 venv + portable Node 22, SQLite instead of
 > PostgreSQL):
-> - backend: `manage.py check`, migrations for all apps, **147 pytest tests passed**, ruff clean,
+> - backend: `manage.py check`, migrations for all apps, **153 pytest tests passed**, ruff clean,
 >   OpenAPI schema valid (strict), every Django Admin page renders, `seed_demo` runs twice;
 >   production settings: `check --deploy` (only the expected test-key / HSTS-preload warnings), `collectstatic`
 >   with WhiteNoise, JSON logs;
@@ -39,6 +39,9 @@ What to do next, in order. Background: [ARCHITECTURE.md §13](architecture/ARCHI
 | 9 | Frontend checks | `pnpm typecheck` · `pnpm lint` · `pnpm test` | all green |
 | 10 | Generate API client | backend running → `pnpm api:generate` | `src/api/generated/` filled → **commit it** |
 | 11 | Run the app | `pnpm dev`, open http://localhost:5173 | home page with vehicle selector |
+| 12 | GitHub + CI | commit, create the repository, push ([SETUP.md §10](SETUP.md#10-git-github-and-ci-one-time)) | CI green; teammate added; `main` protected |
+
+The full order of steps 1–12 on a new laptop: [SETUP.md §0](SETUP.md#0-preparing-a-new-laptop--the-whole-sequence).
 
 Most likely first-run issues and where to look:
 
@@ -94,20 +97,20 @@ All of these are in the code and do nothing until the variable is set (details: 
 
 | Area | Limitation | Fix |
 |---|---|---|
-| Data | Fitment specs and products are **demo data** (approximate) | Wheel-Size API or supplier import (CSV via admin) |
+| Data | Without `WHEEL_SIZE_API_KEY`: 13 demo cars. With the free Sandbox key: all European cars, but only 300 API requests/day and "testing only" licence | Paid Wheel-Size plan before launch; products are still demo data (supplier CSV import) |
 | API client | Hand-written `api.ts` per feature | After step 10, switch features to `src/api/generated` gradually |
-| Images | Products use a drawn wheel placeholder | Upload photos in admin (`ProductMedia`) |
+| Images | Demo photos from Wikimedia Commons (`backend/apps/catalog/demo_media`, `frontend/src/assets/demo`); they show the product type, not the exact product. Author + licence are in `credits.json` and shown under each photo | Real supplier photos uploaded in admin (`ProductMedia`); keep the credit fields for licensed photos |
 | Search | `icontains` on name/brand + exact SKU | PostgreSQL full-text/trigram, then Meilisearch |
 | Background jobs | Celery runs inline (eager) in development | Production compose file runs Redis + worker + beat |
 | Payments | Simulated or Stripe test; no refunds via API | Refund from the Stripe dashboard; automate later |
 | Invoices / AWB | Not generated (phase 2 structure only) | SmartBill + courier integration |
 | Translations | Backend messages are English unless Django has a Romanian translation | Add `locale/ro` with `makemessages` |
 | Tests | No end-to-end test suite (flows checked manually); not yet run on PostgreSQL | Playwright happy path; CI runs PostgreSQL |
-| Bundle size | Pages are split, but the shared bundle is still ~645 KB (~205 KB gzipped): React DOM, React Router, zod, axios, i18next | Acceptable for now; revisit with `manualChunks` / lighter libraries if needed |
+| Bundle size | Pages are split, but the shared bundle is still ~680 KB (~215 KB gzipped): React DOM, React Router, zod, axios, i18next | Acceptable for now; revisit with `manualChunks` / lighter libraries if needed |
 | Docker / CI | Written but never executed here | Run once on a machine with Docker / on GitHub; fix paths if needed |
 | Garage partners | Use Django Admin (restricted) | React portal if needed |
-| Legal | No terms/privacy/cookie pages (the GDPR endpoints exist) | Required before real customers |
-| Not prepared | Apple login, maps for garages, Wheel-Size API, Django Channels, PostHog analytics | See [ARCHITECTURE.md §13](architecture/ARCHITECTURE.md#13-implementation-status-as-built) |
+| Legal | Terms, privacy, cookies and contact pages are **draft texts** (`/legal/*`, `/contact`) | Have them reviewed by a lawyer; add the real company details |
+| Not prepared | Apple login, maps for garages, Django Channels, PostHog analytics | See [ARCHITECTURE.md §13](architecture/ARCHITECTURE.md#13-implementation-status-as-built) |
 
 ## 4. Next steps (priority order)
 
@@ -117,7 +120,7 @@ All of these are in the code and do nothing until the variable is set (details: 
 3. Push to GitHub: `.github/workflows/ci.yml` runs ruff + migrations check + schema check + pytest on PostgreSQL,
    typecheck + lint + test + build for the frontend, and builds both Docker images. Make it green, then make it
    a required check on `main`.
-4. Replace demo data where possible; add real product photos.
+4. Replace demo data where possible; add real product photos from suppliers.
 
 ### 4.2 Deploy the demo on the domain
 Follow [DEPLOYMENT.md](DEPLOYMENT.md): either the single-server Docker stack (`infra/docker-compose.prod.yml`) or

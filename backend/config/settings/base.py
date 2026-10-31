@@ -119,6 +119,10 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 2
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 
+# Vehicle catalogue + fitment from the Wheel-Size API (apps/vehicles/wheelsize.py). Empty = demo seed data only.
+WHEEL_SIZE_API_KEY = env("WHEEL_SIZE_API_KEY", default="")
+WHEEL_SIZE_REGION = env("WHEEL_SIZE_REGION", default="eudm")
+
 # JWT stored in httpOnly cookies (web). Android will send the same token in the
 # Authorization header instead (see apps/accounts/authentication.py).
 SIMPLE_JWT = {

@@ -156,7 +156,7 @@ export function CheckoutPage() {
   return (
     <form onSubmit={onSubmit} noValidate className="container-page grid gap-8 py-10 lg:grid-cols-[1fr_380px]">
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-extrabold tracking-tight">{t("checkout.title")}</h1>
+        <h1 className="text-4xl font-extrabold md:text-5xl">{t("checkout.title")}</h1>
         {formError && (
           <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {formError}

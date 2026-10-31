@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,8 +26,10 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-1.5 text-xs transition-colors",
-        active ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
+        "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "border-primary bg-primary/20 text-foreground shadow-[0_0_18px_-6px] shadow-primary"
+          : "border-white/10 text-muted-foreground hover:border-white/25 hover:text-foreground",
       )}
     >
       {children}
@@ -50,6 +52,10 @@ export function CatalogFilters({ filters, onChange, onReset }: CatalogFiltersPro
   const [search, setSearch] = useState(filters.search);
   const [priceMin, setPriceMin] = useState(filters.price_min?.toString() ?? "");
   const [priceMax, setPriceMax] = useState(filters.price_max?.toString() ?? "");
+  // Open on desktop; on phones the products come first and filters are one tap away.
+  const [openInitially] = useState(
+    () => typeof window.matchMedia !== "function" || window.matchMedia("(min-width: 1024px)").matches,
+  );
 
   // Keep local inputs in sync when the URL changes (back button, reset).
   useEffect(() => setSearch(filters.search), [filters.search]);
@@ -99,8 +105,11 @@ export function CatalogFilters({ filters, onChange, onReset }: CatalogFiltersPro
         </form>
       </div>
 
-      <details className="rounded-2xl border border-border p-4 lg:open:pb-6" open>
-        <summary className="cursor-pointer text-sm font-semibold">{t("catalog.filters")}</summary>
+      <details className="group/filters rounded-2xl border border-white/[0.08] bg-card/50 p-4 lg:open:pb-6" open={openInitially}>
+        <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold">
+          {t("catalog.filters")}
+          <ChevronDown className="size-4 transition-transform group-open/filters:rotate-180" aria-hidden />
+        </summary>
         <div className="mt-4 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {brands && brands.length > 0 && (
             <FilterGroup title={t("catalog.brand")}>

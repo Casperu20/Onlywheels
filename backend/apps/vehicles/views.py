@@ -1,8 +1,11 @@
+import uuid
+
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from . import wheelsize
 from .models import UserVehicle, VehicleGeneration, VehicleMake, VehicleModel
 from .serializers import (
     GenerationDetailSerializer,
@@ -20,16 +23,30 @@ class PublicListMixin:
 
 @extend_schema(tags=["vehicles"])
 class MakeListView(PublicListMixin, generics.ListAPIView):
-    queryset = VehicleMake.objects.all()
     serializer_class = MakeSerializer
+
+    def get_queryset(self):
+        wheelsize.ensure_makes()
+        return VehicleMake.objects.all()
 
 
 @extend_schema(tags=["vehicles"])
 class ModelListView(PublicListMixin, generics.ListAPIView):
-    queryset = VehicleModel.objects.select_related("make")
     serializer_class = VehicleModelSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ("make",)
+
+    def get_queryset(self):
+        if make_id := _uuid(self.request.query_params.get("make")):
+            wheelsize.ensure_models(make_id)
+        return VehicleModel.objects.select_related("make")
+
+
+def _uuid(value):
+    try:
+        return uuid.UUID(str(value)) if value else None
+    except ValueError:
+        return None
 
 
 def _generations():
@@ -43,6 +60,8 @@ class GenerationListView(PublicListMixin, generics.ListAPIView):
     filterset_fields = ("model",)
 
     def get_queryset(self):
+        if model_id := _uuid(self.request.query_params.get("model")):
+            wheelsize.ensure_generations(model_id)
         return _generations()
 
 
@@ -52,6 +71,8 @@ class GenerationDetailView(generics.RetrieveAPIView):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
+        if generation_id := _uuid(self.kwargs.get("pk")):
+            wheelsize.ensure_fitment(generation_id)
         return _generations()
 
 
@@ -78,4 +99,5 @@ class UserVehicleViewSet(
         )
 
     def perform_create(self, serializer):
+        wheelsize.ensure_fitment(serializer.validated_data["generation"].pk)
         serializer.save(user=self.request.user)

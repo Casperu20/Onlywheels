@@ -4,6 +4,17 @@ import { apiClient } from "@/api/http";
 export type ProductType = "wheel" | "tire" | "set" | "accessory";
 export type Finish = "silver" | "black" | "bronze" | "gunmetal" | "chrome" | "white";
 export type Season = "summer" | "winter" | "all_season";
+export type WheelStyle = "five_spoke" | "split_spoke" | "y_spoke" | "multi_spoke" | "mesh";
+export type Badge =
+  | "bestseller"
+  | "new"
+  | "our_pick"
+  | "offer"
+  | "summer"
+  | "winter"
+  | "sport"
+  | "set"
+  | "accessory";
 
 export const PRODUCT_TYPES: ProductType[] = ["wheel", "tire", "set", "accessory"];
 export const FINISHES: Finish[] = ["silver", "black", "bronze", "gunmetal", "chrome", "white"];
@@ -53,8 +64,8 @@ export interface ProductListItem {
   type: ProductType;
   name: string;
   brand: BrandMini;
-  style: string;
-  badge: string;
+  style: WheelStyle | "";
+  badge: Badge | "";
   rating_avg: string;
   rating_count: number;
   min_price: string;
@@ -70,7 +81,7 @@ export interface ProductListItem {
 export interface ProductDetail extends ProductListItem {
   description: string;
   category: { id: string; name: string; slug: string; product_type: ProductType } | null;
-  media: { id: string; image: string; alt: string }[];
+  media: { id: string; image: string; alt: string; credit: string; credit_url: string }[];
   variants: Variant[];
   /** Phase 2 3D showroom; null until a GLB is uploaded in admin */
   model_3d: {

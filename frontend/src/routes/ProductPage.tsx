@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { useCartActions } from "@/features/cart";
 import {
   FitmentBadge,
-  WheelVisual,
+  ProductBadge,
+  ProductPhoto,
   defaultQuantity,
   useProduct,
   variantSummary,
@@ -53,7 +54,14 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
       {
         variantId: variant.id,
         quantity,
-        product: { id: product.id, slug: product.slug, name: product.name, type: product.type, brand: product.brand.name },
+        product: {
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          type: product.type,
+          brand: product.brand.name,
+          image: image?.image ?? null,
+        },
         variant,
       },
       {
@@ -71,24 +79,29 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
       </Link>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative rounded-3xl border border-border bg-linear-to-b from-[#202227] to-card p-10">
-          {image ? (
-            <img src={image.image} alt={image.alt || product.name} className="mx-auto aspect-square w-4/5 object-contain" />
-          ) : (
-            <WheelVisual type={product.type} finish={variant?.finish} className="mx-auto w-4/5" />
-          )}
+        <figure className="relative">
+          <div className="overflow-hidden rounded-3xl border border-white/[0.07]">
+            <ProductPhoto src={image?.image} alt={image?.alt || product.name} eager className="aspect-square w-full" />
+          </div>
           <FavoriteButton productId={product.id} isFavorite={product.is_favorite} className="absolute top-4 right-4" />
-        </div>
+          {image?.credit && (
+            <figcaption className="mt-2 text-[11px] text-muted-foreground">
+              {image.credit_url ? (
+                <a href={image.credit_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  {t("product.photo", { credit: image.credit })}
+                </a>
+              ) : (
+                t("product.photo", { credit: image.credit })
+              )}
+            </figcaption>
+          )}
+        </figure>
 
         <div className="flex flex-col gap-5">
           <div>
-            <p className="text-xs font-bold tracking-[2px] text-muted-foreground uppercase">{product.brand.name}</p>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight md:text-4xl">{product.name}</h1>
-            {product.badge && (
-              <span className="mt-3 inline-block rounded bg-[#35251e] px-2 py-0.5 text-xs font-bold text-[#ff9a70]">
-                {product.badge}
-              </span>
-            )}
+            <p className="text-xs font-bold tracking-[0.2em] text-primary uppercase">{product.brand.name}</p>
+            <h1 className="heading-display mt-2 text-5xl md:text-6xl">{product.name}</h1>
+            <ProductBadge badge={product.badge} className="mt-3" />
           </div>
 
           {vehicleLabel && (
@@ -163,18 +176,17 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
               </div>
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted-foreground">{t("product.total")}</span>
-                <span className="text-2xl font-extrabold">
+                <span className="font-display text-4xl leading-none font-extrabold">
                   {formatPrice(Number(variant.price) * quantity, locale)}
                 </span>
               </div>
-              <Button disabled={addToCart.isPending} onClick={onAddToCart}>
+              <Button size="lg" disabled={addToCart.isPending} onClick={onAddToCart}>
                 <ShoppingCart aria-hidden /> {t("product.addToCart")}
               </Button>
             </div>
           )}
 
           {product.description && <p className="leading-relaxed text-muted-foreground">{product.description}</p>}
-          <p className="text-xs text-muted-foreground">{t("catalog.demoNote")}</p>
         </div>
       </div>
 

@@ -152,6 +152,14 @@ def test_detail_unknown_slug_is_404(api_client):
     assert response.json()["error"]["code"] == "not_found"
 
 
+def test_detail_description_follows_accept_language(api_client):
+    product = make_product(description="Jantă sport", description_en="Sport wheel")
+    make_variant(product)
+
+    assert api_client.get(f"{URL}{product.slug}/", HTTP_ACCEPT_LANGUAGE="en").json()["description"] == "Sport wheel"
+    assert api_client.get(f"{URL}{product.slug}/", HTTP_ACCEPT_LANGUAGE="ro").json()["description"] == "Jantă sport"
+
+
 def test_detail_model_3d_is_optional(api_client):
     product = make_product()
     make_variant(product)
