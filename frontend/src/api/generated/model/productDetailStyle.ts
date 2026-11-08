@@ -5,8 +5,8 @@
  * REST API for the OnlyWheels web and Android apps.
  * OpenAPI spec version: 1.0.0
  */
-import { StyleEnum } from './styleEnum';
+import { WheelStyleEnum } from './wheelStyleEnum';
 import { BlankEnum } from './blankEnum';
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ProductDetailStyle = {...StyleEnum,...BlankEnum,} as const
+export const ProductDetailStyle = {...WheelStyleEnum,...BlankEnum,} as const

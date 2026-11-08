@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 
 import { useMe } from "@/features/auth";
 import type { Variant } from "@/features/catalog/api";
+import { fromBani, multiplyPrice, toBani } from "@/lib/format";
 
 import { cartApi, type CartProduct, type ServerCart } from "./api";
 import { useGuestCart, type GuestLine } from "./store";
@@ -34,8 +35,8 @@ export function fromServer(cart: ServerCart): CartLine[] {
     key: item.id,
     itemId: item.id,
     quantity: item.quantity,
-    unitPrice: Number(item.unit_price),
-    lineTotal: Number(item.line_total),
+    unitPrice: fromBani(toBani(item.unit_price)),
+    lineTotal: fromBani(toBani(item.line_total)),
     available: item.available,
     product: item.product,
     variant: item.variant,
@@ -46,8 +47,8 @@ export function fromGuest(lines: GuestLine[]): CartLine[] {
   return lines.map((line) => ({
     key: line.variantId,
     quantity: line.quantity,
-    unitPrice: Number(line.variant.price),
-    lineTotal: Number(line.variant.price) * line.quantity,
+    unitPrice: fromBani(toBani(line.variant.price)),
+    lineTotal: multiplyPrice(line.variant.price, line.quantity),
     available: line.variant.available,
     product: line.product,
     variant: line.variant,
@@ -56,7 +57,7 @@ export function fromGuest(lines: GuestLine[]): CartLine[] {
 
 export function summarize(lines: CartLine[]) {
   return {
-    subtotal: lines.reduce((sum, l) => sum + l.lineTotal, 0),
+    subtotal: fromBani(lines.reduce((sumBani, l) => sumBani + toBani(l.lineTotal), 0)),
     count: lines.reduce((sum, l) => sum + l.quantity, 0),
   };
 }

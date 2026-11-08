@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/api/http";
-import type { DeliveryMethod, OrderDetail } from "@/features/orders";
+import type { DeliveryMethod, OrderDetail, PaymentMethod } from "@/features/orders";
 
 export interface Quote {
   subtotal: string;
@@ -20,6 +20,7 @@ export interface QuoteRequest {
 }
 
 export interface CheckoutRequest extends QuoteRequest {
+  payment_method?: PaymentMethod;
   email: string;
   full_name: string;
   phone: string;

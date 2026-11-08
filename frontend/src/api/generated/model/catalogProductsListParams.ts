@@ -24,6 +24,10 @@ featured?: boolean;
  * One of: silver, black, bronze, gunmetal, chrome, white
  */
 finish?: string[];
+/**
+ * Only products with a 3D model
+ */
+has_3d?: boolean;
 in_stock?: boolean;
 /**
  * Ordonare

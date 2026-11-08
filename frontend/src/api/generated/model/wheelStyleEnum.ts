@@ -13,11 +13,11 @@
 * `multi_spoke` - Multi-spoke
 * `mesh` - Mesh / cross-spoke
  */
-export type StyleEnum = typeof StyleEnum[keyof typeof StyleEnum];
+export type WheelStyleEnum = typeof WheelStyleEnum[keyof typeof WheelStyleEnum];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const StyleEnum = {
+export const WheelStyleEnum = {
   five_spoke: 'five_spoke',
   split_spoke: 'split_spoke',
   y_spoke: 'y_spoke',

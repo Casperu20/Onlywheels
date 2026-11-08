@@ -36,4 +36,14 @@ describe("summarize", () => {
   it("adds up subtotal and pieces", () => {
     expect(summarize(fromGuest([line(4), line(2, "v2")]))).toEqual({ subtotal: 1500, count: 6 });
   });
+
+  it("avoids IEEE-754 floating-point drift on decimal prices using minor-unit math", () => {
+    const decimalLine: GuestLine = {
+      ...line(3, "v3"),
+      variant: { ...variant, id: "v3", price: "19.99" },
+    };
+    const items = fromGuest([decimalLine]);
+    expect(items[0].lineTotal).toBe(59.97);
+    expect(summarize(items)).toEqual({ subtotal: 59.97, count: 3 });
+  });
 });

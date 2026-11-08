@@ -523,12 +523,14 @@
     "viewOrder": "View order",
     "status": {
       "pending_payment": "Awaiting payment",
+      "confirmed": "Confirmed",
       "paid": "Paid",
       "processing": "Processing",
       "shipped": "Shipped",
       "ready_for_fitting": "Ready for fitting",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "returned": "Returned"
     }
   },
   "fakePay": {

@@ -8,12 +8,14 @@
 
 /**
  * * `pending_payment` - Pending payment
+* `confirmed` - Confirmed
 * `paid` - Paid
 * `processing` - Processing
 * `shipped` - Shipped
 * `ready_for_fitting` - Ready for fitting
 * `completed` - Completed
 * `cancelled` - Cancelled
+* `returned` - Returned (retur)
  */
 export type OrderStatusEnum = typeof OrderStatusEnum[keyof typeof OrderStatusEnum];
 
@@ -21,10 +23,12 @@ export type OrderStatusEnum = typeof OrderStatusEnum[keyof typeof OrderStatusEnu
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OrderStatusEnum = {
   pending_payment: 'pending_payment',
+  confirmed: 'confirmed',
   paid: 'paid',
   processing: 'processing',
   shipped: 'shipped',
   ready_for_fitting: 'ready_for_fitting',
   completed: 'completed',
   cancelled: 'cancelled',
+  returned: 'returned',
 } as const;

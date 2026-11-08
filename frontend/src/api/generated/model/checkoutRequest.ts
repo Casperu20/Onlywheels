@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { DeliveryMethodEnum } from './deliveryMethodEnum';
+import type { OrderPaymentMethodEnum } from './orderPaymentMethodEnum';
 
 export interface CheckoutRequest {
   delivery_method: DeliveryMethodEnum;
@@ -13,6 +14,7 @@ export interface CheckoutRequest {
   garage_id?: string | null;
   /** @maxLength 32 */
   voucher_code?: string;
+  payment_method?: OrderPaymentMethodEnum;
   /** @minLength 1 */
   email: string;
   /**

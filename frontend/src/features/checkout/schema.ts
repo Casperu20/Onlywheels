@@ -5,6 +5,7 @@ const required = z.string().trim().min(1, "validation.required");
 
 export const checkoutSchema = z.object({
   delivery_method: z.enum(["courier", "garage_fitting"]),
+  payment_method: z.enum(["card_online", "cash_on_delivery", "pay_at_garage"]).optional(),
   email: required.email("validation.email"),
   full_name: required.max(150),
   phone: z.string().trim().regex(/^\+?[0-9 ]{9,16}$/, "validation.phone"),

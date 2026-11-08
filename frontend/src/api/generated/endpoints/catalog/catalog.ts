@@ -22,7 +22,9 @@ import type {
 
 import type {
   Brand,
+  CarModel3D,
   CatalogBrandsListParams,
+  CatalogCarModelsListParams,
   CatalogCategoriesListParams,
   CatalogProductsListParams,
   CatalogProductsRetrieveParams,
@@ -201,6 +203,93 @@ export function useCatalogBrandsRetrieve<TData = Awaited<ReturnType<typeof catal
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCatalogBrandsRetrieveQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const catalogCarModelsList = (
+    params?: CatalogCarModelsListParams,
+ options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
+) => {
+      
+      
+      return apiClient<CarModel3D[]>(
+      {url: `/api/v1/catalog/car-models/`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getCatalogCarModelsListQueryKey = (params?: CatalogCarModelsListParams,) => {
+    return [
+    `/api/v1/catalog/car-models/`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getCatalogCarModelsListQueryOptions = <TData = Awaited<ReturnType<typeof catalogCarModelsList>>, TError = ErrorType<unknown>>(params?: CatalogCarModelsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCatalogCarModelsListQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof catalogCarModelsList>>> = ({ signal }) => catalogCarModelsList(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CatalogCarModelsListQueryResult = NonNullable<Awaited<ReturnType<typeof catalogCarModelsList>>>
+export type CatalogCarModelsListQueryError = ErrorType<unknown>
+
+
+export function useCatalogCarModelsList<TData = Awaited<ReturnType<typeof catalogCarModelsList>>, TError = ErrorType<unknown>>(
+ params: undefined |  CatalogCarModelsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof catalogCarModelsList>>,
+          TError,
+          Awaited<ReturnType<typeof catalogCarModelsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCatalogCarModelsList<TData = Awaited<ReturnType<typeof catalogCarModelsList>>, TError = ErrorType<unknown>>(
+ params?: CatalogCarModelsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof catalogCarModelsList>>,
+          TError,
+          Awaited<ReturnType<typeof catalogCarModelsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCatalogCarModelsList<TData = Awaited<ReturnType<typeof catalogCarModelsList>>, TError = ErrorType<unknown>>(
+ params?: CatalogCarModelsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useCatalogCarModelsList<TData = Awaited<ReturnType<typeof catalogCarModelsList>>, TError = ErrorType<unknown>>(
+ params?: CatalogCarModelsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof catalogCarModelsList>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCatalogCarModelsListQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

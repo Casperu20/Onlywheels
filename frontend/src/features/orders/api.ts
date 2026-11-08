@@ -1,18 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type {
+  AppointmentStatusEnum,
+  DeliveryMethodEnum,
+  OrderItem as GeneratedOrderItem,
+  OrderPaymentMethodEnum,
+  OrderStatusEnum,
+} from "@/api/generated/model";
 import { apiClient } from "@/api/http";
-import type { Paginated, ProductType } from "@/features/catalog/api";
+import type { Paginated } from "@/features/catalog/api";
 
-// Mirrors apps/orders/serializers.py.
-export type OrderStatus =
-  | "pending_payment"
-  | "paid"
-  | "processing"
-  | "shipped"
-  | "ready_for_fitting"
-  | "completed"
-  | "cancelled";
-export type DeliveryMethod = "courier" | "garage_fitting";
+// Canonical types derived from the OpenAPI schema (src/api/generated/model).
+export type OrderStatus = OrderStatusEnum;
+export type DeliveryMethod = DeliveryMethodEnum;
+export type PaymentMethod = OrderPaymentMethodEnum;
+export type OrderItem = GeneratedOrderItem;
+
 export type InvoiceStatus =
   | "pending"
   | "issuing"
@@ -46,6 +49,7 @@ export interface OrderSummary {
   number: string;
   status: OrderStatus;
   delivery_method: DeliveryMethod;
+  payment_method: PaymentMethod;
   total: string;
   currency: string;
   item_count: number;
@@ -54,18 +58,6 @@ export interface OrderSummary {
   reserved_until: string | null;
   can_pay: boolean;
   can_cancel: boolean;
-}
-
-export interface OrderItem {
-  id: string;
-  product_name: string;
-  product_slug: string;
-  product_type: ProductType;
-  sku: string;
-  description: string;
-  unit_price: string;
-  quantity: number;
-  line_total: string;
 }
 
 export interface OrderDetail extends OrderSummary {
@@ -89,7 +81,7 @@ export interface OrderDetail extends OrderSummary {
     garage: { name: string; slug: string; city: string; address: string; phone: string };
     slot_start: string;
     slot_end: string;
-    status: "held" | "booked" | "confirmed" | "completed" | "cancelled";
+    status: AppointmentStatusEnum;
   } | null;
   status_changes: { status: OrderStatus; note: string; created_at: string }[];
   invoice: OrderInvoice | null;

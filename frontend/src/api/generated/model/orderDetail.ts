@@ -7,14 +7,18 @@
  */
 import type { OrderStatusEnum } from './orderStatusEnum';
 import type { DeliveryMethodEnum } from './deliveryMethodEnum';
+import type { OrderPaymentMethodEnum } from './orderPaymentMethodEnum';
 import type { OrderItem } from './orderItem';
 import type { OrderDetailAppointment } from './orderDetailAppointment';
 import type { StatusChange } from './statusChange';
+import type { OrderDetailInvoice } from './orderDetailInvoice';
+import type { OrderDetailShipment } from './orderDetailShipment';
 
 export interface OrderDetail {
   readonly number: string;
   status?: OrderStatusEnum;
   delivery_method: DeliveryMethodEnum;
+  payment_method?: OrderPaymentMethodEnum;
   /** @pattern ^-?\d{0,10}(?:\.\d{0,2})?$ */
   total: string;
   /** @maxLength 3 */
@@ -60,4 +64,8 @@ export interface OrderDetail {
   /** @nullable */
   readonly appointment: OrderDetailAppointment;
   readonly status_changes: readonly StatusChange[];
+  /** @nullable */
+  readonly invoice: OrderDetailInvoice;
+  /** @nullable */
+  readonly shipment: OrderDetailShipment;
 }

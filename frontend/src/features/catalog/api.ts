@@ -1,29 +1,28 @@
+import type {
+  BadgeEnum,
+  Brand,
+  BrandMini,
+  FinishEnum,
+  FitmentResult,
+  ProductTypeEnum,
+  SeasonEnum,
+  WheelStyleEnum,
+} from "@/api/generated/model";
+import {
+  FinishEnum as FinishValues,
+  ProductTypeEnum as ProductTypeValues,
+} from "@/api/generated/model";
 import { apiClient } from "@/api/http";
 
-// Hand-written until the orval client is generated; mirrors apps/catalog/serializers.py.
-export type ProductType = "wheel" | "tire" | "set" | "accessory";
-export type Finish = "silver" | "black" | "bronze" | "gunmetal" | "chrome" | "white";
-export type Season = "summer" | "winter" | "all_season";
-export type WheelStyle = "five_spoke" | "split_spoke" | "y_spoke" | "multi_spoke" | "mesh";
-export type Badge =
-  | "bestseller"
-  | "new"
-  | "our_pick"
-  | "offer"
-  | "summer"
-  | "winter"
-  | "sport"
-  | "set"
-  | "accessory";
+export type ProductType = ProductTypeEnum;
+export type Finish = FinishEnum;
+export type Season = SeasonEnum;
+export type WheelStyle = WheelStyleEnum;
+export type Badge = BadgeEnum;
+export type { Brand, BrandMini, FitmentResult };
 
-export const PRODUCT_TYPES: ProductType[] = ["wheel", "tire", "set", "accessory"];
-export const FINISHES: Finish[] = ["silver", "black", "bronze", "gunmetal", "chrome", "white"];
-
-export interface FitmentResult {
-  fits: boolean;
-  needs_hub_rings: boolean;
-  issues: string[];
-}
+export const PRODUCT_TYPES: ProductType[] = Object.values(ProductTypeValues);
+export const FINISHES: Finish[] = Object.values(FinishValues);
 
 export interface Variant {
   id: string;
@@ -46,16 +45,6 @@ export interface Variant {
   thread_size: string;
   available: number;
   fitment: FitmentResult | null;
-}
-
-export interface BrandMini {
-  name: string;
-  slug: string;
-}
-
-export interface Brand extends BrandMini {
-  id: string;
-  logo: string | null;
 }
 
 export interface ProductListItem {

@@ -11,13 +11,32 @@ export const http = axios.create({
   headers: { Accept: "application/json" },
 });
 
-// Django needs the `csrftoken` cookie for every unsafe request; fetch it lazily the first time.
+// Django needs the `csrftoken` cookie for every unsafe request; fetch it lazily once (deduplicated).
 const SAFE_METHODS = ["get", "head", "options"];
+let csrfReady = false;
+let csrfPromise: Promise<void> | null = null;
+
+function ensureCsrfToken(): Promise<void> {
+  if (csrfReady || document.cookie.includes("csrftoken=")) {
+    csrfReady = true;
+    return Promise.resolve();
+  }
+  csrfPromise ??= http
+    .get("/api/v1/csrf/")
+    .then(() => {
+      csrfReady = true;
+    })
+    .finally(() => {
+      csrfPromise = null;
+    });
+  return csrfPromise;
+}
+
 http.interceptors.request.use(async (config) => {
   config.headers.set("Accept-Language", i18n.language || "ro");
   const method = (config.method ?? "get").toLowerCase();
-  if (!SAFE_METHODS.includes(method) && !document.cookie.includes("csrftoken=")) {
-    await http.get("/api/v1/csrf/");
+  if (!SAFE_METHODS.includes(method)) {
+    await ensureCsrfToken();
   }
   return config;
 });

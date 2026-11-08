@@ -8,12 +8,14 @@ import type { OrderDetail, OrderStatus } from "../api";
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   pending_payment: "bg-[#35251e] text-[#ff9a70]",
+  confirmed: "bg-success/15 text-success",
   paid: "bg-success/15 text-success",
   processing: "bg-success/15 text-success",
   shipped: "bg-success/15 text-success",
   ready_for_fitting: "bg-success/15 text-success",
   completed: "bg-secondary text-foreground",
   cancelled: "bg-destructive/15 text-destructive",
+  returned: "bg-secondary text-muted-foreground",
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {

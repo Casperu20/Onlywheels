@@ -527,12 +527,14 @@
     "viewOrder": "Vezi comanda",
     "status": {
       "pending_payment": "Așteaptă plata",
+      "confirmed": "Confirmată",
       "paid": "Plătită",
       "processing": "În procesare",
       "shipped": "Expediată",
       "ready_for_fitting": "Gata de montaj",
       "completed": "Finalizată",
-      "cancelled": "Anulată"
+      "cancelled": "Anulată",
+      "returned": "Returnată"
     }
   },
   "fakePay": {

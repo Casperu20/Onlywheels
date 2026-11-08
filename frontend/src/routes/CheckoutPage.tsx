@@ -4,7 +4,7 @@ import { CreditCard, Tag } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { applyFieldErrors, getApiError, getErrorMessage } from "@/api/errors";
 import { FormField } from "@/components/FormField";
@@ -39,6 +39,7 @@ function Step({ number, title, children }: { number: number; title: string; chil
 export function CheckoutPage() {
   const { t } = useTranslation();
   const locale = useLocale();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: user } = useMe();
   const cart = useCart();
@@ -55,6 +56,7 @@ export function CheckoutPage() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       delivery_method: "courier",
+      payment_method: "card_online",
       email: user?.email ?? "",
       full_name: user ? `${user.first_name} ${user.last_name}`.trim() : "",
       phone: user?.phone ?? "",
@@ -71,6 +73,7 @@ export function CheckoutPage() {
   const { register, handleSubmit, watch, setValue, setError, reset, getValues, formState } = form;
   const { errors } = formState;
   const delivery = watch("delivery_method");
+  const paymentMethod = watch("payment_method") ?? "card_online";
 
   // Prefill from the default saved address once it is loaded.
   const savedAddress = addresses.data?.find((a) => a.is_default) ?? addresses.data?.[0];
@@ -139,8 +142,12 @@ export function CheckoutPage() {
           })
           .catch(() => undefined);
       }
-      const { checkout_url } = await ordersApi.pay(order.number);
-      window.location.assign(checkout_url);
+      if ((values.payment_method ?? "card_online") === "card_online") {
+        const { checkout_url } = await ordersApi.pay(order.number);
+        window.location.assign(checkout_url);
+      } else {
+        navigate(`/checkout/success?order=${order.number}`, { replace: true });
+      }
     } catch (error) {
       const fields = getApiError(error)?.fields;
       if (fields?.slot_start || fields?.garage_id) {
@@ -185,7 +192,14 @@ export function CheckoutPage() {
                 type="button"
                 role="radio"
                 aria-checked={delivery === method}
-                onClick={() => setValue("delivery_method", method)}
+                onClick={() => {
+                  setValue("delivery_method", method);
+                  if (method === "courier" && paymentMethod === "pay_at_garage") {
+                    setValue("payment_method", "card_online");
+                  } else if (method === "garage_fitting" && paymentMethod === "cash_on_delivery") {
+                    setValue("payment_method", "card_online");
+                  }
+                }}
                 className={cn(
                   "rounded-xl border p-4 text-left",
                   delivery === method ? "border-primary bg-primary/5" : "border-border hover:border-[#45484f]",
