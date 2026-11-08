@@ -104,20 +104,40 @@ def _sync_generations(model: VehicleModel) -> None:
     model.save(update_fields=["synced_at", "updated_at"])
 
 
-def ensure_makes() -> None:
+def ensure_makes(*, force: bool = False) -> None:
+    if not enabled() or (not force and cache.get("wheelsize:makes")):
+        return
     _safely(_sync_makes)
 
 
-def ensure_models(make_id) -> None:
+def ensure_models(make_id, *, force: bool = False) -> None:
+    if not enabled():
+        return
     make = VehicleMake.objects.filter(pk=make_id).first()
-    if make:
-        _safely(_sync_models, make)
+    if make is None or (not force and _fresh(make.synced_at)):
+        return
+    if not force and make.synced_at is not None:
+        from .tasks import sync_models_task
+
+        if cache.add(f"wheelsize:task:model:{make.pk}", True, 300):
+            sync_models_task.delay(str(make.pk))
+        return
+    _safely(_sync_models, make)
 
 
-def ensure_generations(model_id) -> None:
+def ensure_generations(model_id, *, force: bool = False) -> None:
+    if not enabled():
+        return
     model = VehicleModel.objects.select_related("make").filter(pk=model_id).first()
-    if model:
-        _safely(_sync_generations, model)
+    if model is None or (not force and _fresh(model.synced_at)):
+        return
+    if not force and model.synced_at is not None:
+        from .tasks import sync_generations_task
+
+        if cache.add(f"wheelsize:task:gen:{model.pk}", True, 300):
+            sync_generations_task.delay(str(model.pk))
+        return
+    _safely(_sync_generations, model)
 
 
 # --- fitment ----------------------------------------------------------------
@@ -193,7 +213,16 @@ def _sync_fitment(generation: VehicleGeneration) -> None:
     generation.save(update_fields=["fitment_checked_at", "updated_at"])
 
 
-def ensure_fitment(generation_id) -> None:
+def ensure_fitment(generation_id, *, force: bool = False) -> None:
+    if not enabled():
+        return
     generation = VehicleGeneration.objects.select_related("model__make").filter(pk=generation_id).first()
-    if generation:
-        _safely(_sync_fitment, generation)
+    if generation is None or not generation.external_id or (not force and _fresh(generation.fitment_checked_at)):
+        return
+    if not force and generation.fitment_checked_at is not None:
+        from .tasks import sync_fitment_task
+
+        if cache.add(f"wheelsize:task:fitment:{generation.pk}", True, 300):
+            sync_fitment_task.delay(str(generation.pk))
+        return
+    _safely(_sync_fitment, generation)

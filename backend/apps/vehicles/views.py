@@ -23,23 +23,25 @@ class PublicListMixin:
 
 @extend_schema(tags=["vehicles"])
 class MakeListView(PublicListMixin, generics.ListAPIView):
+    queryset = VehicleMake.objects.all()
     serializer_class = MakeSerializer
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         wheelsize.ensure_makes()
-        return VehicleMake.objects.all()
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema(tags=["vehicles"])
 class ModelListView(PublicListMixin, generics.ListAPIView):
+    queryset = VehicleModel.objects.select_related("make")
     serializer_class = VehicleModelSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ("make",)
 
-    def get_queryset(self):
-        if make_id := _uuid(self.request.query_params.get("make")):
+    def list(self, request, *args, **kwargs):
+        if make_id := _uuid(request.query_params.get("make")):
             wheelsize.ensure_models(make_id)
-        return VehicleModel.objects.select_related("make")
+        return super().list(request, *args, **kwargs)
 
 
 def _uuid(value):
@@ -55,25 +57,27 @@ def _generations():
 
 @extend_schema(tags=["vehicles"])
 class GenerationListView(PublicListMixin, generics.ListAPIView):
+    queryset = _generations()
     serializer_class = GenerationSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ("model",)
 
-    def get_queryset(self):
-        if model_id := _uuid(self.request.query_params.get("model")):
+    def list(self, request, *args, **kwargs):
+        if model_id := _uuid(request.query_params.get("model")):
             wheelsize.ensure_generations(model_id)
-        return _generations()
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema(tags=["vehicles"])
 class GenerationDetailView(generics.RetrieveAPIView):
+    queryset = _generations()
     serializer_class = GenerationDetailSerializer
     permission_classes = (AllowAny,)
 
-    def get_queryset(self):
-        if generation_id := _uuid(self.kwargs.get("pk")):
+    def retrieve(self, request, *args, **kwargs):
+        if generation_id := _uuid(kwargs.get("pk")):
             wheelsize.ensure_fitment(generation_id)
-        return _generations()
+        return super().retrieve(request, *args, **kwargs)
 
 
 @extend_schema(tags=["vehicles"])

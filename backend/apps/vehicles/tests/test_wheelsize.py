@@ -103,3 +103,30 @@ def test_catalog_vehicle_filter_imports_missing_fitment(api_client, provider):
 def test_records_without_usable_data_give_no_spec():
     assert wheelsize.fitment_from_records([_record(bolt="N/A")]) is None
     assert wheelsize.fitment_from_records([]) is None
+
+
+def test_first_miss_works_when_celery_is_async_and_stale_refreshes_in_background(
+    api_client, provider, settings, monkeypatch
+):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.vehicles.tasks import sync_models_task
+
+    settings.CELERY_TASK_ALWAYS_EAGER = False
+    dispatched = []
+    monkeypatch.setattr(sync_models_task, "delay", lambda make_id: dispatched.append(make_id))
+
+    # First miss runs synchronously even with CELERY_TASK_ALWAYS_EAGER=False
+    api_client.get(f"{BASE}/makes/")
+    vw = VehicleMake.objects.get(slug="volkswagen")
+    models = api_client.get(f"{BASE}/models/", {"make": str(vw.pk)}).json()
+    assert len(models) == 1
+    assert dispatched == []
+
+    # Once synced, if it becomes stale (>30 days), it returns stored data and dispatches background refresh
+    VehicleMake.objects.filter(pk=vw.pk).update(synced_at=timezone.now() - timedelta(days=31))
+    models_stale = api_client.get(f"{BASE}/models/", {"make": str(vw.pk)}).json()
+    assert len(models_stale) == 1
+    assert dispatched == [str(vw.pk)]

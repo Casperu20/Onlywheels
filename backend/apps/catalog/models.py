@@ -157,6 +157,8 @@ class ProductVariant(TimeStampedModel):
         indexes = [
             models.Index(fields=["pcd"]),
             models.Index(fields=["diameter_in"]),
+            models.Index(fields=["product", "is_active", "price"]),
+            models.Index(fields=["is_active", "pcd", "center_bore_mm", "diameter_in"]),
         ]
         constraints = [
             models.CheckConstraint(condition=models.Q(price__gte=0), name="variant_price_gte_0"),
