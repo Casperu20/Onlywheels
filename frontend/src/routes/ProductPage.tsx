@@ -12,6 +12,7 @@ import {
   FitmentBadge,
   ProductBadge,
   ProductPhoto,
+  WheelVisual,
   defaultQuantity,
   useProduct,
   variantSummary,
@@ -20,7 +21,8 @@ import {
 import { FavoriteButton } from "@/features/favorites";
 import { ReviewsSection } from "@/features/reviews";
 import { useVehicleStore } from "@/features/vehicle";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, multiplyPrice } from "@/lib/format";
+import { useLocale } from "@/lib/useLocale";
 import { cn } from "@/lib/utils";
 import { NotFoundPage } from "@/routes/ErrorPages";
 
@@ -38,12 +40,14 @@ export function ProductPage() {
 }
 
 function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicleLabel?: string }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language === "en" ? "en-GB" : "ro-RO";
+  const { t } = useTranslation();
+  const locale = useLocale();
   const preferred = product.variants.find((v) => v.fitment?.fits) ?? product.variants[0];
   const [variantId, setVariantId] = useState(preferred?.id);
   const [quantity, setQuantity] = useState(defaultQuantity(product.type));
   const variant = product.variants.find((v) => v.id === variantId) ?? preferred;
+  const isWheelOrSet = product.type === "wheel" || product.type === "set";
+  const [viewMode, setViewMode] = useState<"photo" | "vector">("photo");
   const image = product.media[0];
   const navigate = useNavigate();
   const addToCart = useCartActions().add;
@@ -81,10 +85,58 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
       <div className="grid gap-10 lg:grid-cols-2">
         <figure className="relative">
           <div className="overflow-hidden rounded-3xl border border-white/[0.07]">
-            <ProductPhoto src={image?.image} alt={image?.alt || product.name} eager className="aspect-square w-full" />
+            {viewMode === "vector" || !image?.image ? (
+              <div className="relative grid aspect-square w-full place-items-center overflow-hidden bg-studio p-8">
+                <WheelVisual
+                  type={product.type}
+                  finish={variant?.finish}
+                  style={product.style}
+                  brake
+                  spin
+                  tire={product.type === "set"}
+                  slug={product.slug}
+                  className="size-full"
+                />
+              </div>
+            ) : (
+              <ProductPhoto src={image?.image} alt={image?.alt || product.name} eager className="aspect-square w-full" />
+            )}
           </div>
-          <FavoriteButton productId={product.id} isFavorite={product.is_favorite} className="absolute top-4 right-4" />
-          {image?.credit && (
+          <FavoriteButton productId={product.id} isFavorite={product.is_favorite} className="absolute top-4 right-4 z-10" />
+
+          {isWheelOrSet && image?.image && (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setViewMode("photo")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                  viewMode === "photo"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white/10 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t("product.photoTab", "Foto")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("vector")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                  viewMode === "vector"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-white/10 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>{t("product.studioTab", "Studio 2D")}</span>
+                {variant?.finish && (
+                  <span className="opacity-75">({t(`catalog.finishes.${variant.finish}`)})</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {viewMode === "photo" && image?.credit && (
             <figcaption className="mt-2 text-[11px] text-muted-foreground">
               {image.credit_url ? (
                 <a href={image.credit_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -177,7 +229,7 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted-foreground">{t("product.total")}</span>
                 <span className="font-display text-4xl leading-none font-extrabold">
-                  {formatPrice(Number(variant.price) * quantity, locale)}
+                  {formatPrice(multiplyPrice(variant.price, quantity), locale)}
                 </span>
               </div>
               <Button size="lg" disabled={addToCart.isPending} onClick={onAddToCart}>
@@ -208,6 +260,28 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
         ratingAvg={product.rating_avg}
         ratingCount={product.rating_count}
       />
+
+      {variant && (
+        <div className="fixed inset-x-0 bottom-[calc(53px+env(safe-area-inset-bottom,0px))] z-20 flex items-center justify-between gap-3 border-t border-white/10 bg-background/95 px-4 py-3 backdrop-blur-xl lg:hidden">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium text-muted-foreground">
+              {variantSummary(variant, product.type)}
+            </p>
+            <p className="font-display text-xl leading-none font-extrabold text-foreground">
+              {formatPrice(multiplyPrice(variant.price, quantity), locale)}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={addToCart.isPending}
+            onClick={onAddToCart}
+            className="shadow-md shadow-primary/25"
+          >
+            <ShoppingCart className="size-4" aria-hidden />
+            {t("product.addToCart")}
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

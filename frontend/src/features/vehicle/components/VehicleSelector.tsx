@@ -44,7 +44,7 @@ export function VehicleSelector({
 
   return (
     <form onSubmit={onSubmit} className="grid items-end gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 min-w-0">
         <Label htmlFor={`${ids}-make`}>01 / {t("vehicle.make")}</Label>
         <NativeSelect
           id={`${ids}-make`}
@@ -64,7 +64,7 @@ export function VehicleSelector({
           ))}
         </NativeSelect>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 min-w-0">
         <Label htmlFor={`${ids}-model`}>02 / {t("vehicle.model")}</Label>
         <NativeSelect
           id={`${ids}-model`}
@@ -84,7 +84,7 @@ export function VehicleSelector({
           ))}
         </NativeSelect>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 min-w-0">
         <Label htmlFor={`${ids}-generation`}>03 / {t("vehicle.generation")}</Label>
         <NativeSelect
           id={`${ids}-generation`}
@@ -101,8 +101,8 @@ export function VehicleSelector({
           ))}
         </NativeSelect>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={!selected || disabled}>
+      <div className="flex flex-wrap gap-2 w-full md:w-auto">
+        <Button type="submit" disabled={!selected || disabled} className="w-full md:w-auto">
           {submitIcon ?? <Car aria-hidden />} {submitLabel}
         </Button>
         {extraActions?.(selected)}

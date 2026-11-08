@@ -53,7 +53,14 @@ export function HomePage() {
               <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-primary" />
               {t("home.eyebrow")}
             </p>
-            <h1 id="hero-title" className="heading-display mt-6 text-[clamp(54px,7.6vw,108px)]">
+            <div className="relative mt-6 mb-1">
+              <img
+                src="/onlywheels-logo.webp"
+                alt="OnlyWheels"
+                className="h-16 w-auto object-contain drop-shadow-[0_15px_35px_rgba(255,100,45,0.4)] sm:h-20 lg:h-24"
+              />
+            </div>
+            <h1 id="hero-title" className="heading-display mt-2 text-[clamp(42px,5.8vw,88px)]">
               {t("home.title1")}
               <br />
               {t("home.title2")} <em className="text-gradient pr-3">{t("home.titleAccent")}</em>
@@ -207,7 +214,7 @@ export function HomePage() {
 function HeroStage() {
   const { t } = useTranslation();
   return (
-    <div className="group relative mx-auto aspect-square w-full max-w-[420px] md:max-w-[600px]">
+    <div className="group relative isolate mx-auto aspect-square w-full max-w-[420px] md:max-w-[600px]">
       <span
         aria-hidden
         className="heading-display text-outline pointer-events-none absolute top-1/2 left-0 hidden -translate-y-1/2 rotate-180 text-[clamp(40px,4.4vw,64px)] whitespace-nowrap [writing-mode:vertical-rl] md:block"
@@ -254,7 +261,7 @@ function HudChip({
   return (
     <span
       className={cn(
-        "absolute z-20 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-xl backdrop-blur-md",
+        "absolute z-10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-xl backdrop-blur-md",
         tone === "default" && "border-white/15 bg-black/50 text-white",
         tone === "success" && "border-success/40 bg-success/15 text-success",
         tone === "primary" && "border-primary/50 bg-primary/20 text-[#ffc2a8]",

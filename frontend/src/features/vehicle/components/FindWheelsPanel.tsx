@@ -26,7 +26,7 @@ export function FindWheelsPanel() {
       id="vehicle-search"
       className="relative mt-8 rounded-3xl bg-linear-to-r from-primary/70 via-white/10 to-electric/50 p-px shadow-[0_30px_80px_-40px_rgb(255_100_45/0.6)]"
     >
-      <div className="rounded-[calc(1.5rem-1px)] bg-[#121418]/95 p-6 backdrop-blur md:p-7">
+      <div className="rounded-[calc(1.5rem-1px)] bg-[#121418]/95 p-5 sm:p-6 md:p-7 backdrop-blur min-w-0 overflow-hidden">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="heading-display text-2xl md:text-3xl">{t("vehicle.panelTitle")}</h2>
           <Link to="/account/garage" className="text-xs font-semibold text-primary hover:underline">

@@ -2,24 +2,42 @@ import { Link } from "react-router";
 
 import { cn } from "@/lib/utils";
 
-export function Logo({ small = false }: { small?: boolean }) {
+interface LogoProps {
+  small?: boolean;
+  markOnly?: boolean;
+  className?: string;
+}
+
+export function Logo({ small = false, markOnly = false, className }: LogoProps) {
   return (
     <Link
       to="/"
       aria-label="OnlyWheels"
       className={cn(
-        "group flex shrink-0 items-center gap-2 font-display font-extrabold tracking-tight whitespace-nowrap uppercase italic",
-        small ? "text-xl" : "text-[22px] sm:text-[27px]",
+        "group flex shrink-0 items-center transition-transform focus-visible:outline-none",
+        className,
       )}
     >
-      <img
-        src="/onlywheels-logo.svg"
-        alt=""
-        className={cn("shrink-0", small ? "size-8" : "size-9 sm:size-11")}
-      />
-      <span>
-        Only<span className="text-gradient pr-0.5">Wheels</span>
-      </span>
+      <picture>
+        <source
+          srcSet={markOnly ? "/onlywheels-mark.webp" : "/onlywheels-logo.webp"}
+          type="image/webp"
+        />
+        <img
+          src={markOnly ? "/onlywheels-mark.png" : "/onlywheels-logo.png"}
+          alt="OnlyWheels"
+          className={cn(
+            "w-auto object-contain transition-transform duration-300 group-hover:scale-105 group-active:scale-95",
+            markOnly
+              ? small
+                ? "size-8"
+                : "size-10 sm:size-11"
+              : small
+                ? "h-7 sm:h-8"
+                : "h-9 sm:h-11 md:h-12",
+          )}
+        />
+      </picture>
     </Link>
   );
 }

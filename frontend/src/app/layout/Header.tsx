@@ -17,7 +17,7 @@ export function Header() {
   const cartCount = useCart().count;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-background/95 backdrop-blur-xl">
       <div className="container-page flex h-16 items-center justify-between gap-3 md:h-20 lg:gap-6">
         <Logo />
 

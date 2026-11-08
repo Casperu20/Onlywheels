@@ -23,12 +23,14 @@ export function ActiveVehicleBar({ vehicleId, onApply, onRemove }: ActiveVehicle
   if (vehicleId) {
     const label = generation ? vehicleLabel(generation, t("vehicle.present")) : "…";
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm">
-        <span className="flex items-center gap-2">
-          <Car className="size-4 text-success" aria-hidden />
-          {t("vehicle.filteringFor")} <b>{label}</b>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-success/30 bg-success/10 p-3.5 text-sm min-w-0 max-w-full overflow-hidden">
+        <span className="flex items-center gap-2 min-w-0">
+          <Car className="size-4 shrink-0 text-success" aria-hidden />
+          <span className="truncate">
+            {t("vehicle.filteringFor")} <b className="font-semibold">{label}</b>
+          </span>
         </span>
-        <Button variant="ghost" size="sm" onClick={onRemove}>
+        <Button variant="ghost" size="sm" onClick={onRemove} className="shrink-0 self-start sm:self-auto">
           <X aria-hidden /> {t("vehicle.removeFilter")}
         </Button>
       </div>
@@ -37,10 +39,18 @@ export function ActiveVehicleBar({ vehicleId, onApply, onRemove }: ActiveVehicle
 
   if (active) {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm">
-        <span className="text-muted-foreground">{t("vehicle.notFiltered")}</span>
-        <Button variant="secondary" size="sm" onClick={() => onApply(active.id)}>
-          <Car aria-hidden /> {t("vehicle.showFitting", { vehicle: active.label })}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card/60 p-3.5 text-sm min-w-0 max-w-full overflow-hidden">
+        <span className="text-muted-foreground min-w-0 text-xs sm:text-sm">{t("vehicle.notFiltered")}</span>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onApply(active.id)}
+          className="h-auto py-2 px-3 whitespace-normal text-left sm:text-center max-w-full text-xs font-semibold w-full sm:w-auto"
+        >
+          <Car className="size-4 shrink-0" aria-hidden />
+          <span className="break-words">
+            {t("vehicle.showFitting", { vehicle: active.label })}
+          </span>
         </Button>
       </div>
     );

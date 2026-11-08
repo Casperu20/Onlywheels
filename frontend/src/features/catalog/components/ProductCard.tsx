@@ -23,7 +23,12 @@ export function ProductCard({ product, vehicle }: { product: ProductListItem; ve
         <ProductBadge badge={product.badge} className="absolute top-3 left-3 z-10" />
         <ProductPhoto
           src={product.image}
-          className="size-full transition-transform duration-500 group-hover:scale-105"
+          type={product.type}
+          finish={variant?.finish}
+          style={product.style}
+          slug={product.slug}
+          spin
+          className="size-full transition-transform duration-500 group-hover:scale-105 group-hover:rotate-2"
         />
       </div>
       <FavoriteButton productId={product.id} isFavorite={product.is_favorite} className="absolute top-3 right-3 z-10" />

@@ -42,7 +42,7 @@ export function Footer() {
       <div aria-hidden className="racing-stripes absolute inset-x-0 top-0 h-1.5 opacity-60" />
       <div className="container-page grid gap-10 py-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="flex flex-col gap-4">
-          <Logo small />
+          <Logo className="w-fit" />
           <p className="max-w-xs text-sm text-muted-foreground">{t("footer.about")}</p>
         </div>
         {columns.map((column) => (
