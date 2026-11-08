@@ -218,13 +218,15 @@ function HeroStage() {
         aria-hidden
         className="absolute inset-[14%] rounded-full bg-[radial-gradient(circle,rgb(255_100_45/0.55),rgb(255_46_85/0.18)_45%,transparent_70%)] blur-2xl md:left-[20%]"
       />
-      <figure className="relative z-10 mx-auto w-[80%] translate-y-[6%] md:mr-0 md:ml-[18%] md:w-[76%]">
-        <img
-          src={heroPhoto}
-          alt=""
-          fetchPriority="high"
-          className="aspect-square w-full rounded-full object-cover shadow-[0_40px_60px_-20px_rgb(0_0_0/0.85)] ring-1 ring-white/15"
-        />
+      <figure className="relative z-10 mx-auto w-[80%] translate-y-[6%] md:w-[76%]">
+        <div className="aspect-square overflow-hidden rounded-full shadow-[0_40px_60px_-20px_rgb(0_0_0/0.85)] ring-1 ring-white/15">
+          <img
+            src={heroPhoto}
+            alt=""
+            fetchPriority="high"
+            className="size-full scale-[1.08] translate-x-[3%] -translate-y-[4%] object-cover"
+          />
+        </div>
         <figcaption className="mt-2 text-center text-[10px] text-muted-foreground">
           {t("product.photo", { credit: creditText("hero") })}
         </figcaption>
