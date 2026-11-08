@@ -108,5 +108,8 @@ class ProductFilter(filters.FilterSet):
         if variants is None:
             return queryset.none()
         user = getattr(self.request, "user", None)
-        queryset = annotate_listing(queryset, variants, user).order_by("-is_featured", "name")
-        return super().filter_queryset(queryset)
+        queryset = annotate_listing(queryset, variants, user).order_by("-is_featured", "name", "pk")
+        queryset = super().filter_queryset(queryset)
+        if self.form.cleaned_data.get("ordering"):
+            queryset = queryset.order_by(*queryset.query.order_by, "name", "pk")
+        return queryset

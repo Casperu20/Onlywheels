@@ -32,7 +32,7 @@ def annotate_listing(
 ) -> QuerySet[Product]:
     """
     Keep products that have at least one variant in `variants` and annotate:
-    cheapest_variant_id / min_price / min_price_old (cheapest matching variant), in_stock, is_favorite.
+    cheapest_variant_id / min_price (cheapest matching variant), in_stock, is_favorite.
     All variant filters must be applied to `variants` so they match the *same* variant.
     """
     variants = active_variants() if variants is None else variants
@@ -42,7 +42,6 @@ def annotate_listing(
     products = products.filter(Exists(matching)).annotate(
         cheapest_variant_id=Subquery(cheapest.values("pk")[:1]),
         min_price=Subquery(cheapest.values("price")[:1]),
-        min_price_old=Subquery(cheapest.values("old_price")[:1]),
         in_stock=Exists(matching.filter(in_stock_q())),
     )
     if user is not None and user.is_authenticated:

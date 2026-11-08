@@ -121,9 +121,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     brand = BrandMiniSerializer(read_only=True)
     min_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    old_price = serializers.DecimalField(
-        source="min_price_old", max_digits=10, decimal_places=2, read_only=True, allow_null=True
-    )
+    old_price = serializers.SerializerMethodField()
     in_stock = serializers.BooleanField(read_only=True)
     is_favorite = serializers.BooleanField(read_only=True)
     image = serializers.SerializerMethodField()
@@ -153,6 +151,22 @@ class ProductListSerializer(serializers.ModelSerializer):
             "cheapest_variant",
         )
 
+    @staticmethod
+    def _resolve_cheapest(obj: Product) -> ProductVariant | None:
+        if not hasattr(obj, "_cached_cheapest_variant"):
+            target = getattr(obj, "cheapest_variant_id", None)
+            obj._cached_cheapest_variant = next(
+                (v for v in obj.variants.all() if v.pk == target), None
+            )
+        return obj._cached_cheapest_variant
+
+    @extend_schema_field(serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True))
+    def get_old_price(self, obj: Product) -> str | None:
+        variant = self._resolve_cheapest(obj)
+        if variant is None or variant.old_price is None:
+            return None
+        return f"{variant.old_price:.2f}"
+
     @extend_schema_field(OpenApiTypes.URI)
     def get_image(self, obj: Product) -> str | None:
         media = obj.media.all()
@@ -171,8 +185,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     @extend_schema_field(VariantSerializer(allow_null=True))
     def get_cheapest_variant(self, obj: Product):
         """Cheapest variant that matched the current filters (the one behind `min_price`)."""
-        target = getattr(obj, "cheapest_variant_id", None)
-        variant = next((v for v in obj.variants.all() if v.pk == target), None)
+        variant = self._resolve_cheapest(obj)
         if variant is None:
             return None
         return VariantSerializer(variant, context=self.context).data

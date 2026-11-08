@@ -103,11 +103,13 @@ def test_vehicle_without_fitment_data_returns_nothing(api_client):
 def test_ordering_by_price(api_client):
     a = make_product(name="A")
     b = make_product(name="B")
+    c = make_product(name="C")
+    make_variant(c, price="2000")
     make_variant(a, price="2000")
     make_variant(b, price="900")
 
-    assert slugs(api_client.get(URL, {"ordering": "price"})) == [b.slug, a.slug]
-    assert slugs(api_client.get(URL, {"ordering": "-price"})) == [a.slug, b.slug]
+    assert slugs(api_client.get(URL, {"ordering": "price"})) == [b.slug, a.slug, c.slug]
+    assert slugs(api_client.get(URL, {"ordering": "-price"})) == [a.slug, c.slug, b.slug]
 
 
 def test_search_by_name_brand_and_sku(api_client):
