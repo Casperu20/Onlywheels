@@ -1,5 +1,8 @@
+from decimal import Decimal
+from math import isfinite
+
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -118,6 +121,15 @@ class ProductVariant(TimeStampedModel):
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text="RON, VAT included")
     old_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    shipping_weight_kg = models.DecimalField(
+        "Shipping weight (kg)",
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.01"))],
+        help_text="Packed weight of one unit; required before courier shipping",
+    )
 
     # Wheels and sets
     finish = models.CharField(max_length=20, choices=Finish.choices, blank=True)
@@ -148,6 +160,10 @@ class ProductVariant(TimeStampedModel):
         ]
         constraints = [
             models.CheckConstraint(condition=models.Q(price__gte=0), name="variant_price_gte_0"),
+            models.CheckConstraint(
+                condition=models.Q(shipping_weight_kg__isnull=True) | models.Q(shipping_weight_kg__gt=0),
+                name="variant_shipping_weight_gt_0",
+            ),
         ]
 
     def __str__(self) -> str:
@@ -247,3 +263,108 @@ class Model3D(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"3D model of {self.product}"
+
+
+class CarModel3D(TimeStampedModel):
+    class BodyType(models.TextChoices):
+        HATCHBACK = "hatchback", "Hatchback"
+        SEDAN = "sedan", "Sedan"
+        WAGON = "wagon", "Wagon"
+        SUV = "suv", "SUV"
+        COUPE = "coupe", "Coupe"
+
+    class Front(models.TextChoices):
+        POSITIVE_Z = "+z", "+Z"
+        NEGATIVE_Z = "-z", "-Z"
+        POSITIVE_X = "+x", "+X"
+        NEGATIVE_X = "-x", "-X"
+
+    class DetectionStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        OK = "ok", "Detected"
+        FAILED = "failed", "Needs wheel positions"
+
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=170, unique=True)
+    body_type = models.CharField(max_length=20, choices=BodyType.choices)
+    glb_file = models.FileField(
+        upload_to="models3d/cars/",
+        validators=[FileExtensionValidator(["glb"])],
+        help_text="glTF binary car model. Keep the nose direction noted in the Front field.",
+    )
+    length_m = models.DecimalField(
+        max_digits=5,
+        decimal_places=3,
+        validators=[MinValueValidator(Decimal("0.1"))],
+        help_text="Real vehicle length in metres.",
+    )
+    front = models.CharField(max_length=2, choices=Front.choices, default=Front.POSITIVE_Z)
+    vehicle_model = models.ForeignKey(
+        "vehicles.VehicleModel",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="showroom_models",
+    )
+    wheel_anchors = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Optional override: {"axis":"x","wheels":[{"x":0,"y":0,"z":0}, ... four points]}',
+    )
+    detected_anchors = models.JSONField(null=True, blank=True, editable=False)
+    detection_status = models.CharField(
+        max_length=10,
+        choices=DetectionStatus.choices,
+        default=DetectionStatus.PENDING,
+        editable=False,
+    )
+    detection_message = models.TextField(blank=True, editable=False)
+    attribution = models.CharField(max_length=255)
+    source_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=False)
+    sort_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ("sort_order", "name")
+        verbose_name = "3D car model"
+        verbose_name_plural = "3D car models"
+
+    def clean(self) -> None:
+        super().clean()
+        if not self.attribution.strip():
+            raise ValidationError({"attribution": "Credit the model author and licence."})
+        if self.wheel_anchors:
+            anchors = self.wheel_anchors
+            valid = isinstance(anchors, dict) and set(anchors) == {"axis", "wheels"}
+            valid = valid and anchors.get("axis") in {"x", "z"}
+            wheels = anchors.get("wheels", []) if isinstance(anchors, dict) else []
+            valid = valid and isinstance(wheels, list) and len(wheels) == 4
+            for wheel in wheels if isinstance(wheels, list) else []:
+                valid = valid and isinstance(wheel, dict) and set(wheel) == {"x", "y", "z"}
+                if isinstance(wheel, dict):
+                    for coordinate in wheel.values():
+                        valid = (
+                            valid
+                            and isinstance(coordinate, (int, float))
+                            and not isinstance(coordinate, bool)
+                            and isfinite(coordinate)
+                        )
+            if not valid:
+                raise ValidationError(
+                    {"wheel_anchors": "Enter an axis (x or z) and exactly four finite x/y/z wheel positions."}
+                )
+
+    @property
+    def effective_wheel_anchors(self) -> dict | None:
+        if self.wheel_anchors:
+            return self.wheel_anchors
+        if self.detection_status == self.DetectionStatus.OK:
+            return self.detected_anchors
+        return None
+
+    @property
+    def is_usable(self) -> bool:
+        return self.effective_wheel_anchors is not None
+
+    def __str__(self) -> str:
+        return self.name

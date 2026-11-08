@@ -20,8 +20,52 @@ before the first push, otherwise the first CI run fails.
 | 8 | Add the teammate, protect `main` | [§10.3](#103-teammate-and-branch-protection) | Changes only via reviewed pull requests |
 | 9 | Optional: Google login, Stripe test mode, Docker | [§5](#5-google-login-optional-until-needed), [§6](#6-payments), [DEPLOYMENT.md §3.5](DEPLOYMENT.md#35-trying-the-production-stack-locally) | — |
 
-The second developer only does steps 1, 3, 4 and 5 after cloning (`git clone`, no `git init`), without
-`makemigrations` (the migrations are already committed).
+### 0.1 Second developer – joining the existing repository
+
+The repository already contains everything the first developer created once: migrations, `backend/uv.lock`,
+`frontend/pnpm-lock.yaml`, the generated API client and the CI workflow. Only machine-specific things are
+missing after cloning: the secret files `backend/.env` and `frontend/.env.local` (never committed), the
+installed packages (`.venv`, `node_modules`) and a database – each developer has their own.
+
+| # | What | Details |
+|---|---|---|
+| 1 | Accept the collaborator invitation (e-mail or github.com → notifications) | [§10.3](#103-teammate-and-branch-protection) |
+| 2 | Install the tools | [§1](#1-tools-one-time) |
+| 3 | `git clone https://github.com/<owner>/onlywheels.git` and `cd onlywheels` | — |
+| 4 | PostgreSQL: Docker (option A) or native install (option B) | [§2](#2-postgresql--pick-one-option) |
+| 5 | Backend (commands below) | [§3](#3-backend-django) |
+| 6 | Frontend (second terminal, commands below) | [§4](#4-frontend-react--vite) |
+
+```powershell
+# terminal 1
+cd backend
+Copy-Item .env.example .env          # then edit DATABASE_URL and DJANGO_SECRET_KEY (own values)
+uv sync
+uv run python manage.py migrate
+uv run python manage.py seed_demo
+uv run python manage.py createsuperuser
+uv run python manage.py runserver
+
+# terminal 2
+cd frontend
+Copy-Item .env.example .env.local
+pnpm install
+pnpm dev                             # http://localhost:5173
+```
+
+**Do not** run `git init`, `makemigrations` (only when you change a model yourself), or create a new GitHub
+repository – that was done once. `pnpm api:generate` is only needed after a backend API change.
+
+Keeping up to date with the teammate's work:
+
+```powershell
+git switch main
+git pull
+cd backend;  uv sync; uv run python manage.py migrate    # new dependencies / migrations
+cd ..\frontend; pnpm install                              # new dependencies
+```
+
+Then work on a branch and open a pull request ([§10.3](#103-teammate-and-branch-protection)).
 
 ## 1. Tools (one time)
 
@@ -195,6 +239,23 @@ Demo vouchers from `seed_demo`: `BINEAIVENIT10` (10% over 500 RON), `ROTI100` (1
 3. In `backend/.env`: `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY=sk_test_...`, `STRIPE_WEBHOOK_SECRET=whsec_...`.
 4. Test card: `4242 4242 4242 4242`, any future date, any CVC.
 
+### NETOPIA (sandbox)
+
+1. Create a NETOPIA sandbox merchant account and obtain its API key, POS signature, RSA public key, and allowed POS signatures from NETOPIA. Do not use live credentials for local testing.
+2. Set these server-side values in `backend/.env`:
+   - `PAYMENT_PROVIDER=netopia`
+   - `NETOPIA_MODE=sandbox`
+   - `NETOPIA_API_KEY` and `NETOPIA_POS_SIGNATURE`
+   - `NETOPIA_PUBLIC_KEY` (PEM public key; represent line breaks as `\n` in a single-line `.env` value)
+   - `NETOPIA_POS_SIGNATURE_SET` (comma-separated allowlist of POS signatures accepted in callback tokens)
+   - `NETOPIA_NOTIFY_URL=https://<public-host>/api/v1/payments/webhook/netopia/`
+3. NETOPIA must be able to reach the callback over public HTTPS. For local testing, expose the backend with a trusted HTTPS tunnel and use that tunnel URL in `NETOPIA_NOTIFY_URL`; keep the backend running while testing.
+4. Apply migrations with `uv run python manage.py migrate`, start the backend and frontend as in §3–4, then place an order and complete it using NETOPIA's sandbox payment details. Confirm the authenticated callback changes the payment/order state; the browser redirect alone is not proof of payment.
+
+The checkout sends `payment.options.installments=0`; it does not present a separate installment-count selector. The callback stores any installment count NETOPIA reports. Confirm how NETOPIA applies this option and which terms are eligible for your sandbox merchant/card setup before offering installments to customers.
+
+For production, use a publicly reachable production HTTPS callback, the live API key/POS signature/public key, and `NETOPIA_MODE=live`. Switch `PAYMENT_PROVIDER=netopia` only after a sandbox checkout and callback have been verified end to end. Keep all credentials in the deployment secret store, never in frontend variables or source control.
+
 ## 7. Garage partner access
 
 1. Create a user, tick **Staff status** and add it to the `garage_partner` group (created by `seed_demo`).
@@ -218,9 +279,164 @@ Variables go in `backend/.env` (or `frontend/.env.local` for `VITE_*`); the full
 | Logs | `LOG_FORMAT=json` or `console`, `LOG_LEVEL` | One JSON object per line (default when `DJANGO_DEBUG=False`) |
 | Content-Security-Policy | `CSP_ENABLED=True` | CSP header on Django pages (admin, `/api/docs/`). Tests always run with it on. |
 | Redis | `CACHE_URL=rediscache://localhost:6379/1`, `CELERY_BROKER_URL=redis://localhost:6379/0`, `CELERY_TASK_ALWAYS_EAGER=False` | Shared cache/rate limits; run `celery -A config worker` and `celery -A config beat` |
+| SmartBill invoicing | `SMARTBILL_ENABLED`, `SMARTBILL_USER`, `SMARTBILL_TOKEN`, `SMARTBILL_CIF`, `SMARTBILL_SERIES`, `SMARTBILL_TAX_NAME`, `SMARTBILL_MEASURING_UNIT` | Paid orders enqueue invoice issuance; see below before enabling |
+| Courier AWB | `SHIPPING_CARRIER`, `SHIPPING_MODE`, `SAMEDAY_*` or `FAN_COURIER_*` | Courier orders get an AWB when staff mark them "processing"; see below |
+| AI photo studio | `AI_STUDIO_PROVIDER`, `REPLICATE_API_TOKEN` or `FAL_KEY`, `AI_STUDIO_DAILY_*` | Signed-in customers render wheels on a photo of their car; see below |
 | Email (Resend) | `EMAIL_BACKEND=anymail.backends.resend.EmailBackend`, `RESEND_API_KEY` | Real emails instead of the console |
 | File storage (R2/S3/MinIO) | `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_CUSTOM_DOMAIN` | Uploads (product photos, GLB models) go to the bucket |
 
+### SmartBill invoicing
+
+Invoice issuance is disabled by default. SmartBill's documented V1 API has no verified sandbox in this integration: API-created invoices consume the account's document allowance. Do not enable it until the merchant confirms an account suitable for test issuance.
+
+Set the exact account values in `backend/.env` (or the deployment secret store):
+
+```dotenv
+SMARTBILL_ENABLED=True
+SMARTBILL_API_BASE_URL=https://ws.smartbill.ro/SBORO/api
+SMARTBILL_USER=<SmartBill account email>
+SMARTBILL_TOKEN=<SmartBill API token>
+SMARTBILL_CIF=<company tax identifier>
+SMARTBILL_SERIES=<invoice series configured in SmartBill>
+SMARTBILL_TAX_NAME=<exact SmartBill tax name>
+SMARTBILL_MEASURING_UNIT=<exact SmartBill unit, e.g. buc>
+```
+
+Confirm the tax name, unit, series, VAT treatment and a test customer with the accountant/merchant before enabling. Once enabled, the paid-order transaction queues issuance after commit. In production, set `CELERY_TASK_ALWAYS_EAGER=False` and keep the Celery worker running; local eager mode runs the task inline. If enqueueing fails, the order remains paid and a pending invoice stays available for a staff retry; the enqueue error is logged.
+
+**Demo invoice (no SmartBill account).** While `SMARTBILL_ENABLED=False`, setting `SMARTBILL_DEMO=True` makes every paid order get a local mock-up invoice instead of a failed one. The mock-up is laid out like a SmartBill invoice (series `DEMO`, number = order number). It carries a "DEMO" watermark and a red banner saying the official SmartBill API is disabled and that it is **not a fiscal document**. No HTTP request is made, and nothing is sent to SmartBill or ANAF. The order page shows the same notice next to the download button. `SMARTBILL_DEMO` defaults to `True` in development and `False` elsewhere, and production settings refuse to start if it is set. To convert an older failed invoice, run the "Retry pending/failed invoice" admin action. Demo invoices stay as they are after the real API is enabled. Only orders paid after that point get real SmartBill invoices.
+
+The customer sees invoice status and a download button on the order page. Invoice metadata is available at `GET /api/v1/invoices/{order_number}/`; the PDF endpoint is `GET /api/v1/invoices/{order_number}/pdf/` and requires the order owner or staff authentication. PDFs are kept in the private invoice volume and are not served from the public media URL. Staff can retry pending/failed issuance or PDF retrieval from Django Admin. If an issuance remains in `issuing` for over 30 minutes, staff can move it to `review_required`; search SmartBill by order number and reconcile the provider result before changing state or retrying. Never retry `review_required` automatically, because SmartBill may have created an invoice despite an ambiguous response.
+
+e-Factura submission/status automation is not implemented or verified; the stored status remains `not_sent`. Require accounting/legal approval and a documented SmartBill/ANAF workflow before live use.
+
+### Courier AWB (Sameday / FAN Courier)
+
+Disabled by default (`SHIPPING_CARRIER` empty): orders keep the manual flow (staff use the admin "mark shipped" action).
+
+**Demo courier (no account needed)** – for coursework and presentations set `SHIPPING_CARRIER=demo` and restart. Moving a courier order to *processing* then creates a simulated `DEMO…` AWB, marks the order shipped and stores a one-page PDF label marked *SIMULATED* (Django Admin › *Shipping › Shipments* › label link). Nothing is sent anywhere and there is no tracking link. Each tracking refresh moves the parcel one step: picked up → in transit → delivered (which completes the order). Celery Beat refreshes hourly; to demo it quickly, select the shipment in the admin and run *Refresh tracking now* three times. Production settings refuse `demo`.
+
+**Sameday sandbox** – ask Sameday for demo API credentials (the demo host is `https://sameday-api.demo.zitec.com`), then read your pickup point and service IDs from the API (`GET /api/client/pickup-points`, `GET /api/client/services` with the `X-AUTH-TOKEN` from `POST /api/authenticate`). The pickup point is the sender/return address, configured in your Sameday account.
+
+```dotenv
+SHIPPING_CARRIER=sameday
+SHIPPING_MODE=sandbox
+SAMEDAY_USERNAME=<demo user>
+SAMEDAY_PASSWORD=<demo password>
+SAMEDAY_PICKUP_POINT_ID=<id>
+SAMEDAY_SERVICE_ID=<id>
+```
+
+**FAN Courier** – FAN has no separate sandbox host; use the test account published in FAN's API documentation (or your own SelfAWB account). The sender address is the one on the FAN client account. FAN only shares its JSON API v2 spec on request: the adapter follows the commonly used endpoints (`/login`, `/intern-awb`, `/awb/label`, `/reports/awb/tracking`); confirm them against FAN's spec before going live.
+
+```dotenv
+SHIPPING_CARRIER=fan_courier
+SHIPPING_MODE=sandbox
+FAN_COURIER_CLIENT_ID=<client id>
+FAN_COURIER_USERNAME=<user>
+FAN_COURIER_PASSWORD=<password>
+```
+
+**How it works.**
+
+- Every product variant has a *Shipping weight (kg)*. It is required: the seed sets demo values, so set real ones in admin.
+- Order items keep a copy of the weight. Each wheel/tire/set unit ships as one parcel; all accessories travel together in one parcel.
+- When staff mark a **courier** order "processing", a shipment is created and the AWB task runs after commit. On success the order becomes "shipped", the A4 label PDF is stored in the private volume (`PRIVATE_INVOICE_ROOT/shipping/labels/`, never public) and staff download it from *Shipping › Shipments*.
+- Garage-fitting orders never get an AWB.
+- Celery Beat refreshes tracking hourly (`refresh-shipment-tracking`). Statuses only move forward; carrier statuses that cannot be recognised are shown to staff but not applied. "Delivered" completes the order.
+- The customer sees the carrier, the AWB, the status and a tracking link on the order page.
+
+**Failures.**
+
+| Shipment state | Meaning | What to do |
+|---|---|---|
+| `failed` | Request rejected (bad address or credentials, missing weight) or carrier unreachable; nothing was created. The order stays "processing". | Fix the cause, then use the admin action *Retry failed AWB creation*. |
+| `review_required` | Timeout/5xx: the AWB may exist. | Search the order number in the carrier portal. If an AWB exists, type it in the shipment and use *Use the AWB entered manually*. Otherwise use *Retry after confirming … no AWB exists*. Never retried automatically. |
+| `created` with an error | AWB exists but the label download failed. | Use the admin action *Download missing labels*. |
+
+Carrier status names are not published by either carrier, so they are classified by keyword (RO/EN). Check the tracking in the sandbox and adjust `apps/shipping/providers/base.py` if needed. Live mode (`SHIPPING_MODE=live`) creates billable AWBs: use it only with a signed carrier contract.
+
+### AI photo studio (Replicate / fal)
+
+Disabled by default (`AI_STUDIO_PROVIDER` empty): `/ai-studio` tells signed-in users the studio is unavailable and creating a job returns 503. There is no fake provider, and **every generation is billed by the provider** (about $0.04 per image).
+
+1. Create an API key: Replicate (*Account › API tokens*) or fal (*Dashboard › Keys*). Add a small prepaid balance and, if the provider offers it, a spend limit.
+2. In `backend/.env`, set one of:
+
+   ```env
+   AI_STUDIO_PROVIDER=replicate
+   REPLICATE_API_TOKEN=<token>
+   REPLICATE_MODEL=black-forest-labs/flux-kontext-pro   # or google/nano-banana
+   REPLICATE_COST_PER_IMAGE_USD=0.04                    # check the model page
+   ```
+
+   ```env
+   AI_STUDIO_PROVIDER=fal
+   FAL_KEY=<key>
+   FAL_MODEL=fal-ai/flux-pro/kontext
+   FAL_COST_PER_IMAGE_USD=0.04
+   ```
+
+3. Keep `AI_STUDIO_DAILY_QUOTA` (per user, per Bucharest day; failed jobs do not count) and `AI_STUDIO_DAILY_BUDGET_USD` (global ceiling) low while testing. Neither provider reports the price per request, so the budget uses the `*_COST_PER_IMAGE_USD` estimate: keep it equal to or above the real model price.
+4. Restart the backend, sign in, open a wheel product and click *Try them on your car with AI* (or open `/ai-studio`). Upload a JPEG/PNG/WebP car photo, pick a scene and style and generate. With `CELERY_TASK_ALWAYS_EAGER=True` the request waits for the provider; with a worker it runs in the background and the page polls.
+
+**Privacy.** Photos are re-encoded (EXIF/GPS removed, max 2048 px) and stored under `AI_STUDIO_PRIVATE_ROOT` (default `backend/private-media/ai/`) or the private bucket `AI_STUDIO_PRIVATE_BUCKET`. They are only streamed to their owner (and staff in Django Admin) with `no-store`; they are never public media. Celery Beat (`ai-studio-cleanup`, hourly) deletes jobs older than `AI_STUDIO_RETENTION_DAYS` and recovers jobs stuck for 30 minutes. Users can delete images at any time, and account export/deletion includes them. fal requests are sent with request storage disabled; Replicate deletes inputs and outputs after about an hour.
+
+**Failures.**
+
+| What the user sees | Likely cause | What to do |
+|---|---|---|
+| "AI Studio is not available right now" banner | Provider empty, unknown, or its key missing (the backend logs which) | Set `AI_STUDIO_PROVIDER` and the matching key; restart |
+| "…reached its usage limit for today" (429) | `AI_STUDIO_DAILY_BUDGET_USD` reached | Wait for the next day or raise the budget |
+| "…used all your AI generations for today" (429) | The user used `AI_STUDIO_DAILY_QUOTA` | Expected; resets at local midnight |
+| Job failed, "not available right now. You can retry later." | Provider rejected the key or the account has no credit (401/402/403) | Check the key and the provider balance |
+| Job failed, "safety filter rejected…" | The provider's moderation refused the photo/prompt | Try another photo; nothing is retried automatically |
+| Job failed, "could not be generated" | Provider error, timeout or a worker that never finished | The user can press *Retry*; staff see the technical detail in *AI studio › Generations* |
+
+The result is labelled as an AI illustration: it is not an exact product photo and does not guarantee fitment.
+
+### 3D showroom (wheels and cars)
+
+`/showroom` lists active wheels and shows one at a time with finish and size selectors. The default is the wheel-only view. If at least one usable car has been uploaded in Django Admin, visitors can switch to a car view; the active garage vehicle is matched when possible, otherwise the first available car is selected. The view and selected car are stored in the URL alongside the product and variant.
+
+**Free fallback, no assets needed:** a wheel without an uploaded `.glb` is drawn in code (`frontend/src/features/showroom3d/procedural.ts` + `GenericWheel` in `ModelCanvas.tsx`). Diameter, width and bolt pattern come from the selected variant, the finish colours the rim, and the spoke count (5/6/7/9/10) is picked per product from its slug. A "Generic 3D preview" banner tells the visitor the spoke design is indicative. Uploading a real model (steps below) replaces the generic wheel for that product only.
+
+1. Get a wheel model whose licence allows **commercial use on a website** (manufacturer/supplier asset, or a paid/CC-BY model). Keep the licence and the author credit with your records; `Model3D` has no credit field, so if the licence requires visible attribution, add it to the product description.
+2. Export it as **glTF binary (`.glb`)**, **Draco-compressed** (e.g. `gltf-transform draco in.glb out.glb`), wheel **centred at the origin**, **1 unit = 1 m**, axle along Z (facing the camera). Aim for under ~3 MB.
+3. Name the materials: the paintable rim surface `rim` or `finish` (any name containing those words). If no material is named so, everything except `tire`/`tyre`/`rubber`/`logo`/`badge`/`emblem`/`valve`/`glass` is painted.
+4. Django Admin › *Catalog › Products* › the wheel › *3D model* inline: upload the `.glb`, optionally a thumbnail and `finish_materials`, e.g.
+
+   ```json
+   {"black": {"color": "#202020", "metalness": 0.6, "roughness": 0.35}}
+   ```
+
+   Keys are variant finishes (`silver`, `black`, `bronze`, `gunmetal`, `chrome`, `white`). Missing finishes or fields use built-in defaults; invalid colours or values outside 0–1 are ignored.
+5. Open `/showroom` (or `/showroom?product=<slug>`), rotate the wheel and switch finishes.
+
+#### Add car models
+
+Car files are **not shipped with the project**. You must obtain a model and upload it yourself; suitable free models may be downloaded from sources such as Sketchfab, subject to the individual model's licence and download terms. Use only a licence that permits commercial use and modification (for example CC0, CC-BY or CC-BY-SA); do not use NC or no-derivatives models. Prefer generic, unbranded cars: a model-file licence may not grant rights to vehicle logos or other trademarks. Keep a record of the licence and author, and enter the required credit and source URL in the admin so visitors can see the attribution.
+
+1. Prepare a `.glb` car model. Set its nose direction (`front`) correctly; the model is uniformly scaled in the viewer to the entered real vehicle length, so note the model's length axis and export orientation. Keep descriptive wheel/tire node names and POSITION accessor bounds in the file; these help automatic anchor detection. Draco-compress the model (for example, `gltf-transform draco in.glb out.glb`).
+2. In Django Admin, open **Catalog › 3D car models** and add a car. Enter its name/body type, real length in metres, nose direction, optional matching vehicle model, attribution and source URL. Upload the GLB and save.
+3. On save, the admin attempts to detect the four road-wheel positions from named GLB parts and their POSITION bounds. The car is offered in the showroom only after detection succeeds or manual positions are supplied. If detection fails (for example, names or bounds are missing), use the displayed message and enter `wheel_anchors` as JSON with exactly four points in the GLB's original coordinates, for example:
+
+   ```json
+   {
+     "axis": "x",
+     "wheels": [
+       {"x": -1.2, "y": 0.3, "z": -0.7},
+       {"x": -1.2, "y": 0.3, "z": 0.7},
+       {"x": 1.2, "y": 0.3, "z": -0.7},
+       {"x": 1.2, "y": 0.3, "z": 0.7}
+     ]
+   }
+   ```
+
+   `axis` is the car's length axis (`x` or `z`); `y` is up. Manual positions override automatic detection. Activate the model and use the admin's preview link to check wheel placement; deactivate it while making corrections.
+4. In `/showroom`, choose **On a car** and select the model. Car-view GLBs are loaded only after this choice. If a car cannot load, retry or return to wheel-only mode.
+
+Without WebGL, the page shows the product photo rather than a 3D scene. A product without a wheel GLB uses the generic wheel even in car view; a broken wheel GLB shows an error with *Retry*. The Draco decoder is served from the site itself (`/draco/`); this is why the CSP allows `'wasm-unsafe-eval'` and `blob:` workers. The 3D code (~300 KB gzipped) is loaded only on this page and is not precached by the PWA.
 PWA: `pnpm dev` does **not** register the service worker; use `pnpm build; pnpm preview` to test install/offline.
 After a new build the service worker updates itself on the next page load.
 
@@ -272,7 +488,8 @@ What each step checks: [DEPLOYMENT.md §6](DEPLOYMENT.md#6-ci--githubworkflowsci
 
 ### 10.3 Teammate and branch protection
 
-1. Repository → **Settings → Collaborators → Add people** → the other developer (write access).
+1. Repository → **Settings → Collaborators → Add people** → the other developer (write access). They then
+   follow [§0.1](#01-second-developer--joining-the-existing-repository).
 2. After CI was green once: **Settings → Branches → Add branch protection rule** (or **Rules → Rulesets**) for
    `main`: require a pull request with 1 approval and require the status checks `backend`, `frontend`, `docker`.
 3. Daily work: `git switch -c feat/<name>` → commit → `git push -u origin feat/<name>` → open a pull request
@@ -313,5 +530,6 @@ A public repository is fine for a university project as long as no secrets are c
 | `permission denied to create database` in tests | Give the DB user `CREATEDB` (step 2B). |
 | `relation "accounts_user" does not exist` | Run `makemigrations` (see step 3) then `migrate`. |
 | Catalog is empty | Run `uv run python manage.py seed_demo`. |
+| `UnicodeEncodeError: 'charmap'` in the backend log after a payment (Windows) | The dev console email backend can't print Romanian characters on a cp1252 console. The order is still paid; set `$env:PYTHONUTF8 = "1"` before `runserver` to see the emails. |
 | `pnpm preview` shows an old version | The service worker served the cached build; reload once more (or DevTools → Application → Service workers → Unregister). |
 | Admin/Swagger broken only with `CSP_ENABLED=True` | Browser console shows the blocked URL; add it to `CONTENT_SECURITY_POLICY` in `config/settings/base.py`. |

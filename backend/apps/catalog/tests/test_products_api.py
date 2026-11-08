@@ -175,6 +175,18 @@ def test_detail_model_3d_is_optional(api_client):
     assert data["finish_materials"]["silver"]["color"] == "#c9ccd1"
 
 
+def test_has_3d_filter_lists_only_products_with_a_model(api_client, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    with_model = make_product()
+    without_model = make_product()
+    make_variant(with_model)
+    make_variant(without_model)
+    Model3D.objects.create(product=with_model, glb_file=SimpleUploadedFile("wheel.glb", b"glTF"))
+
+    assert slugs(api_client.get(URL, {"has_3d": "true"})) == [with_model.slug]
+    assert slugs(api_client.get(URL, {"has_3d": "false"})) == [without_model.slug]
+
+
 def test_list_has_no_n_plus_one(api_client, django_assert_max_num_queries):
     for _ in range(5):
         product = make_product()

@@ -18,6 +18,7 @@ class Payment(TimeStampedModel):
     session_id = models.CharField(max_length=255, unique=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default="RON")
+    installments = models.PositiveSmallIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.CREATED)
     payment_reference = models.CharField(max_length=255, blank=True, help_text="e.g. Stripe PaymentIntent id")
     failure_reason = models.CharField(max_length=255, blank=True)

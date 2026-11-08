@@ -14,4 +14,13 @@ app.conf.beat_schedule = {
         "task": "apps.orders.tasks.expire_unpaid_orders_task",
         "schedule": 300.0,
     },
+    "refresh-shipment-tracking": {
+        "task": "apps.shipping.tasks.refresh_shipments_task",
+        "schedule": 3600.0,
+    },
+    # AI studio retention + recovery of jobs whose worker died.
+    "ai-studio-cleanup": {
+        "task": "apps.ai_studio.tasks.cleanup_expired_generations",
+        "schedule": 3600.0,
+    },
 }

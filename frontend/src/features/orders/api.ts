@@ -13,6 +13,34 @@ export type OrderStatus =
   | "completed"
   | "cancelled";
 export type DeliveryMethod = "courier" | "garage_fitting";
+export type InvoiceStatus =
+  | "pending"
+  | "issuing"
+  | "pdf_pending"
+  | "issued"
+  | "failed"
+  | "review_required";
+
+export interface OrderInvoice {
+  status: InvoiceStatus;
+  series: string;
+  number: string;
+  issued_at: string | null;
+  total: string;
+  efactura_status: "not_sent" | "sent" | "validated" | "rejected";
+  pdf_url: string | null;
+  is_demo: boolean;
+}
+
+export type ShipmentStatus = "created" | "picked_up" | "in_transit" | "delivered" | "returned";
+
+export interface OrderShipment {
+  carrier: "sameday" | "fan_courier" | "demo";
+  carrier_display: string;
+  awb: string;
+  tracking_url: string;
+  status: ShipmentStatus;
+}
 
 export interface OrderSummary {
   number: string;
@@ -64,15 +92,24 @@ export interface OrderDetail extends OrderSummary {
     status: "held" | "booked" | "confirmed" | "completed" | "cancelled";
   } | null;
   status_changes: { status: OrderStatus; note: string; created_at: string }[];
+  invoice: OrderInvoice | null;
+  shipment: OrderShipment | null;
 }
 
 const BASE = "/api/v1/orders";
+const INVOICE_BASE = "/api/v1/invoices";
 
 export const ordersApi = {
   list: (page = 1) => apiClient<Paginated<OrderSummary>>({ url: `${BASE}/`, method: "GET", params: { page } }),
   get: (number: string) => apiClient<OrderDetail>({ url: `${BASE}/${number}/`, method: "GET" }),
   pay: (number: string) => apiClient<{ checkout_url: string }>({ url: `${BASE}/${number}/pay/`, method: "POST" }),
   cancel: (number: string) => apiClient<OrderDetail>({ url: `${BASE}/${number}/cancel/`, method: "POST" }),
+  downloadInvoice: (number: string) =>
+    apiClient<Blob>({
+      url: `${INVOICE_BASE}/${number}/pdf/`,
+      method: "GET",
+      responseType: "blob",
+    }),
   fakeComplete: (number: string) =>
     apiClient<{ status: OrderStatus }>({
       url: "/api/v1/payments/fake/complete/",
@@ -115,6 +152,20 @@ export function useCancelOrder() {
     onSuccess: (order) => {
       queryClient.setQueryData(orderKeys.detail(order.number), order);
       return queryClient.invalidateQueries({ queryKey: ["orders", "list"] });
+    },
+  });
+}
+
+export function useDownloadInvoice() {
+  return useMutation({
+    mutationFn: ordersApi.downloadInvoice,
+    onSuccess: (pdf, orderNumber) => {
+      const url = URL.createObjectURL(pdf);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${orderNumber}-invoice.pdf`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
   });
 }

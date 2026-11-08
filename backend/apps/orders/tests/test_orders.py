@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 from django.core import mail
@@ -10,6 +11,7 @@ from apps.accounts.models import User
 from apps.appointments.models import Appointment
 from apps.cart.models import CartItem
 from apps.inventory.models import StockItem
+from apps.invoicing.models import Invoice
 from apps.orders import services
 from apps.orders.models import Order
 from apps.pricing.models import Voucher
@@ -214,6 +216,66 @@ def test_mark_paid_deducts_stock_once_and_emails(user, variant, cart, django_cap
     assert voucher.used_count == 1
     assert len(mail.outbox) == 1
     assert order.number in mail.outbox[0].subject
+
+
+def test_mark_paid_schedules_one_invoice_task_after_commit(
+    user, variant, cart, django_capture_on_commit_callbacks
+):
+    order = services.place_order(user, checkout_payload())
+
+    with (
+        patch("apps.orders.services._notify"),
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        services.mark_paid(order)
+        services.mark_paid(order)
+
+    assert len(callbacks) == 1
+    invoice = Invoice.objects.get(order=order)
+    assert invoice.status == Invoice.Status.FAILED
+
+
+def test_paid_order_keeps_a_retryable_invoice_if_task_enqueue_fails(
+    user, variant, cart, django_capture_on_commit_callbacks, caplog
+):
+    order = services.place_order(user, checkout_payload())
+
+    with (
+        patch("apps.orders.services._notify"),
+        patch(
+            "apps.invoicing.tasks.issue_invoice_task.delay",
+            side_effect=RuntimeError("broker unavailable"),
+        ),
+    ):
+        with django_capture_on_commit_callbacks(execute=True):
+            services.mark_paid(order)
+
+    invoice = Invoice.objects.get(order=order)
+    assert invoice.status == Invoice.Status.PENDING
+    order.refresh_from_db()
+    assert order.status == Order.Status.PAID
+    assert "broker unavailable" in caplog.text
+
+
+def test_paid_order_survives_confirmation_email_failure(
+    user, variant, cart, django_capture_on_commit_callbacks, caplog
+):
+    order = services.place_order(user, checkout_payload())
+
+    with (
+        patch(
+            "apps.notifications.tasks.send_order_confirmation.delay",
+            side_effect=UnicodeEncodeError("charmap", "ț", 0, 1, "undefined"),
+        ),
+        patch("apps.invoicing.tasks.issue_invoice_task.delay") as issue_delay,
+    ):
+        with django_capture_on_commit_callbacks(execute=True):
+            services.mark_paid(order)
+
+    order.refresh_from_db()
+    assert order.status == Order.Status.PAID
+    issue_delay.assert_called_once_with(str(order.pk))
+    assert "charmap" in caplog.text
 
 
 def test_paid_garage_order_books_appointment_and_notifies_garage(user, cart, django_capture_on_commit_callbacks):

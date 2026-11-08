@@ -193,6 +193,9 @@ SPECTACULAR_SETTINGS = {
         "AppointmentStatusEnum": "apps.appointments.models.Appointment.Status",
         "ReviewStatusEnum": "apps.reviews.models.Review.Status",
         "ProductTypeEnum": "apps.catalog.models.ProductType",
+        "WheelStyleEnum": "apps.catalog.models.WheelStyle",
+        "AIStyleEnum": "apps.ai_studio.options.STYLE_CHOICES",
+        "AISceneEnum": "apps.ai_studio.options.SCENE_CHOICES",
     },
 }
 
@@ -247,6 +250,7 @@ if AWS_STORAGE_BUCKET_NAME:
             "file_overwrite": False,
         },
     }
+PRIVATE_INVOICE_ROOT = env("PRIVATE_INVOICE_ROOT", default=str(BASE_DIR / "private-media"))
 
 # --- Security headers: Content Security Policy (django-csp) ----------------
 # Applies to HTML served by Django (admin, API docs). The SPA gets its CSP from frontend/public/_headers.
@@ -336,7 +340,69 @@ APPOINTMENT_BOOKING_DAYS = 14
 PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="fake")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+NETOPIA_MODE = env("NETOPIA_MODE", default="sandbox").strip().lower()
+NETOPIA_API_KEY = env("NETOPIA_API_KEY", default="")
+NETOPIA_POS_SIGNATURE = env("NETOPIA_POS_SIGNATURE", default="")
+NETOPIA_NOTIFY_URL = env("NETOPIA_NOTIFY_URL", default="")
+NETOPIA_PUBLIC_KEY = env("NETOPIA_PUBLIC_KEY", default="")
+NETOPIA_POS_SIGNATURE_SET = [
+    signature.strip()
+    for signature in env.list("NETOPIA_POS_SIGNATURE_SET", default=[])
+    if signature.strip()
+]
+SMARTBILL_ENABLED = env.bool("SMARTBILL_ENABLED", default=False)
+SMARTBILL_API_BASE_URL = env(
+    "SMARTBILL_API_BASE_URL", default="https://ws.smartbill.ro/SBORO/api"
+).rstrip("/")
+SMARTBILL_USER = env("SMARTBILL_USER", default="")
+SMARTBILL_TOKEN = env("SMARTBILL_TOKEN", default="")
+SMARTBILL_CIF = env("SMARTBILL_CIF", default="")
+SMARTBILL_SERIES = env("SMARTBILL_SERIES", default="")
+SMARTBILL_TAX_NAME = env("SMARTBILL_TAX_NAME", default="")
+SMARTBILL_MEASURING_UNIT = env("SMARTBILL_MEASURING_UNIT", default="")
+# While SmartBill is disabled, issue a clearly marked mock invoice PDF instead (dev default; refused in production).
+SMARTBILL_DEMO = env.bool("SMARTBILL_DEMO", default=False)
 
-# --- Phase 2 placeholders ---------------------------------------------------
-AI_STUDIO_PROVIDER = env("AI_STUDIO_PROVIDER", default="replicate")
+# --- Courier AWB ------------------------------------------------------------
+# Empty SHIPPING_CARRIER disables AWB creation (staff ship manually). "demo" simulates AWBs for
+# coursework/presentations (refused in production); real carriers never fall back to it.
+SHIPPING_CARRIER = env("SHIPPING_CARRIER", default="").strip().lower()
+SHIPPING_MODE = env("SHIPPING_MODE", default="sandbox").strip().lower()
+SAMEDAY_API_BASE_URL = env("SAMEDAY_API_BASE_URL", default="")
+SAMEDAY_USERNAME = env("SAMEDAY_USERNAME", default="")
+SAMEDAY_PASSWORD = env("SAMEDAY_PASSWORD", default="")
+SAMEDAY_PICKUP_POINT_ID = env("SAMEDAY_PICKUP_POINT_ID", default="")
+SAMEDAY_SERVICE_ID = env("SAMEDAY_SERVICE_ID", default="")
+SAMEDAY_TRACKING_URL = env("SAMEDAY_TRACKING_URL", default="https://sameday.ro/#awb={awb}")
+FAN_COURIER_API_BASE_URL = env("FAN_COURIER_API_BASE_URL", default="https://api.fancourier.ro")
+FAN_COURIER_CLIENT_ID = env("FAN_COURIER_CLIENT_ID", default="")
+FAN_COURIER_USERNAME = env("FAN_COURIER_USERNAME", default="")
+FAN_COURIER_PASSWORD = env("FAN_COURIER_PASSWORD", default="")
+FAN_COURIER_SERVICE = env("FAN_COURIER_SERVICE", default="Standard")
+FAN_COURIER_TRACKING_URL = env(
+    "FAN_COURIER_TRACKING_URL", default="https://www.fancourier.ro/awb-tracking/?awb={awb}"
+)
+
+# --- AI photo studio --------------------------------------------------------
+# Empty provider = studio disabled (the page explains it; no job is accepted).
+AI_STUDIO_PROVIDER = env("AI_STUDIO_PROVIDER", default="")
 AI_STUDIO_DAILY_QUOTA = env.int("AI_STUDIO_DAILY_QUOTA", default=5)
+AI_STUDIO_DAILY_BUDGET_USD = Decimal(env("AI_STUDIO_DAILY_BUDGET_USD", default="5.00"))
+AI_STUDIO_RETENTION_DAYS = env.int("AI_STUDIO_RETENTION_DAYS", default=30)
+AI_STUDIO_MAX_UPLOAD_BYTES = env.int("AI_STUDIO_MAX_UPLOAD_BYTES", default=10 * 1024 * 1024)
+AI_STUDIO_MAX_PIXELS = env.int("AI_STUDIO_MAX_PIXELS", default=25_000_000)
+AI_STUDIO_MIN_SIDE_PX = env.int("AI_STUDIO_MIN_SIDE_PX", default=256)
+AI_STUDIO_MAX_SIDE_PX = env.int("AI_STUDIO_MAX_SIDE_PX", default=2048)
+AI_STUDIO_PRIVATE_ROOT = env("AI_STUDIO_PRIVATE_ROOT", default=str(BASE_DIR / "private-media" / "ai"))
+# Set in deployment so AI images live in a private bucket instead of the local disk.
+AI_STUDIO_PRIVATE_BUCKET = env("AI_STUDIO_PRIVATE_BUCKET", default="")
+AI_STUDIO_PROVIDER_TIMEOUT_SECONDS = env.int("AI_STUDIO_PROVIDER_TIMEOUT_SECONDS", default=180)
+# Neither provider reports a per-request cost; these per-image estimates feed the daily budget.
+REPLICATE_API_TOKEN = env("REPLICATE_API_TOKEN", default="")
+REPLICATE_API_BASE_URL = env("REPLICATE_API_BASE_URL", default="https://api.replicate.com/v1")
+REPLICATE_MODEL = env("REPLICATE_MODEL", default="black-forest-labs/flux-kontext-pro")
+REPLICATE_COST_PER_IMAGE_USD = Decimal(env("REPLICATE_COST_PER_IMAGE_USD", default="0.04"))
+FAL_KEY = env("FAL_KEY", default="")
+FAL_QUEUE_BASE_URL = env("FAL_QUEUE_BASE_URL", default="https://queue.fal.run")
+FAL_MODEL = env("FAL_MODEL", default="fal-ai/flux-pro/kontext")
+FAL_COST_PER_IMAGE_USD = Decimal(env("FAL_COST_PER_IMAGE_USD", default="0.04"))

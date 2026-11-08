@@ -27,6 +27,9 @@ class ProductFilter(filters.FilterSet):
     brand = CharInFilter(field_name="brand__slug", lookup_expr="in", help_text="Brand slugs, comma separated")
     category = filters.CharFilter(field_name="category__slug")
     featured = filters.BooleanFilter(field_name="is_featured")
+    has_3d = filters.BooleanFilter(
+        field_name="model_3d", lookup_expr="isnull", exclude=True, help_text="Only products with a 3D model"
+    )
     search = filters.CharFilter(method="filter_search", help_text="Name, brand or exact SKU")
 
     diameter = NumberInFilter(method="variant_filter", help_text="Inches, comma separated")

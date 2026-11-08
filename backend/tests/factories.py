@@ -134,10 +134,19 @@ WHEEL_DEFAULTS = {
 }
 
 
+DEFAULT_WEIGHTS_KG = {
+    ProductType.WHEEL: Decimal("11.00"),
+    ProductType.TIRE: Decimal("10.00"),
+    ProductType.SET: Decimal("21.00"),
+    ProductType.ACCESSORY: Decimal("0.50"),
+}
+
+
 def make_variant(product: Product, *, price: str = "1000", stock: int = 10, **fields) -> ProductVariant:
     n = next(_seq)
     if product.type in (ProductType.WHEEL, ProductType.SET):
         fields = {**WHEEL_DEFAULTS, **fields}
+    fields.setdefault("shipping_weight_kg", DEFAULT_WEIGHTS_KG[product.type])
     variant = ProductVariant.objects.create(
         product=product, sku=f"SKU-{n}", price=Decimal(price), **fields
     )

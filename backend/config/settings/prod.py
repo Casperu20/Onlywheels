@@ -21,6 +21,10 @@ CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default=None)
 
 if PAYMENT_PROVIDER == "fake":  # noqa: F405
     raise ImproperlyConfigured("PAYMENT_PROVIDER=fake is not allowed in production.")
+if SHIPPING_CARRIER == "demo":  # noqa: F405
+    raise ImproperlyConfigured("SHIPPING_CARRIER=demo (simulated AWBs) is not allowed in production.")
+if SMARTBILL_DEMO:  # noqa: F405
+    raise ImproperlyConfigured("SMARTBILL_DEMO (mock invoices) is not allowed in production.")
 
 # Static files: compressed + hashed names, served by WhiteNoise (run `collectstatic` on deploy).
 STORAGES = {

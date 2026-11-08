@@ -64,7 +64,7 @@ class OrderViewSet(
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Order.objects.none()
-        return Order.objects.filter(user=self.request.user).prefetch_related(
+        return Order.objects.filter(user=self.request.user).select_related("invoice", "shipment").prefetch_related(
             Prefetch("items", queryset=OrderItem.objects.order_by("created_at")),
             "status_changes",
             "appointment__garage",

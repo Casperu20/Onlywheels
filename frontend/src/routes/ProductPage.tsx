@@ -1,4 +1,4 @@
-import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
@@ -183,6 +183,18 @@ function ProductView({ product, vehicleLabel }: { product: ProductDetail; vehicl
               <Button size="lg" disabled={addToCart.isPending} onClick={onAddToCart}>
                 <ShoppingCart aria-hidden /> {t("product.addToCart")}
               </Button>
+              {(product.type === "wheel" || product.type === "set") && (
+                <Button asChild variant="secondary">
+                  <Link
+                    to={`/ai-studio?${new URLSearchParams({
+                      variant: variant.id,
+                      wheel: `${product.brand.name} ${product.name} ${variantSummary(variant, product.type)}`,
+                    })}`}
+                  >
+                    <Sparkles aria-hidden /> {t("product.tryAiStudio")}
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
 

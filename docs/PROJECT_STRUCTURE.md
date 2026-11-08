@@ -25,7 +25,7 @@ src/
 ├── routes/                        # Pages: Home, Catalog, Product, Cart, Checkout, OrderPages (orders,
 │                                  # order detail, success, fake pay, fitting), Auth, Account, AccountSubPages
 │                                  # (garage, favorites, profile & addresses), InfoPages (legal: terms, privacy,
-│                                  # cookies; contact), Placeholder (showroom, AI), ErrorPages
+│                                  # cookies; contact), AIStudioPage, ErrorPages
 ├── features/                      # Each: api.ts (types + calls), hooks, components/, index.ts
 │   ├── auth/                      # Login/register/reset forms, Google button, RequireAuth, useMe,
 │                                  # PrivacySection (GDPR export + delete account)
@@ -38,11 +38,11 @@ src/
 │   ├── garages/                   # Garage cards, garage + date + slot picker
 │   ├── orders/                    # Orders API, status badge, totals table
 │   ├── reviews/                   # Reviews list + form, stars
-│   ├── showroom3d/                # Design notes only (phase 2)
-│   └── ai-studio/                 # Design notes only (phase 2)
+│   ├── showroom3d/                # Wheel/car API, car geometry, wheel-only and lazy R3F car scenes
+│   └── ai-studio/                 # AI studio API + hooks (jobs, polling, private image blobs)
 ├── api/                           # http.ts (axios: CSRF, token refresh, language), errors.ts,
 │                                  # queryClient.ts, generated/ (empty until `pnpm api:generate`)
-├── components/                    # FormField, PageLoader, ComingSoon, ui/ (button, input, label, native-select)
+├── components/                    # FormField, PageLoader, ui/ (button, input, label, native-select)
 ├── lib/                           # format.ts (RON), useLocale.ts, utils.ts (cn), sentry.ts, native/ (camera,
 │                                  # share, push, storage adapters for Capacitor later)
 ├── i18n/                          # i18next setup + locales/ro|en/common.json
@@ -67,20 +67,20 @@ apps/
 │                      # GDPR export (me/export) + account deletion (me/delete)
 ├── vehicles/          # Make/Model/Generation, UserVehicle (garage), seed_vehicles, wheelsize.py
 ├── fitment/           # FitmentSpec, normalize.py, services.py (fit check + DB filter)
-├── catalog/           # Brand, Category, Product, ProductVariant, ProductMedia, Model3D (GLB for the
-│                      # 3D showroom), filters, selectors, seed_catalog, search_index.py (Meilisearch plan)
+├── catalog/           # Brand, Category, Product, ProductVariant, Model3D and CarModel3D (showroom GLBs),
+│                      # wheel-anchor detection, filters, selectors, seed_catalog, search_index.py (Meilisearch plan)
 ├── inventory/         # StockItem (quantity, reserved), CSV import in admin
 ├── pricing/           # Voucher + validation/discount, seed_vouchers
 ├── cart/              # Cart, CartItem, merge
 ├── garages/           # Garage (hours, capacity, fitting price, partner users), slots API, seed_garages
 ├── appointments/      # Appointment, slot calculation/holding, partner-restricted admin
 ├── orders/            # Order, OrderItem, OrderStatusChange, services.py (lifecycle), expire_orders
-├── payments/          # Payment, WebhookEvent, providers/ (fake, stripe, netopia stub), Stripe webhook
+├── payments/          # Payment, WebhookEvent, providers/ (fake, stripe, netopia), payment webhooks
 ├── notifications/     # Email tasks (order paid/status, garage booking), push.py stub
 ├── reviews/           # Favorite, Review (moderation), urls/{favorites,reviews}.py
-├── shipping/          # Phase 2 structure: Shipment, carrier providers (Sameday, Fan Courier)
-├── invoicing/         # Phase 2 structure: Invoice, SmartBill plan
-└── ai_studio/         # Phase 2 structure: AIGeneration, quota, image providers (Replicate, fal.ai)
+├── shipping/          # Shipment, AWB/label/tracking tasks, carrier providers (Sameday, FAN Courier)
+├── invoicing/         # Invoice, SmartBill provider, private PDFs
+└── ai_studio/         # AIGeneration, quota + daily budget, private storage, providers (Replicate, fal)
 templates/emails/      # password_reset, order_confirmation, order_status, garage_booking (.txt, ro + en)
 tests/                 # factories.py, test_health.py, test_seed.py (+ tests/ inside each app)
 conftest.py            # api_client, user, auth_client fixtures
@@ -184,8 +184,7 @@ frontend/
 │   │   │                        # Accesorii), search box, filters (brand, size, PCD, ET, finish, price),
 │   │   │                        # product detail page, fitment badge
 │   │   ├── favorites/           # Heart toggle, favorites list (synced to backend when logged in)
-│   │   ├── showroom3d/          # react-three-fiber scene: car + wheel GLB, finish/size switcher,
-│   │   │                        # camera controls, "Add set of 4 to cart"
+│   │   ├── showroom3d/          # wheel-only and optional car + wheel scenes; API, geometry and viewer controls
 │   │   ├── ai-studio/           # Photo upload/camera, scene/angle/style picker, job status polling,
 │   │   │                        # result gallery, quota display
 │   │   ├── cart/                # Cart drawer/page, line items, sets of 4, fitting add-on, totals
@@ -315,7 +314,8 @@ backend/
 ```
 catalog/
 ├── migrations/          # Auto-generated database schema changes
-├── models.py            # Product, ProductVariant, ProductMedia, Model3D, Brand, Category
+├── models.py            # Product, ProductVariant, ProductMedia, Model3D, CarModel3D, Brand, Category
+├── car_model_detection.py # GLB metadata parser and wheel-anchor detection for admin uploads
 ├── serializers.py       # DRF serializers (JSON in/out)
 ├── views.py             # DRF ViewSets (list, retrieve, filters)
 ├── urls.py              # Router registration for this app

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from rest_framework.exceptions import APIException
+
 from apps.orders.models import Order
 
 
@@ -8,6 +10,12 @@ from apps.orders.models import Order
 class CheckoutSession:
     session_id: str
     url: str
+
+
+class PaymentProviderError(APIException):
+    status_code = 502
+    default_detail = "Payment provider could not start checkout."
+    default_code = "payment_provider_error"
 
 
 class PaymentProvider(ABC):

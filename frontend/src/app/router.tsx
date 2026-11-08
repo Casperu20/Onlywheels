@@ -17,10 +17,6 @@ const auth = () => import("@/routes/AuthPages");
 const orders = () => import("@/routes/OrderPages");
 const accountSub = () => import("@/routes/AccountSubPages");
 const info = () => import("@/routes/InfoPages");
-const placeholder = (which: "showroom" | "aiStudio") => async () => {
-  const { PlaceholderPage } = await import("@/routes/PlaceholderPage");
-  return { element: <PlaceholderPage page={which} /> };
-};
 
 export const router = createBrowserRouter([
   {
@@ -33,8 +29,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "catalog", lazy: page(() => import("@/routes/CatalogPage"), "CatalogPage") },
       { path: "catalog/:slug", lazy: page(() => import("@/routes/ProductPage"), "ProductPage") },
-      { path: "showroom", lazy: placeholder("showroom") },
-      { path: "ai-studio", lazy: placeholder("aiStudio") },
+      { path: "showroom", lazy: page(() => import("@/features/showroom3d/ShowroomPage"), "ShowroomPage") },
       { path: "fitting", lazy: page(orders, "FittingPage") },
       { path: "cart", lazy: page(() => import("@/routes/CartPage"), "CartPage") },
       { path: "login", lazy: page(auth, "LoginPage") },
@@ -55,6 +50,7 @@ export const router = createBrowserRouter([
           { path: "account/favorites", lazy: page(accountSub, "FavoritesPage") },
           { path: "account/orders", lazy: page(orders, "OrdersPage") },
           { path: "account/orders/:number", lazy: page(orders, "OrderDetailPage") },
+          { path: "ai-studio", lazy: page(() => import("@/routes/AIStudioPage"), "AIStudioPage") },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

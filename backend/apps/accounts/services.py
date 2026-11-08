@@ -89,6 +89,8 @@ def reset_password(*, uid: str, token: str, new_password: str) -> User:
 
 
 def export_user_data(user: User) -> dict:
+    from apps.ai_studio.services import export_generations
+
     """Everything we store about the user (GDPR art. 15/20), as JSON-serialisable data."""
     from apps.orders.models import Order
 
@@ -129,6 +131,7 @@ def export_user_data(user: User) -> dict:
             user.reviews.values("product__name", "rating", "title", "body", "status", "created_at")
         ),
         "orders": orders,
+        "ai_generations": export_generations(user),
     }
 
 
@@ -137,6 +140,7 @@ def delete_account(user: User) -> None:
     """GDPR art. 17. Personal data is removed; orders stay (accounting law) but point to an anonymous user."""
     from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
+    from apps.ai_studio.services import purge_generations
     from apps.cart.models import Cart
     from apps.reviews.services import recalculate_rating
 
@@ -148,7 +152,7 @@ def delete_account(user: User) -> None:
     user.addresses.all().delete()
     user.vehicles.all().delete()
     user.favorites.all().delete()
-    user.ai_generations.all().delete()
+    purge_generations(user.ai_generations.all())
     Cart.objects.filter(user=user).delete()
     user.partner_garages.clear()
     user.groups.clear()

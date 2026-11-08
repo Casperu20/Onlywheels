@@ -75,6 +75,7 @@ class OrderItem(TimeStampedModel):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveSmallIntegerField()
     line_total = models.DecimalField(max_digits=12, decimal_places=2)
+    shipping_weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     class Meta:
         ordering = ("created_at",)

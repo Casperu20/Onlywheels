@@ -4,6 +4,8 @@ from rest_framework import serializers
 
 from apps.appointments.models import Appointment
 from apps.garages.models import Garage
+from apps.invoicing.serializers import InvoiceSummarySerializer
+from apps.shipping.serializers import ShipmentSummarySerializer
 
 from .models import Order, OrderItem, OrderStatusChange
 
@@ -132,6 +134,8 @@ class OrderDetailSerializer(OrderSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     appointment = serializers.SerializerMethodField()
     status_changes = StatusChangeSerializer(many=True, read_only=True)
+    invoice = serializers.SerializerMethodField()
+    shipment = serializers.SerializerMethodField()
 
     class Meta(OrderSerializer.Meta):
         fields = (
@@ -154,6 +158,8 @@ class OrderDetailSerializer(OrderSerializer):
             "items",
             "appointment",
             "status_changes",
+            "invoice",
+            "shipment",
         )
 
     @staticmethod
@@ -167,6 +173,16 @@ class OrderDetailSerializer(OrderSerializer):
     def get_appointment(self, obj: Order):
         appointment = self._appointment(obj)
         return AppointmentSerializer(appointment).data if appointment else None
+
+    @extend_schema_field(InvoiceSummarySerializer(allow_null=True))
+    def get_invoice(self, obj: Order):
+        invoice = getattr(obj, "invoice", None)
+        return InvoiceSummarySerializer(invoice).data if invoice else None
+
+    @extend_schema_field(ShipmentSummarySerializer(allow_null=True))
+    def get_shipment(self, obj: Order):
+        shipment = getattr(obj, "shipment", None)
+        return ShipmentSummarySerializer(shipment).data if shipment and shipment.awb else None
 
 
 class CheckoutSessionSerializer(serializers.Serializer):

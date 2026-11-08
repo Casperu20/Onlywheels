@@ -23,6 +23,7 @@ htmlcov/
 
 # Django
 backend/media/
+backend/private-media/
 backend/staticfiles/
 backend/schema.yml
 

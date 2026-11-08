@@ -17,6 +17,7 @@ x-backend: &backend
     CELERY_TASK_ALWAYS_EAGER: "False"
   volumes:
     - media:/app/media
+    - private-invoices:/app/private-media
   depends_on:
     postgres:
       condition: service_healthy
@@ -73,3 +74,4 @@ services:
 volumes:
   postgres-data:
   media:
+  private-invoices:

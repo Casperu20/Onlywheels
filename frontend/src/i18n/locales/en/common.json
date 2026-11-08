@@ -39,10 +39,22 @@
     "ctaCatalog": "Explore the collection",
     "ctaShowroom": "Enter the showroom",
     "benefits": {
-      "fit": { "title": "The right fit", "text": "Search by your car" },
-      "preview": { "title": "See before you choose", "text": "3D Showroom & AI Studio" },
-      "payment": { "title": "Pay your way", "text": "Secure online card payment" },
-      "fitting": { "title": "Road ready", "text": "Fitting at partner garages" }
+      "fit": {
+        "title": "The right fit",
+        "text": "Search by your car"
+      },
+      "preview": {
+        "title": "See before you choose",
+        "text": "3D Showroom & AI Studio"
+      },
+      "payment": {
+        "title": "Pay your way",
+        "text": "Secure online card payment"
+      },
+      "fitting": {
+        "title": "Road ready",
+        "text": "Fitting at partner garages"
+      }
     },
     "categoriesTitle": "Any road. Your style.",
     "categoriesText": "Everything you need, down to the last detail.",
@@ -56,9 +68,18 @@
     "featuredText": "A selection for those who don't choose at random.",
     "viewAll": "View full catalog",
     "stats": {
-      "fit": { "value": "100%", "label": "fitment checked for your car" },
-      "fitting": { "value": "24h", "label": "to your fitting appointment" },
-      "delivery": { "value": "0 RON", "label": "delivery over 1,000 RON" }
+      "fit": {
+        "value": "100%",
+        "label": "fitment checked for your car"
+      },
+      "fitting": {
+        "value": "24h",
+        "label": "to your fitting appointment"
+      },
+      "delivery": {
+        "value": "0 RON",
+        "label": "delivery over 1,000 RON"
+      }
     },
     "hud": {
       "fits": "5×112 · fits BMW 3 Series G20",
@@ -76,10 +97,6 @@
       "aiText": "A photo of your car, with the wheels you chose.",
       "soon": "Soon"
     }
-  },
-  "comingSoon": {
-    "badge": "Coming soon",
-    "back": "Back home"
   },
   "pages": {
     "catalog": {
@@ -188,29 +205,68 @@
     "terms": {
       "title": "Terms and conditions",
       "sections": [
-        { "title": "Who we are", "text": "OnlyWheels is a university demo shop (MSA project). No real orders are delivered and no real payments are taken." },
-        { "title": "Orders and prices", "text": "Prices are in RON and include 21% VAT. An order is confirmed once the payment is received; stock is reserved for 30 minutes while you pay." },
-        { "title": "Delivery and fitting", "text": "Courier delivery is free over 1,000 RON, otherwise 25 RON. With partner fitting, the products are delivered to the garage and you choose the date and time at checkout." },
-        { "title": "Returns", "text": "Consumers may withdraw within 14 days of receiving the products (GEO 34/2014), except for products that have been mounted or used." },
-        { "title": "Complaints", "text": "Write to contact@onlywheels.ro. You can also contact ANPC or use alternative dispute resolution (SAL)." }
+        {
+          "title": "Who we are",
+          "text": "OnlyWheels is a university demo shop (MSA project). No real orders are delivered and no real payments are taken."
+        },
+        {
+          "title": "Orders and prices",
+          "text": "Prices are in RON and include 21% VAT. An order is confirmed once the payment is received; stock is reserved for 30 minutes while you pay."
+        },
+        {
+          "title": "Delivery and fitting",
+          "text": "Courier delivery is free over 1,000 RON, otherwise 25 RON. With partner fitting, the products are delivered to the garage and you choose the date and time at checkout."
+        },
+        {
+          "title": "Returns",
+          "text": "Consumers may withdraw within 14 days of receiving the products (GEO 34/2014), except for products that have been mounted or used."
+        },
+        {
+          "title": "Complaints",
+          "text": "Write to contact@onlywheels.ro. You can also contact ANPC or use alternative dispute resolution (SAL)."
+        }
       ]
     },
     "privacy": {
       "title": "Privacy policy",
       "sections": [
-        { "title": "Data we collect", "text": "Account details (name, email, phone), addresses, saved cars, favorites, reviews and orders." },
-        { "title": "Why we use it", "text": "To process orders and fitting appointments, send order emails and keep your account. Legal basis: the contract and our legal obligations (accounting)." },
-        { "title": "How long we keep it", "text": "Account data until you delete your account; orders and invoices for the period required by accounting law." },
-        { "title": "Your rights", "text": "Access, rectification, erasure, portability and objection. In My account → Your data you can download your data or delete your account. You can complain to ANSPDCP." },
-        { "title": "Processors", "text": "Payment processor (Stripe), email provider and hosting. Data is stored in the EU." }
+        {
+          "title": "Data we collect",
+          "text": "Account details (name, email, phone), addresses, saved cars, favorites, reviews and orders."
+        },
+        {
+          "title": "Why we use it",
+          "text": "To process orders and fitting appointments, send order emails and keep your account. Legal basis: the contract and our legal obligations (accounting)."
+        },
+        {
+          "title": "How long we keep it",
+          "text": "Account data until you delete your account; orders and invoices for the period required by accounting law."
+        },
+        {
+          "title": "Your rights",
+          "text": "Access, rectification, erasure, portability and objection. In My account → Your data you can download your data or delete your account. You can complain to ANSPDCP."
+        },
+        {
+          "title": "Processors",
+          "text": "Payment processor (Stripe), email provider and hosting. Data is stored in the EU."
+        }
       ]
     },
     "cookies": {
       "title": "Cookie policy",
       "sections": [
-        { "title": "Essential cookies", "text": "Login session (ow_access, ow_refresh) and security (csrftoken). They are required for the shop to work and need no consent." },
-        { "title": "Local storage", "text": "Your language, guest cart and selected car are kept in your browser." },
-        { "title": "Analytics", "text": "This demo uses no analytics or advertising cookies. If they are added later, they will only run after your consent." }
+        {
+          "title": "Essential cookies",
+          "text": "Login session (ow_access, ow_refresh) and security (csrftoken). They are required for the shop to work and need no consent."
+        },
+        {
+          "title": "Local storage",
+          "text": "Your language, guest cart and selected car are kept in your browser."
+        },
+        {
+          "title": "Analytics",
+          "text": "This demo uses no analytics or advertising cookies. If they are added later, they will only run after your consent."
+        }
       ]
     }
   },
@@ -349,7 +405,8 @@
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
     "total": "Total",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "tryAiStudio": "Try them on your car with AI"
   },
   "favorites": {
     "title": "Favorites",
@@ -377,7 +434,10 @@
     "fullName": "Full name",
     "delivery": "Delivery or fitting",
     "methods": {
-      "courier": { "title": "Courier delivery", "text": "Free over 1,000 RON, otherwise 25 RON." },
+      "courier": {
+        "title": "Courier delivery",
+        "text": "Free over 1,000 RON, otherwise 25 RON."
+      },
       "garage_fitting": {
         "title": "Fitting at a partner garage",
         "text": "Products are delivered to the garage; you pick the fitting date and time."
@@ -436,6 +496,29 @@
     "deliveryTo": "Deliver to",
     "history": "History",
     "reservedUntil": "Products are reserved until {{time}}.",
+    "invoice": {
+      "title": "Invoice",
+      "download": "Download invoice (PDF)",
+      "demoNote": "Demo invoice in SmartBill format — the official SmartBill API is disabled for now. This is not a fiscal document.",
+      "status": {
+        "pending": "Invoice preparation is queued.",
+        "issuing": "Invoice is being created.",
+        "pdf_pending": "Invoice is created; preparing the PDF.",
+        "failed": "Invoice is temporarily unavailable.",
+        "review_required": "Invoice is being reviewed."
+      }
+    },
+    "shipment": {
+      "title": "Courier delivery",
+      "track": "Track parcel",
+      "status": {
+        "created": "AWB created – waiting for courier pickup",
+        "picked_up": "Picked up by the courier",
+        "in_transit": "In transit",
+        "delivered": "Delivered",
+        "returned": "Returned to sender"
+      }
+    },
     "cancel": "Cancel order",
     "viewOrder": "View order",
     "status": {
@@ -476,5 +559,83 @@
     "title": "Something went wrong",
     "text": "Reload the page. If the problem persists, come back later.",
     "retry": "Reload"
+  },
+  "aiStudio": {
+    "unavailableTitle": "AI Studio is not available right now",
+    "unavailable": "Image generation is temporarily switched off. Your earlier images are still available below.",
+    "history": "Your images",
+    "empty": "You have not generated any images yet.",
+    "loadError": "We could not load your images.",
+    "photo": "Photo of your car",
+    "photoHint": "Choose a JPEG, PNG or WebP photo showing the car from the side or three-quarter view.",
+    "preview": "Photo preview",
+    "wrongType": "Choose a JPEG, PNG or WebP photo.",
+    "tooLarge": "The photo is too large (max {{mb}} MB).",
+    "choosePhoto": "Choose a photo first.",
+    "wheels": "Wheels",
+    "selectedWheel": "Selected wheel",
+    "clearWheel": "Clear the selected wheel",
+    "anyWheels": "The AI will pick matching wheels.",
+    "pickWheels": "Choose from the catalogue",
+    "scene": "Scene",
+    "style": "Style",
+    "quota": "{{remaining}} of {{limit}} generations left today.",
+    "quotaUsed": "You have used all of today's generations. Come back tomorrow.",
+    "generate": "Generate image",
+    "privacy": "Your photo stays private, is stripped of EXIF/GPS data and is deleted automatically after {{days}} days. The result is an AI illustration, not an exact product photo.",
+    "queued": "Your image is being generated.",
+    "resultAlt": "AI-generated image",
+    "inputAlt": "Uploaded photo",
+    "illustrative": "AI illustration",
+    "download": "Download",
+    "retry": "Retry",
+    "delete": "Delete",
+    "status": {
+      "queued": "Queued…",
+      "running": "Generating…",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "scenes": {
+      "city_night": "City at night",
+      "mountain_road": "Mountain road",
+      "race_track": "Race track",
+      "coastal_road": "Coastal road",
+      "studio": "Studio",
+      "keep_background": "Keep my background"
+    },
+    "styles": {
+      "photo": "Photorealistic",
+      "cinematic": "Cinematic",
+      "magazine": "Car magazine"
+    }
+  },
+  "showroom": {
+    "product": "Wheel model",
+    "finish": "Finish",
+    "size": "Size",
+    "hint": "Drag to rotate; use the scroll wheel or two fingers to zoom.",
+    "loading": "Loading the 3D model…",
+    "viewerLabel": "3D model: {{name}}",
+    "loadError": "The 3D model could not be loaded.",
+    "retry": "Retry",
+    "backToWheelOnly": "Back to wheel only",
+    "genericTitle": "Generic 3D preview",
+    "generic": "This product has no 3D model of its own yet: size and finish match your choice, the spoke design is indicative.",
+    "noWebglTitle": "This device cannot display 3D",
+    "noWebgl": "WebGL is not available in this browser, so we are showing the product photo.",
+    "noModelsTitle": "No wheels in the catalogue yet",
+    "noModels": "Wheels appear here in 3D as soon as they are added to the catalogue.",
+    "browseCatalog": "Browse wheels",
+    "productError": "We could not load the product.",
+    "viewProduct": "View product",
+    "illustrative": "Indicative 3D render; real colours may differ.",
+    "viewMode": "3D preview mode",
+    "wheelOnly": "Wheel only",
+    "onCar": "On a car",
+    "carModel": "Car model",
+    "yourCar": "your car",
+    "carModelsError": "We could not load the 3D car models. Wheel-only preview is still available."
   }
 }

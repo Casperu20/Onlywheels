@@ -5,8 +5,38 @@ from rest_framework import serializers
 
 from apps.fitment.services import check_variant
 from apps.inventory.models import available_for
+from apps.vehicles.models import VehicleModel
 
-from .models import Brand, Category, Model3D, Product, ProductMedia, ProductVariant
+from .models import Brand, CarModel3D, Category, Model3D, Product, ProductMedia, ProductVariant
+
+
+class CarVehicleModelSerializer(serializers.ModelSerializer):
+    make = serializers.CharField(source="make.name", read_only=True)
+
+    class Meta:
+        model = VehicleModel
+        fields = ("id", "name", "make")
+
+
+class CarModel3DSerializer(serializers.ModelSerializer):
+    vehicle_model = CarVehicleModelSerializer(read_only=True)
+    wheel_anchors = serializers.JSONField(source="effective_wheel_anchors", read_only=True)
+
+    class Meta:
+        model = CarModel3D
+        fields = (
+            "id",
+            "name",
+            "slug",
+            "body_type",
+            "glb_file",
+            "length_m",
+            "front",
+            "vehicle_model",
+            "wheel_anchors",
+            "attribution",
+            "source_url",
+        )
 
 
 class BrandSerializer(serializers.ModelSerializer):

@@ -88,7 +88,7 @@ All of these are in the code and do nothing until the variable is set (details: 
 | PWA | `vite-plugin-pwa` in `vite.config.ts`, icons in `frontend/public/` | always on in `pnpm build` |
 | Route code splitting | `frontend/src/app/router.tsx` (`lazy`) | always on |
 | GDPR export / delete account | `GET /api/v1/auth/me/export/`, `POST /api/v1/auth/me/delete/`, Account page | — |
-| 3D model data | `catalog.Model3D` (GLB upload in the product admin), `model_3d` in product detail | upload a `.glb` |
+| 3D model data | `catalog.Model3D` wheel GLBs and `catalog.CarModel3D` car GLBs (admin uploads), public car-model API, `/showroom` wheel/car viewer | Upload licensed assets and credit them (see [SETUP.md](SETUP.md)); no third-party models are bundled |
 | Docker (production) | `infra/docker/*.Dockerfile`, `infra/docker-compose.prod.yml`, `infra/nginx/` | `docker compose … up` |
 | CI | `.github/workflows/ci.yml` | push to GitHub |
 | Android shell | `frontend/capacitor.config.json` | `npx cap add android` (phase 3) |
@@ -103,7 +103,10 @@ All of these are in the code and do nothing until the variable is set (details: 
 | Search | `icontains` on name/brand + exact SKU | PostgreSQL full-text/trigram, then Meilisearch |
 | Background jobs | Celery runs inline (eager) in development | Production compose file runs Redis + worker + beat |
 | Payments | Simulated or Stripe test; no refunds via API | Refund from the Stripe dashboard; automate later |
-| Invoices / AWB | Not generated (phase 2 structure only) | SmartBill + courier integration |
+| Invoices | SmartBill integration is built but disabled until a merchant account is configured (dev issues a local "DEMO" mock-up PDF instead, clearly marked as not a fiscal document); not yet run against the live API; e-Factura status is not automated | Configure SmartBill (see [SETUP.md](SETUP.md)); approved e-Factura workflow |
+| AWB | Sameday and FAN Courier adapters are built and HTTP-mocked tested, but disabled until carrier credentials are configured; not yet run against a carrier sandbox. FAN v2 endpoints and both carriers' status names come from unofficial sources. `SHIPPING_CARRIER=demo` simulates the whole flow without an account (development only) | Configure a carrier (see [SETUP.md](SETUP.md)); run one sandbox AWB and check the status mapping |
+| AI photo studio | Replicate and fal adapters are built and HTTP-mocked tested, but disabled until an API key is configured; not yet run against a real model. The Replicate Kontext price and fal Kontext input fields beyond `prompt`/`image_url` come from documentation, not a live call; costs are estimates (providers do not report them) | Configure a provider (see [SETUP.md](SETUP.md)); run one generation and compare the cost with the provider dashboard |
+| 3D showroom | Wheel and optional car views are implemented. No licensed wheel or car GLBs are shipped: wheels use the code-drawn generic preview until uploaded; the car selector appears after a usable car is uploaded in admin. Car wheel positions are detected from GLB metadata or can be entered manually. The Three.js scene is lazy-loaded on `/showroom` | Upload and credit licensed, Draco-compressed GLBs (see [SETUP.md](SETUP.md)); on Cloudflare Pages + R2 add the R2 CORS rule from [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Translations | Backend messages are English unless Django has a Romanian translation | Add `locale/ro` with `makemessages` |
 | Tests | No end-to-end test suite (flows checked manually); not yet run on PostgreSQL | Playwright happy path; CI runs PostgreSQL |
 | Bundle size | Pages are split, but the shared bundle is still ~680 KB (~215 KB gzipped): React DOM, React Router, zod, axios, i18next | Acceptable for now; revisit with `manualChunks` / lighter libraries if needed |
@@ -130,11 +133,11 @@ Cloudflare Pages + API on Render/VPS; managed PostgreSQL, Stripe test webhook, S
 
 | Feature | Where the design notes are | Backend work | Frontend work |
 |---|---|---|---|
-| 3D showroom | `frontend/src/features/showroom3d/index.ts` | Done: `Model3D` + GLB upload in admin + `model_3d` in the API | three.js / react-three-fiber configurator page |
-| AI photo studio | `backend/apps/ai_studio/services.py`, `providers/` | API endpoints, Celery task, provider adapter | Upload + polling + gallery (`features/ai-studio`) |
-| Invoicing (SmartBill + e-Factura) | `backend/apps/invoicing/services.py` | Task after payment, PDF storage | Invoice link on the order page |
-| Courier AWB | `backend/apps/shipping/services.py`, `providers/` | AWB on "processing", tracking task | Tracking link/status on the order page |
-| Netopia + installments | `backend/apps/payments/providers/netopia.py` | Provider + webhook | Installment option at checkout |
+| 3D showroom | `frontend/src/features/showroom3d/` | Done: wheel `Model3D` and admin-managed `CarModel3D`, automatic/manual wheel anchors, and public active-car API | `/showroom` supports wheel-only and car views, active-vehicle matching, URL-synced car/variant selection, generic wheel fallback, attribution, and wheel-only recovery; licensed GLBs remain optional and must be uploaded by the owner |
+| AI photo studio | `backend/apps/ai_studio/services.py`, `providers/` | Upload API with EXIF stripping, per-user quota + global USD budget, Replicate/fal adapters, Celery task, private storage, retention cleanup, GDPR export/erasure implemented; disabled until a provider key is configured | `/ai-studio` page (upload, scene/style, polling history, retry/download/delete) and "Try on your car" link on wheel products implemented |
+| Invoicing (SmartBill + e-Factura) | `backend/apps/invoicing/services.py` | Paid-order task, private PDF storage, owner/staff API, and staff retry implemented; issuance remains disabled until a test account is confirmed (`SMARTBILL_DEMO` issues a local mock-up PDF in dev); e-Factura automation is not supported | Order-page invoice status and authenticated PDF download implemented |
+| Courier AWB | `backend/apps/shipping/services.py`, `providers/` | AWB on "processing" (courier orders), private labels, hourly tracking, admin retry/review implemented; disabled until a carrier is configured | Tracking block (carrier, AWB, status, link) on the order page implemented |
+| Netopia + installments | `backend/apps/payments/providers/netopia.py` | Hosted checkout, authenticated callback, and installment persistence implemented; sandbox E2E requires merchant credentials | Existing checkout redirects to NETOPIA; no separate installment-count selector (provider-managed terms must be verified with the merchant account) |
 | PWA | `frontend/vite.config.ts` | — | Done (installable, offline catalog cache); later: push notifications, install prompt UI |
 
 ### 4.4 Phase 3 – Android

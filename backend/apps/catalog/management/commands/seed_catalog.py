@@ -52,6 +52,19 @@ def accessory(sku, label, price, stock, thread=""):
     return {"sku": sku, "label": label, "thread_size": thread, "price": Decimal(price), "stock": stock}
 
 
+def default_weight_kg(product_type: str, variant: dict) -> Decimal:
+    """Demo packed weight per unit; replace with supplier data before real shipping."""
+    if product_type == ProductType.ACCESSORY:
+        return Decimal("0.50")
+    extra = Decimal(max(variant.get("diameter_in", 15) - 15, 0))
+    wheel, tire = Decimal("8.00") + extra, Decimal("7.00") + extra
+    if product_type == ProductType.WHEEL:
+        return wheel
+    if product_type == ProductType.TIRE:
+        return tire
+    return wheel + tire
+
+
 PRODUCTS = [
     {
         "type": ProductType.WHEEL, "brand": "BBS", "category": "jante-aliaj", "name": "CH-R",
@@ -243,6 +256,7 @@ class Command(BaseCommand):
                 fields = dict(variant_data)
                 stock = fields.pop("stock")
                 sku = fields.pop("sku")
+                fields["shipping_weight_kg"] = default_weight_kg(data["type"], variant_data)
                 variant, _ = ProductVariant.objects.update_or_create(
                     sku=sku, defaults={**fields, "product": product, "is_active": True}
                 )

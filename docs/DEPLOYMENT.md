@@ -24,7 +24,7 @@ flowchart LR
 | Database | PostgreSQL (native, `infra/docker-compose.yml` or Supabase) | PostgreSQL 16 service container | `postgres` container (A) or managed PostgreSQL (B) |
 | Celery | Eager (tasks run inline, no Redis) | Eager | Redis + `worker` + `beat` |
 | Email | Printed to the console | In memory (tests) | Resend via django-anymail |
-| Payments | `fake` (simulated) | `fake` (tests) | `stripe` (`fake` is refused) |
+| Payments | `fake` (simulated) | `fake` (tests) | `stripe` or `netopia` with live credentials and authenticated callbacks (`fake` is refused) |
 | Uploads | `backend/media/` | In memory (tests) | `media` volume (A) or Cloudflare R2 |
 | Frontend | Vite dev server :5173, proxies `/api` and `/media` | `pnpm build` | nginx image (A) or Cloudflare Pages (B) |
 | Logs | Readable console lines | — | JSON lines |
@@ -80,13 +80,18 @@ Cloudflare (TLS) ──► nginx :80 ─┬─ /                     React build
 |---|---|---|---|---|---|
 | `postgres` | `postgres:16-alpine` | default | none | `postgres-data` | Health check `pg_isready`; the backend services wait for it |
 | `redis` | `redis:7-alpine` | default | none | — | Celery broker (db 0) + Django cache (db 1); no persistence needed |
-| `web` | `onlywheels-api` | `migrate`, then gunicorn | none | `media` | Migrations run on every start |
-| `worker` | `onlywheels-api` | `celery -A config worker` | none | `media` | Emails, order expiry tasks |
-| `beat` | `onlywheels-api` | `celery -A config beat` | none | — | Schedules `expire_unpaid_orders_task` every 5 min; **run exactly one** |
+| `web` | `onlywheels-api` | `migrate`, then gunicorn | none | `media`, `private-invoices` | Migrations run on every start |
+| `worker` | `onlywheels-api` | `celery -A config worker` | none | `media`, `private-invoices` | Emails, order expiry and invoice tasks |
+| `beat` | `onlywheels-api` | `celery -A config beat` | none | — | Schedules order expiry (5 min), shipment tracking and AI studio cleanup (hourly); **run exactly one** |
 | `nginx` | built from `frontend.Dockerfile` | default | `${HTTP_PORT:-80}` | `media` (read-only) | The only service reachable from outside |
 
 All services restart automatically (`unless-stopped`). Only nginx is exposed; PostgreSQL and Redis are reachable
 only inside the compose network.
+
+The `private-invoices` volume is mounted only by Django services; nginx does not mount it. Customers download
+PDFs through the authenticated invoice API, which checks order ownership before streaming the file. The same
+volume holds shipping labels and AI studio photos (`/app/private-media/ai`), which are likewise streamed only by
+the authenticated API.
 
 ### 3.2 Configuration
 
@@ -96,6 +101,15 @@ only inside the compose network.
 - The compose file sets `DJANGO_SETTINGS_MODULE`, `DATABASE_URL`, `CELERY_BROKER_URL`, `CACHE_URL` and
   `CELERY_TASK_ALWAYS_EAGER` itself; these win over the same names in `.env.prod`.
 - Use only letters and digits in `POSTGRES_PASSWORD` – it is put into a URL.
+- For NETOPIA, configure `PAYMENT_PROVIDER=netopia`, `NETOPIA_MODE=live`,
+  `NETOPIA_API_KEY`, `NETOPIA_POS_SIGNATURE`, `NETOPIA_PUBLIC_KEY`,
+  `NETOPIA_POS_SIGNATURE_SET`, and `NETOPIA_NOTIFY_URL` in the backend environment.
+  The notification URL must be the public HTTPS endpoint
+  `/api/v1/payments/webhook/netopia/`; the PEM key may be supplied as one line with
+  escaped `\n` line breaks. Never pass these credentials as `VITE_*` build arguments.
+- Complete a sandbox checkout and verify its callback before changing to live mode.
+  NETOPIA installment eligibility and terms depend on the merchant/card setup; the
+  application does not currently expose a customer-selected installment count.
 
 ### 3.3 First deployment
 
@@ -177,6 +191,9 @@ CSRF_COOKIE_DOMAIN=.onlywheels.ro          # the SPA must read the csrftoken coo
 - `frontend/public/_redirects` (SPA routing) and `frontend/public/_headers` (security headers + CSP) are
   picked up by Pages automatically. **Edit the `connect-src` in `_headers`** if the API domain differs from
   `https://api.onlywheels.ro`.
+- 3D showroom on R2: the viewer downloads `.glb` files with `fetch` from `https://media.onlywheels.ro` (already in
+  `connect-src`). Add a CORS rule to the R2 bucket (*R2 › bucket › Settings › CORS policy*): allowed origin
+  `https://onlywheels.ro`, method `GET`. Without it the showroom shows "The 3D model could not be loaded".
 - Cookies: `ow_access`/`ow_refresh` (httpOnly, Secure, SameSite=Lax) are set for `api.onlywheels.ro`; both
   hosts are the same "site" (`onlywheels.ro`), so the browser sends them with the SPA's requests.
 
@@ -189,6 +206,7 @@ CSRF_COOKIE_DOMAIN=.onlywheels.ro          # the SPA must read the csrftoken coo
 | Car database | Wheel-Size API key (Sandbox is for testing only; a public shop needs a paid plan) | `WHEEL_SIZE_API_KEY` |
 | Resend (email) | Verify the domain (SPF/DKIM DNS records), create an API key | `EMAIL_BACKEND=anymail.backends.resend.EmailBackend`, `RESEND_API_KEY`, `DEFAULT_FROM_EMAIL` |
 | Cloudflare R2 | Create a bucket + API token; optional public custom domain `media.onlywheels.ro` | `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_CUSTOM_DOMAIN` |
+| AI photo studio | Replicate or fal API key with a spend limit; on hosted platforms without a persistent disk, a **separate private** R2/S3 bucket (no public domain) | `AI_STUDIO_PROVIDER`, `REPLICATE_API_TOKEN` / `FAL_KEY`, `AI_STUDIO_DAILY_BUDGET_USD`, `AI_STUDIO_PRIVATE_BUCKET` (reuses the `AWS_*` credentials) |
 | Sentry | Two projects: Django and React | `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `VITE_SENTRY_DSN` (build-time) |
 | Uptime | Any monitor on `/api/v1/health/` | — |
 
@@ -307,4 +325,7 @@ Use a dedicated deploy user and key on the server, and keep `infra/.env.prod` on
 - [ ] Open the site with the browser console: no CSP violations (admin, Swagger, Google login, Sentry).
 - [ ] Legal pages: terms, privacy policy (GDPR – the export/delete endpoints exist), cookies, ANPC/SOL links.
 - [ ] Replace demo fitment/catalog data and remove the "demo" labels.
-- [ ] Real invoicing (SmartBill, phase 2) before accepting real payments.
+- [ ] Confirm SmartBill test-account eligibility, invoice series/tax/unit/VAT values, and accounting/legal approval before enabling `SMARTBILL_ENABLED`; verify one paid test order and staff reconciliation.
+- [ ] Confirm the e-Factura/ANAF submission and status workflow; the current integration stores `not_sent` and does not automate submission/status checks.
+- [ ] Real invoicing (SmartBill) must be verified before accepting real payments.
+- [ ] AI studio: set a provider spend limit and a low `AI_STUDIO_DAILY_BUDGET_USD`, keep `*_COST_PER_IMAGE_USD` at or above the model price, mention AI processing of uploaded photos in the privacy policy, and run one generation end to end.

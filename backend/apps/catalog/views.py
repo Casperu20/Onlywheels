@@ -1,18 +1,20 @@
 import uuid
 
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import viewsets
+from rest_framework import generics, viewsets
 from rest_framework.permissions import AllowAny
 
 from apps.fitment.services import get_spec
 
 from .filters import ProductFilter
-from .models import Brand, Category
+from .models import Brand, CarModel3D, Category
 from .selectors import annotate_listing, product_base
 from .serializers import (
     BrandSerializer,
+    CarModel3DSerializer,
     CategorySerializer,
     ProductDetailSerializer,
     ProductListSerializer,
@@ -35,6 +37,26 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     pagination_class = None
     lookup_field = "slug"
+
+
+@extend_schema(tags=["catalog"])
+class CarModel3DListView(generics.ListAPIView):
+    serializer_class = CarModel3DSerializer
+    permission_classes = (AllowAny,)
+    pagination_class = None
+
+    def get_queryset(self):
+        return (
+            CarModel3D.objects.filter(is_active=True)
+            .filter(
+                Q(wheel_anchors__wheels__isnull=False)
+                | Q(
+                    detection_status=CarModel3D.DetectionStatus.OK,
+                    detected_anchors__wheels__isnull=False,
+                )
+            )
+            .select_related("vehicle_model__make")
+        )
 
 
 @extend_schema_view(

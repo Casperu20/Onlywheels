@@ -2,11 +2,13 @@ from django.conf import settings
 
 from .base import CheckoutSession, PaymentProvider
 from .fake import FakeProvider
+from .netopia import NetopiaProvider
 from .stripe_provider import StripeProvider
 
 PROVIDERS: dict[str, type[PaymentProvider]] = {
     "fake": FakeProvider,
     "stripe": StripeProvider,
+    "netopia": NetopiaProvider,
 }
 
 

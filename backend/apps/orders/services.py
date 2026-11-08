@@ -112,7 +112,7 @@ def _notify(task_name: str, order: Order) -> None:
     from apps.notifications import tasks
 
     order_id = str(order.pk)
-    transaction.on_commit(lambda: getattr(tasks, task_name).delay(order_id))
+    transaction.on_commit(lambda: getattr(tasks, task_name).delay(order_id), robust=True)
 
 
 def place_order(user, data: dict) -> Order:
@@ -176,6 +176,7 @@ def _place_order(user, data: dict) -> Order:
                 unit_price=item.variant.price,
                 quantity=item.quantity,
                 line_total=item.variant.price * item.quantity,
+                shipping_weight_kg=item.variant.shipping_weight_kg,
             )
             for item in items
         ]
@@ -228,6 +229,14 @@ def mark_paid(order: Order, *, note: str = "Payment received") -> Order:
         note = "Payment received after the reservation expired – check stock and fitting slot."
     add_history(order, Status.PAID, note)
     _notify("send_order_confirmation", order)
+    from apps.invoicing.models import Invoice
+    from apps.invoicing.tasks import issue_invoice_task
+
+    Invoice.objects.get_or_create(
+        order=order,
+        defaults={"total": order.total, "status": Invoice.Status.PENDING},
+    )
+    transaction.on_commit(lambda: issue_invoice_task.delay(str(order.pk)), robust=True)
     return order
 
 
@@ -289,6 +298,10 @@ def change_status(order: Order, new_status: str, *, by=None, note: str = "") -> 
         )
     order.status = new_status
     order.save(update_fields=["status", "updated_at"])
+    if new_status == Status.PROCESSING:
+        from apps.shipping.services import queue_shipment
+
+        queue_shipment(order)
     if new_status == Status.COMPLETED:
         Appointment.objects.filter(
             order=order, status__in=(Appointment.Status.BOOKED, Appointment.Status.CONFIRMED)

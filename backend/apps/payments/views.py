@@ -31,6 +31,23 @@ class StripeWebhookView(APIView):
         return Response({"received": True})
 
 
+@extend_schema(exclude=True)
+class NetopiaWebhookView(APIView):
+    """NETOPIA -> us. Authenticated by its Verification-token JWT."""
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+    throttle_classes = ()
+
+    def post(self, request):
+        try:
+            event = services.verify_netopia_callback(request.body, request.headers)
+        except ValueError:
+            return Response({"error": {"code": "invalid_signature", "message": "Invalid NETOPIA webhook."}}, status=400)
+        services.handle_netopia_event(event)
+        return Response({"received": True})
+
+
 @extend_schema(tags=["payments"])
 class FakePaymentCompleteView(APIView):
     """Only when PAYMENT_PROVIDER=fake (development): simulates a successful payment."""

@@ -1,10 +1,34 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { loadEnv } from "vite";
+import { loadEnv, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
+
+// Draco decoder for compressed showroom GLBs, served from our origin (CSP) and pinned to the installed three.
+const DRACO_DIR = fileURLToPath(new URL("./node_modules/three/examples/jsm/libs/draco/gltf/", import.meta.url));
+const DRACO_FILES = ["draco_decoder.js", "draco_decoder.wasm", "draco_wasm_wrapper.js"];
+
+function dracoDecoder(): Plugin {
+  return {
+    name: "onlywheels-draco-decoder",
+    configureServer(server) {
+      server.middlewares.use("/draco", (req, res, next) => {
+        const name = (req.url ?? "").split("?")[0].replace(/^\//, "");
+        if (!DRACO_FILES.includes(name)) return next();
+        res.setHeader("Content-Type", name.endsWith(".wasm") ? "application/wasm" : "text/javascript");
+        res.end(readFileSync(DRACO_DIR + name));
+      });
+    },
+    generateBundle() {
+      for (const name of DRACO_FILES) {
+        this.emitFile({ type: "asset", fileName: `draco/${name}`, source: readFileSync(DRACO_DIR + name) });
+      }
+    },
+  };
+}
 
 // Installable PWA: app shell precached, catalog API network-first (offline fallback), media cache-first.
 const pwa = VitePWA({
@@ -28,6 +52,8 @@ const pwa = VitePWA({
   },
   workbox: {
     navigateFallback: "/index.html",
+    // The 3D viewer chunk and the Draco decoder are large and only needed in the showroom: load on demand.
+    globIgnores: ["draco/**", "assets/ModelCanvas-*.js"],
     navigateFallbackDenylist: [/^\/api\//, /^\/admin\//, /^\/media\//, /^\/static\//],
     runtimeCaching: [
       {
@@ -56,7 +82,7 @@ export default defineConfig(({ mode }) => {
   const backend = env.VITE_PROXY_TARGET || "http://127.0.0.1:8000";
 
   return {
-    plugins: [react(), tailwindcss(), mode === "test" ? [] : pwa],
+    plugins: [react(), tailwindcss(), dracoDecoder(), mode === "test" ? [] : pwa],
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },

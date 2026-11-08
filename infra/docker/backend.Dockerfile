@@ -28,7 +28,7 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.prod \
     python manage.py collectstatic --noinput
 
 RUN useradd --create-home --uid 1000 app \
-    && mkdir -p /app/media \
+    && mkdir -p /app/media /app/private-media \
     && chown -R app:app /app
 USER app
 

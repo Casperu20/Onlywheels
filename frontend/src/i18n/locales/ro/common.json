@@ -39,10 +39,22 @@
     "ctaCatalog": "Descoperă colecția",
     "ctaShowroom": "Intră în showroom",
     "benefits": {
-      "fit": { "title": "Alegerea potrivită", "text": "Căutare după mașina ta" },
-      "preview": { "title": "Vezi înainte să alegi", "text": "Showroom 3D & AI Studio" },
-      "payment": { "title": "Plata, în ritmul tău", "text": "Card online, în siguranță" },
-      "fitting": { "title": "Pregătit de drum", "text": "Montaj la service-uri partenere" }
+      "fit": {
+        "title": "Alegerea potrivită",
+        "text": "Căutare după mașina ta"
+      },
+      "preview": {
+        "title": "Vezi înainte să alegi",
+        "text": "Showroom 3D & AI Studio"
+      },
+      "payment": {
+        "title": "Plata, în ritmul tău",
+        "text": "Card online, în siguranță"
+      },
+      "fitting": {
+        "title": "Pregătit de drum",
+        "text": "Montaj la service-uri partenere"
+      }
     },
     "categoriesTitle": "Orice drum. Stilul tău.",
     "categoriesText": "Tot ce ai nevoie, de la jante până la ultimul detaliu.",
@@ -56,9 +68,18 @@
     "featuredText": "O selecție pentru cei care nu aleg la întâmplare.",
     "viewAll": "Vezi tot catalogul",
     "stats": {
-      "fit": { "value": "100%", "label": "compatibilitate verificată" },
-      "fitting": { "value": "24h", "label": "până la programarea la montaj" },
-      "delivery": { "value": "0 RON", "label": "livrare peste 1.000 RON" }
+      "fit": {
+        "value": "100%",
+        "label": "compatibilitate verificată"
+      },
+      "fitting": {
+        "value": "24h",
+        "label": "până la programarea la montaj"
+      },
+      "delivery": {
+        "value": "0 RON",
+        "label": "livrare peste 1.000 RON"
+      }
     },
     "hud": {
       "fits": "5×112 · compatibil BMW Seria 3 G20",
@@ -76,10 +97,6 @@
       "aiText": "O fotografie a mașinii tale, cu jantele alese.",
       "soon": "În curând"
     }
-  },
-  "comingSoon": {
-    "badge": "În curând",
-    "back": "Înapoi acasă"
   },
   "pages": {
     "catalog": {
@@ -188,29 +205,68 @@
     "terms": {
       "title": "Termeni și condiții",
       "sections": [
-        { "title": "Cine suntem", "text": "OnlyWheels este un magazin demonstrativ realizat în cadrul unui proiect universitar (MSA). Nu se livrează comenzi reale și nu se încasează plăți reale." },
-        { "title": "Comenzi și prețuri", "text": "Prețurile sunt în RON și includ TVA 21%. Comanda este confirmată după încasarea plății; stocul este rezervat 30 de minute cât timp plătești." },
-        { "title": "Livrare și montaj", "text": "Livrarea prin curier este gratuită peste 1.000 RON, altfel 25 RON. La montajul partener, produsele sunt livrate la service, iar data și ora le alegi la checkout." },
-        { "title": "Retur", "text": "Consumatorii se pot retrage în 14 zile de la primirea produselor (OUG 34/2014), cu excepția produselor montate sau folosite." },
-        { "title": "Reclamații", "text": "Scrie-ne la contact@onlywheels.ro. Te poți adresa și ANPC sau poți folosi soluționarea alternativă a litigiilor (SAL)." }
+        {
+          "title": "Cine suntem",
+          "text": "OnlyWheels este un magazin demonstrativ realizat în cadrul unui proiect universitar (MSA). Nu se livrează comenzi reale și nu se încasează plăți reale."
+        },
+        {
+          "title": "Comenzi și prețuri",
+          "text": "Prețurile sunt în RON și includ TVA 21%. Comanda este confirmată după încasarea plății; stocul este rezervat 30 de minute cât timp plătești."
+        },
+        {
+          "title": "Livrare și montaj",
+          "text": "Livrarea prin curier este gratuită peste 1.000 RON, altfel 25 RON. La montajul partener, produsele sunt livrate la service, iar data și ora le alegi la checkout."
+        },
+        {
+          "title": "Retur",
+          "text": "Consumatorii se pot retrage în 14 zile de la primirea produselor (OUG 34/2014), cu excepția produselor montate sau folosite."
+        },
+        {
+          "title": "Reclamații",
+          "text": "Scrie-ne la contact@onlywheels.ro. Te poți adresa și ANPC sau poți folosi soluționarea alternativă a litigiilor (SAL)."
+        }
       ]
     },
     "privacy": {
       "title": "Politica de confidențialitate",
       "sections": [
-        { "title": "Ce date colectăm", "text": "Datele contului (nume, email, telefon), adrese, mașini salvate, favorite, recenzii și comenzi." },
-        { "title": "De ce le folosim", "text": "Pentru procesarea comenzilor și a programărilor la montaj, emailurile despre comandă și păstrarea contului. Temei legal: contractul și obligațiile legale (contabilitate)." },
-        { "title": "Cât timp le păstrăm", "text": "Datele contului până la ștergerea contului; comenzile și facturile pe durata cerută de legea contabilității." },
-        { "title": "Drepturile tale", "text": "Acces, rectificare, ștergere, portabilitate și opoziție. Din Contul meu → Datele tale poți descărca datele sau șterge contul. Te poți adresa ANSPDCP." },
-        { "title": "Persoane împuternicite", "text": "Procesatorul de plăți (Stripe), furnizorul de email și hostingul. Datele sunt stocate în UE." }
+        {
+          "title": "Ce date colectăm",
+          "text": "Datele contului (nume, email, telefon), adrese, mașini salvate, favorite, recenzii și comenzi."
+        },
+        {
+          "title": "De ce le folosim",
+          "text": "Pentru procesarea comenzilor și a programărilor la montaj, emailurile despre comandă și păstrarea contului. Temei legal: contractul și obligațiile legale (contabilitate)."
+        },
+        {
+          "title": "Cât timp le păstrăm",
+          "text": "Datele contului până la ștergerea contului; comenzile și facturile pe durata cerută de legea contabilității."
+        },
+        {
+          "title": "Drepturile tale",
+          "text": "Acces, rectificare, ștergere, portabilitate și opoziție. Din Contul meu → Datele tale poți descărca datele sau șterge contul. Te poți adresa ANSPDCP."
+        },
+        {
+          "title": "Persoane împuternicite",
+          "text": "Procesatorul de plăți (Stripe), furnizorul de email și hostingul. Datele sunt stocate în UE."
+        }
       ]
     },
     "cookies": {
       "title": "Politica de cookies",
       "sections": [
-        { "title": "Cookies esențiale", "text": "Sesiunea de autentificare (ow_access, ow_refresh) și securitatea (csrftoken). Sunt necesare pentru funcționarea magazinului și nu necesită consimțământ." },
-        { "title": "Stocare locală", "text": "Limba, coșul de vizitator și mașina selectată sunt păstrate în browserul tău." },
-        { "title": "Analiză", "text": "Acest demo nu folosește cookies de analiză sau publicitate. Dacă vor fi adăugate, vor rula doar după acordul tău." }
+        {
+          "title": "Cookies esențiale",
+          "text": "Sesiunea de autentificare (ow_access, ow_refresh) și securitatea (csrftoken). Sunt necesare pentru funcționarea magazinului și nu necesită consimțământ."
+        },
+        {
+          "title": "Stocare locală",
+          "text": "Limba, coșul de vizitator și mașina selectată sunt păstrate în browserul tău."
+        },
+        {
+          "title": "Analiză",
+          "text": "Acest demo nu folosește cookies de analiză sau publicitate. Dacă vor fi adăugate, vor rula doar după acordul tău."
+        }
       ]
     }
   },
@@ -351,7 +407,8 @@
     "decrease": "Scade cantitatea",
     "increase": "Crește cantitatea",
     "total": "Total",
-    "addToCart": "Adaugă în coș"
+    "addToCart": "Adaugă în coș",
+    "tryAiStudio": "Încearcă-le pe mașina ta cu AI"
   },
   "favorites": {
     "title": "Favorite",
@@ -380,7 +437,10 @@
     "fullName": "Nume complet",
     "delivery": "Livrare sau montaj",
     "methods": {
-      "courier": { "title": "Livrare prin curier", "text": "Gratuit peste 1.000 RON, altfel 25 RON." },
+      "courier": {
+        "title": "Livrare prin curier",
+        "text": "Gratuit peste 1.000 RON, altfel 25 RON."
+      },
       "garage_fitting": {
         "title": "Montaj la service partener",
         "text": "Produsele ajung la service; alegi data și ora montajului."
@@ -440,6 +500,29 @@
     "deliveryTo": "Livrare la",
     "history": "Istoric",
     "reservedUntil": "Produsele sunt rezervate până la {{time}}.",
+    "invoice": {
+      "title": "Factură",
+      "download": "Descarcă factura (PDF)",
+      "demoNote": "Factură demo în format SmartBill — API-ul oficial SmartBill este dezactivat momentan. Nu este document fiscal.",
+      "status": {
+        "pending": "Pregătirea facturii este în așteptare.",
+        "issuing": "Factura este în curs de emitere.",
+        "pdf_pending": "Factura a fost emisă; se pregătește PDF-ul.",
+        "failed": "Factura este temporar indisponibilă.",
+        "review_required": "Factura este în curs de verificare."
+      }
+    },
+    "shipment": {
+      "title": "Livrare prin curier",
+      "track": "Urmărește coletul",
+      "status": {
+        "created": "AWB generat – așteaptă ridicarea de către curier",
+        "picked_up": "Preluat de curier",
+        "in_transit": "În tranzit",
+        "delivered": "Livrat",
+        "returned": "Returnat expeditorului"
+      }
+    },
     "cancel": "Anulează comanda",
     "viewOrder": "Vezi comanda",
     "status": {
@@ -481,5 +564,83 @@
     "title": "Ceva nu a mers bine",
     "text": "Reîncarcă pagina. Dacă problema persistă, revino mai târziu.",
     "retry": "Reîncarcă"
+  },
+  "aiStudio": {
+    "unavailableTitle": "AI Studio nu este disponibil momentan",
+    "unavailable": "Generarea de imagini este oprită temporar. Imaginile tale anterioare rămân disponibile mai jos.",
+    "history": "Imaginile tale",
+    "empty": "Nu ai generat încă nicio imagine.",
+    "loadError": "Nu am putut încărca imaginile.",
+    "photo": "Fotografia mașinii",
+    "photoHint": "Alege o fotografie JPEG, PNG sau WebP cu mașina din lateral sau trei sferturi.",
+    "preview": "Previzualizare fotografie",
+    "wrongType": "Alege o fotografie JPEG, PNG sau WebP.",
+    "tooLarge": "Fotografia este prea mare (maxim {{mb}} MB).",
+    "choosePhoto": "Alege mai întâi o fotografie.",
+    "wheels": "Jante",
+    "selectedWheel": "Janta selectată",
+    "clearWheel": "Renunță la janta selectată",
+    "anyWheels": "AI-ul va alege jante potrivite.",
+    "pickWheels": "Alege din catalog",
+    "scene": "Decor",
+    "style": "Stil",
+    "quota": "Mai ai {{remaining}} din {{limit}} generări azi.",
+    "quotaUsed": "Ai folosit toate generările de azi. Revino mâine.",
+    "generate": "Generează imaginea",
+    "privacy": "Fotografia este privată, fără date EXIF/GPS, și se șterge automat după {{days}} zile. Rezultatul este o ilustrație AI, nu o fotografie exactă a produsului.",
+    "queued": "Imaginea a intrat în lucru.",
+    "resultAlt": "Imagine generată cu AI",
+    "inputAlt": "Fotografia încărcată",
+    "illustrative": "Ilustrație AI",
+    "download": "Descarcă",
+    "retry": "Reîncearcă",
+    "delete": "Șterge",
+    "status": {
+      "queued": "În așteptare…",
+      "running": "Se generează…",
+      "done": "Gata",
+      "failed": "Eșuat",
+      "cancelled": "Anulat"
+    },
+    "scenes": {
+      "city_night": "Oraș noaptea",
+      "mountain_road": "Drum de munte",
+      "race_track": "Circuit",
+      "coastal_road": "Drum pe coastă",
+      "studio": "Studio",
+      "keep_background": "Păstrează fundalul meu"
+    },
+    "styles": {
+      "photo": "Fotorealist",
+      "cinematic": "Cinematic",
+      "magazine": "Revistă auto"
+    }
+  },
+  "showroom": {
+    "product": "Model de jantă",
+    "finish": "Finisaj",
+    "size": "Dimensiune",
+    "hint": "Trage pentru a roti, folosește rotița sau două degete pentru zoom.",
+    "loading": "Se încarcă modelul 3D…",
+    "viewerLabel": "Model 3D: {{name}}",
+    "loadError": "Modelul 3D nu s-a putut încărca.",
+    "retry": "Reîncearcă",
+    "backToWheelOnly": "Înapoi la janta",
+    "genericTitle": "Previzualizare 3D generică",
+    "generic": "Acest produs nu are încă model 3D propriu: dimensiunea și finisajul sunt cele alese, designul spițelor este orientativ.",
+    "noWebglTitle": "Dispozitivul nu poate afișa 3D",
+    "noWebgl": "Browserul nu are WebGL activ, așa că îți arătăm fotografia produsului.",
+    "noModelsTitle": "Încă nu avem jante în catalog",
+    "noModels": "Jantele apar aici în 3D imediat ce sunt adăugate în catalog.",
+    "browseCatalog": "Vezi jantele din catalog",
+    "productError": "Nu am putut încărca produsul.",
+    "viewProduct": "Vezi produsul",
+    "illustrative": "Randare 3D orientativă; culorile reale pot diferi.",
+    "viewMode": "Modul previzualizării 3D",
+    "wheelOnly": "Doar janta",
+    "onCar": "Pe mașină",
+    "carModel": "Model de mașină",
+    "yourCar": "mașina ta",
+    "carModelsError": "Nu am putut încărca modelele 3D de mașini. Previzualizarea jantei rămâne disponibilă."
   }
 }

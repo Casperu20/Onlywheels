@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleX, Clock, CreditCard, MapPin } from "lucide-react";
+import { CheckCircle2, CircleX, Clock, CreditCard, MapPin, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   TotalsTable,
   ordersApi,
   useCancelOrder,
+  useDownloadInvoice,
   useOrder,
   useOrders,
   usePayOrder,
@@ -74,6 +75,7 @@ export function OrderDetailPage() {
   const { data: order, isPending, isError } = useOrder(number);
   const pay = usePayOrder();
   const cancel = useCancelOrder();
+  const downloadInvoice = useDownloadInvoice();
 
   if (isPending) return <PageLoader />;
   if (isError || !order) return <NotFoundPage />;
@@ -141,6 +143,61 @@ export function OrderDetailPage() {
             ))}
           </ol>
         </div>
+        {order.shipment && (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border p-5">
+            <div>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <Truck className="size-4" aria-hidden />
+                {t("orders.shipment.title")}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {order.shipment.carrier_display} · AWB {order.shipment.awb}
+              </p>
+              <p className="mt-1 text-sm">{t(`orders.shipment.status.${order.shipment.status}`)}</p>
+            </div>
+            {order.shipment.tracking_url && (
+              <Button asChild variant="secondary">
+                <a href={order.shipment.tracking_url} target="_blank" rel="noopener noreferrer">
+                  {t("orders.shipment.track")}
+                </a>
+              </Button>
+            )}
+          </section>
+        )}
+        {order.invoice && (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border p-5">
+            <div>
+              <h2 className="font-semibold">{t("orders.invoice.title")}</h2>
+              {order.invoice.status === "issued" ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {order.invoice.series}-{order.invoice.number}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(`orders.invoice.status.${order.invoice.status}`)}
+                </p>
+              )}
+              {order.invoice.is_demo && (
+                <p className="mt-2 max-w-md rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                  {t("orders.invoice.demoNote")}
+                </p>
+              )}
+            </div>
+            {order.invoice.status === "issued" && order.invoice.pdf_url && (
+              <Button
+                variant="secondary"
+                disabled={downloadInvoice.isPending}
+                onClick={() =>
+                  downloadInvoice.mutate(order.number, {
+                    onError: (error) => toast.error(getErrorMessage(error, t("auth.genericError"))),
+                  })
+                }
+              >
+                {t("orders.invoice.download")}
+              </Button>
+            )}
+          </section>
+        )}
       </div>
 
       <aside className="flex h-fit flex-col gap-4 rounded-2xl border border-border bg-card p-6">
