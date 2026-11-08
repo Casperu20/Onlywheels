@@ -41,6 +41,11 @@ class StripeProvider(PaymentProvider):
             ],
             success_url=f"{frontend}/checkout/success?order={order.number}",
             cancel_url=f"{frontend}/account/orders/{order.number}?payment=cancelled",
-            expires_at=int((timezone.now() + timedelta(minutes=30)).timestamp()),
+            expires_at=int(
+                max(
+                    order.reserved_until or (timezone.now() + timedelta(minutes=30)),
+                    timezone.now() + timedelta(minutes=30),
+                ).timestamp()
+            ),
         )
         return CheckoutSession(session_id=session.id, url=session.url)

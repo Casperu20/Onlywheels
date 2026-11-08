@@ -20,6 +20,7 @@ class Voucher(TimeStampedModel):
     valid_until = models.DateTimeField(null=True, blank=True)
     max_uses = models.PositiveIntegerField(null=True, blank=True, help_text="Empty = unlimited")
     used_count = models.PositiveIntegerField(default=0, editable=False)
+    reserved_count = models.PositiveIntegerField(default=0, editable=False)
     is_active = models.BooleanField(default=True)
 
     history = HistoricalRecords()

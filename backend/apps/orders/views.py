@@ -90,6 +90,8 @@ class OrderViewSet(
     def pay(self, request, number=None):
         """Start (or restart) the online payment; redirect the browser to `checkout_url`."""
         order = self.get_object()
+        if order.payment_method != Order.PaymentMethod.CARD_ONLINE:
+            raise ValidationError({"non_field_errors": ["Only card orders can be paid online."]})
         reservation_valid = order.reserved_until and order.reserved_until > timezone.now()
         if order.status != Order.Status.PENDING_PAYMENT or not reservation_valid:
             raise ValidationError({"non_field_errors": ["This order can no longer be paid."]})
@@ -100,7 +102,7 @@ class OrderViewSet(
     @action(detail=True, methods=["post"])
     def cancel(self, request, number=None):
         order = self.get_object()
-        if order.status != Order.Status.PENDING_PAYMENT:
-            raise ValidationError({"non_field_errors": ["Only unpaid orders can be cancelled online."]})
+        if order.status not in (Order.Status.PENDING_PAYMENT, Order.Status.CONFIRMED):
+            raise ValidationError({"non_field_errors": ["This order can no longer be cancelled online."]})
         services.cancel_order(order, note="Cancelled by customer", by=request.user)
         return Response(OrderDetailSerializer(self.get_queryset().get(pk=order.pk)).data)

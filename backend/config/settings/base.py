@@ -190,6 +190,7 @@ SPECTACULAR_SETTINGS = {
     # Stable enum names for the generated TypeScript client.
     "ENUM_NAME_OVERRIDES": {
         "OrderStatusEnum": "apps.orders.models.Order.Status",
+        "OrderPaymentMethodEnum": "apps.orders.models.Order.PaymentMethod",
         "AppointmentStatusEnum": "apps.appointments.models.Appointment.Status",
         "ReviewStatusEnum": "apps.reviews.models.Review.Status",
         "ProductTypeEnum": "apps.catalog.models.ProductType",

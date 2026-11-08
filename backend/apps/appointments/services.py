@@ -70,3 +70,32 @@ def hold_slot(garage: Garage, slot_start: datetime, order) -> Appointment:
 def set_status(appointment: Appointment, status: str) -> None:
     appointment.status = status
     appointment.save(update_fields=["status", "updated_at"])
+
+
+def book_for_order(order, *, was_cancelled: bool = False) -> bool:
+    """
+    Transition an order's appointment to BOOKED upon payment.
+    If the order had expired (`was_cancelled`), verify the garage slot still has capacity
+    before rebooking so late webhooks cannot double-book a partner garage.
+    """
+    appointment = Appointment.objects.select_related("garage").filter(order=order).first()
+    if appointment is None:
+        return True
+    if appointment.status == Appointment.Status.BOOKED:
+        return True
+    if appointment.status == Appointment.Status.HELD:
+        set_status(appointment, Appointment.Status.BOOKED)
+        return True
+    if appointment.status == Appointment.Status.CANCELLED and was_cancelled:
+        garage = appointment.garage
+        Garage.objects.select_for_update().filter(pk=garage.pk).first()
+        taken = Appointment.objects.filter(
+            garage=garage,
+            status__in=Appointment.ACTIVE_STATUSES,
+            slot_start=appointment.slot_start,
+        ).count()
+        if taken < garage.capacity_per_slot:
+            set_status(appointment, Appointment.Status.BOOKED)
+            return True
+        return False
+    return True

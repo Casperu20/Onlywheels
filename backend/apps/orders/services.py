@@ -14,17 +14,25 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import APIException, ValidationError
 
 from apps.appointments.models import Appointment
-from apps.appointments.services import hold_slot
+from apps.appointments.services import book_for_order, hold_slot
 from apps.cart import services as cart_services
 from apps.cart.models import CartItem
 from apps.garages.models import Garage
 from apps.inventory.models import StockItem
 from apps.pricing.models import Voucher
-from apps.pricing.services import discount_for, get_valid_voucher, register_use
+from apps.pricing.services import (
+    discount_for,
+    get_valid_voucher,
+    register_use,
+    release_used_voucher,
+    release_voucher,
+    reserve_voucher,
+)
 
 from .models import Order, OrderItem, OrderStatusChange
 
@@ -33,10 +41,11 @@ ZERO = Decimal("0.00")
 Status = Order.Status
 
 STAFF_TRANSITIONS = {
+    Status.CONFIRMED: {Status.PROCESSING, Status.CANCELLED},
     Status.PAID: {Status.PROCESSING, Status.CANCELLED},
     Status.PROCESSING: {Status.SHIPPED, Status.READY_FOR_FITTING, Status.CANCELLED},
-    Status.SHIPPED: {Status.COMPLETED},
-    Status.READY_FOR_FITTING: {Status.COMPLETED},
+    Status.SHIPPED: {Status.COMPLETED, Status.RETURNED, Status.CANCELLED},
+    Status.READY_FOR_FITTING: {Status.COMPLETED, Status.RETURNED, Status.CANCELLED},
 }
 
 
@@ -117,7 +126,15 @@ def _notify(task_name: str, order: Order) -> None:
 
 def place_order(user, data: dict) -> Order:
     """Create an order from the user's cart. `data` comes from CheckoutSerializer."""
-    expire_unpaid_orders()
+    cart = cart_services.get_cart(user)
+    variant_ids = list(cart.items.values_list("variant_id", flat=True))
+    delivery = data["delivery_method"]
+    garage = data.get("garage") if delivery == Order.Delivery.GARAGE_FITTING else None
+    expire_unpaid_orders(
+        variant_ids=variant_ids,
+        garage=garage,
+        voucher_code=data.get("voucher_code", ""),
+    )
     return _place_order(user, data)
 
 
@@ -140,10 +157,21 @@ def _place_order(user, data: dict) -> Order:
     if missing:
         raise OutOfStock(f"Not enough stock for: {', '.join(missing)}")
 
+    payment_method = data.get("payment_method", Order.PaymentMethod.CARD_ONLINE)
+    is_online_card = payment_method == Order.PaymentMethod.CARD_ONLINE
+    initial_status = Status.PENDING_PAYMENT if is_online_card else Status.CONFIRMED
+    reserved_until = (
+        timezone.now() + timedelta(minutes=settings.ORDER_RESERVATION_MINUTES)
+        if is_online_card
+        else None
+    )
+
     order = Order.objects.create(
         number=_new_number(),
         user=user,
         delivery_method=delivery,
+        payment_method=payment_method,
+        status=initial_status,
         email=data["email"],
         full_name=data["full_name"],
         phone=data["phone"],
@@ -161,7 +189,7 @@ def _place_order(user, data: dict) -> Order:
         vat=quote.vat,
         voucher=quote.voucher,
         voucher_code=quote.voucher_code or "",
-        reserved_until=timezone.now() + timedelta(minutes=settings.ORDER_RESERVATION_MINUTES),
+        reserved_until=reserved_until,
     )
     OrderItem.objects.bulk_create(
         [
@@ -183,13 +211,36 @@ def _place_order(user, data: dict) -> Order:
     )
     for item in items:
         row = stock[item.variant_id]
-        row.reserved += item.quantity
-        row.save(update_fields=["reserved", "updated_at"])
+        if is_online_card:
+            row.reserved += item.quantity
+            row.save(update_fields=["reserved", "updated_at"])
+        else:
+            row.quantity = max(row.quantity - item.quantity, 0)
+            row.save(update_fields=["quantity", "updated_at"])
 
     if garage is not None:
-        hold_slot(garage, data["slot_start"], order)
+        appointment = hold_slot(garage, data["slot_start"], order)
+        if not is_online_card:
+            appointment.status = Appointment.Status.BOOKED
+            appointment.save(update_fields=["status", "updated_at"])
 
-    add_history(order, Status.PENDING_PAYMENT, "Order placed", by=user)
+    if quote.voucher:
+        if is_online_card:
+            reserve_voucher(quote.voucher)
+        else:
+            register_use(quote.voucher, was_reserved=False)
+
+    if is_online_card:
+        add_history(order, Status.PENDING_PAYMENT, "Order placed", by=user)
+    else:
+        add_history(
+            order,
+            Status.CONFIRMED,
+            f"Order placed ({order.get_payment_method_display()})",
+            by=user,
+        )
+        _notify("send_order_confirmation", order)
+
     cart_services.clear(cart)
     return order
 
@@ -204,12 +255,15 @@ def mark_paid(order: Order, *, note: str = "Payment received") -> Order:
     was_cancelled = order.status == Status.CANCELLED
     items = list(order.items.all())
     stock = _locked_stock([item.variant_id for item in items if item.variant_id])
+    short_skus: list[str] = []
     for item in items:
         row = stock.get(item.variant_id)
         if row is None:
             continue
         if not was_cancelled:
             row.reserved = max(row.reserved - item.quantity, 0)
+        elif row.available < item.quantity:
+            short_skus.append(item.sku)
         row.quantity = max(row.quantity - item.quantity, 0)
         row.reserved = min(row.reserved, row.quantity)
         row.save(update_fields=["quantity", "reserved", "updated_at"])
@@ -219,14 +273,17 @@ def mark_paid(order: Order, *, note: str = "Payment received") -> Order:
     order.reserved_until = None
     order.save(update_fields=["status", "paid_at", "reserved_until", "updated_at"])
 
-    Appointment.objects.filter(
-        order=order, status__in=(Appointment.Status.HELD, Appointment.Status.CANCELLED)
-    ).update(status=Appointment.Status.BOOKED)
+    slot_ok = book_for_order(order, was_cancelled=was_cancelled)
     if order.voucher_id:
-        register_use(order.voucher)
+        register_use(order.voucher, was_reserved=not was_cancelled)
 
     if was_cancelled:
-        note = "Payment received after the reservation expired – check stock and fitting slot."
+        warnings = ["Payment received after the reservation expired – check stock and fitting slot."]
+        if short_skus:
+            warnings.append(f"Stock shortage for: {', '.join(short_skus)}.")
+        if not slot_ok:
+            warnings.append("Fitting slot was taken by another order; reschedule required.")
+        note = " ".join(warnings)
     add_history(order, Status.PAID, note)
     _notify("send_order_confirmation", order)
     from apps.invoicing.models import Invoice
@@ -245,17 +302,18 @@ def cancel_order(order: Order, *, note: str, by=None) -> Order:
     order = Order.objects.select_for_update().get(pk=order.pk)
     if order.status == Status.CANCELLED:
         return order
-    if order.status not in (Status.PENDING_PAYMENT, Status.PAID, Status.PROCESSING):
+    if order.status not in (Status.PENDING_PAYMENT, Status.PAID, Status.CONFIRMED, Status.PROCESSING):
         raise ValidationError({"non_field_errors": ["This order can no longer be cancelled."]})
 
-    was_paid = order.status != Status.PENDING_PAYMENT
+    is_card = order.payment_method == Order.PaymentMethod.CARD_ONLINE
+    was_paid = order.status != Status.PENDING_PAYMENT and is_card
     items = list(order.items.all())
     stock = _locked_stock([item.variant_id for item in items if item.variant_id])
     for item in items:
         row = stock.get(item.variant_id)
         if row is None:
             continue
-        if was_paid:
+        if was_paid or not is_card:
             row.quantity += item.quantity  # back on the shelf; refund is handled manually
         else:
             row.reserved = max(row.reserved - item.quantity, 0)
@@ -264,22 +322,46 @@ def cancel_order(order: Order, *, note: str, by=None) -> Order:
     Appointment.objects.filter(order=order).exclude(status=Appointment.Status.COMPLETED).update(
         status=Appointment.Status.CANCELLED
     )
+
+    if order.voucher_id:
+        if is_card and not was_paid:
+            release_voucher(order.voucher)
+        elif not is_card or was_paid:
+            release_used_voucher(order.voucher_id)
+
     order.status = Status.CANCELLED
     order.reserved_until = None
     order.save(update_fields=["status", "reserved_until", "updated_at"])
     add_history(order, Status.CANCELLED, note, by=by)
-    if was_paid:
+    if was_paid or not is_card:
         _notify("send_order_status_update", order)
     return order
 
 
-def expire_unpaid_orders(now=None) -> int:
+def expire_unpaid_orders(
+    now=None,
+    *,
+    variant_ids: list | None = None,
+    garage: Garage | None = None,
+    voucher_code: str = "",
+) -> int:
     now = now or timezone.now()
-    expired = Order.objects.filter(
-        status=Status.PENDING_PAYMENT, reserved_until__lt=now
-    ).values_list("pk", flat=True)
+    expired_qs = Order.objects.filter(status=Status.PENDING_PAYMENT, reserved_until__lt=now)
+    if variant_ids is not None or garage is not None or voucher_code:
+        scope = Q()
+        if variant_ids:
+            scope |= Q(items__variant_id__in=variant_ids)
+        if garage is not None:
+            scope |= Q(appointment__garage=garage)
+        if voucher_code.strip():
+            scope |= Q(voucher_code__iexact=voucher_code.strip())
+        if not scope:
+            return 0
+        expired_qs = expired_qs.filter(scope).distinct()
+
+    expired = list(expired_qs.values_list("pk", flat=True))
     count = 0
-    for pk in list(expired):
+    for pk in expired:
         cancel_order(Order(pk=pk), note="Payment not received in time – reservation expired.")
         count += 1
     return count
@@ -287,7 +369,7 @@ def expire_unpaid_orders(now=None) -> int:
 
 @transaction.atomic
 def change_status(order: Order, new_status: str, *, by=None, note: str = "") -> Order:
-    """Staff transitions after payment (admin actions)."""
+    """Staff transitions after payment or confirmation (admin actions)."""
     if new_status == Status.CANCELLED:
         return cancel_order(order, note=note or "Cancelled by staff", by=by)
 
@@ -296,8 +378,27 @@ def change_status(order: Order, new_status: str, *, by=None, note: str = "") -> 
         raise ValidationError(
             {"status": [f"Cannot change status from {order.status} to {new_status}."]}
         )
+
+    if new_status == Status.RETURNED:
+        items = list(order.items.all())
+        stock = _locked_stock([item.variant_id for item in items if item.variant_id])
+        for item in items:
+            row = stock.get(item.variant_id)
+            if row:
+                row.quantity += item.quantity
+                row.save(update_fields=["quantity", "updated_at"])
+        Appointment.objects.filter(order=order).exclude(
+            status=Appointment.Status.COMPLETED
+        ).update(status=Appointment.Status.CANCELLED)
+        if order.voucher_id:
+            release_used_voucher(order.voucher_id)
+
     order.status = new_status
-    order.save(update_fields=["status", "updated_at"])
+    if new_status == Status.COMPLETED and order.paid_at is None:
+        order.paid_at = timezone.now()
+        order.save(update_fields=["status", "paid_at", "updated_at"])
+    else:
+        order.save(update_fields=["status", "updated_at"])
     if new_status == Status.PROCESSING:
         from apps.shipping.services import queue_shipment
 

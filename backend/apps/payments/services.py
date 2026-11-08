@@ -4,6 +4,7 @@ import hmac
 import json
 import logging
 from collections.abc import Mapping
+from datetime import timedelta
 from decimal import Decimal
 from json import JSONDecodeError
 
@@ -11,6 +12,7 @@ import jwt
 import stripe
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import APIException, ValidationError
 
 from apps.orders.models import Order
@@ -23,8 +25,13 @@ from .providers.stripe_provider import to_minor_units
 logger = logging.getLogger(__name__)
 
 
+@transaction.atomic
 def start_checkout(order: Order) -> CheckoutSession:
     provider = get_provider()
+    min_reserved_until = timezone.now() + timedelta(minutes=settings.ORDER_RESERVATION_MINUTES)
+    if order.reserved_until is None or order.reserved_until < min_reserved_until:
+        order.reserved_until = min_reserved_until
+        order.save(update_fields=["reserved_until", "updated_at"])
     session = provider.create_checkout(order)
     Payment.objects.create(
         order=order,

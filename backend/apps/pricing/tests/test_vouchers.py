@@ -59,3 +59,32 @@ def test_register_use_increments():
     register_use(voucher)
     voucher.refresh_from_db()
     assert voucher.used_count == 1
+
+
+def test_reserve_and_release_voucher():
+    from apps.pricing.services import release_voucher, reserve_voucher
+
+    voucher = make_voucher(max_uses=1)
+    reserve_voucher(voucher)
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 1
+
+    # Second reservation should fail because max_uses is reached
+    with pytest.raises(ValidationError):
+        reserve_voucher(voucher)
+
+    # Release frees the voucher slot
+    release_voucher(voucher)
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 0
+
+    # Can now be reserved again
+    reserve_voucher(voucher)
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 1
+
+    # Payment commits reserved voucher to used
+    register_use(voucher, was_reserved=True)
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 0
+    assert voucher.used_count == 1

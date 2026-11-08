@@ -312,6 +312,31 @@ def test_payment_after_expiry_still_marks_paid(user, variant, cart):
     assert "expired" in order.status_changes.get(status="paid").note
 
 
+def test_late_payment_after_expiry_does_not_double_book_taken_garage_slot(user, variant, cart):
+    garage = make_garage(capacity_per_slot=1)
+    slot = future_slot(garage)
+    payload = {
+        **checkout_payload(),
+        "delivery_method": "garage_fitting",
+        "garage": garage,
+        "slot_start": slot,
+    }
+    first_order = services.place_order(user, payload)
+    services.cancel_order(first_order, note="expired")
+
+    # Another customer books the same slot while first_order is cancelled
+    other = User.objects.create_user(email="other-slot@example.com", password="x")
+    add_to_cart(other, variant, 4)
+    second_order = services.place_order(other, payload)
+
+    # Late webhook arrives for first_order
+    services.mark_paid(first_order)
+
+    assert Appointment.objects.get(order=second_order).status == "held"
+    assert Appointment.objects.get(order=first_order).status == "cancelled"
+    assert "reschedule" in first_order.status_changes.get(status="paid").note
+
+
 def test_staff_status_transitions(user, cart, django_capture_on_commit_callbacks):
     order = place(user)
     services.mark_paid(order)
@@ -334,3 +359,54 @@ def test_cancelling_paid_order_restocks(user, variant, cart):
     services.change_status(order, Order.Status.CANCELLED)
 
     assert stock_of(variant).quantity == 10
+
+
+def test_cash_on_delivery_order(user, variant, cart):
+    payload = checkout_payload(payment_method="cash_on_delivery")
+    order = services.place_order(user, payload)
+
+    assert order.status == Order.Status.CONFIRMED
+    assert order.payment_method == Order.PaymentMethod.CASH_ON_DELIVERY
+    assert order.reserved_until is None
+    # Stock deducted immediately for COD
+    assert stock_of(variant).quantity == 6
+    assert stock_of(variant).reserved == 0
+
+    # Staff workflow
+    services.change_status(order, Order.Status.PROCESSING)
+    services.change_status(order, Order.Status.SHIPPED)
+    services.change_status(order, Order.Status.COMPLETED)
+
+    order.refresh_from_db()
+    assert order.status == Order.Status.COMPLETED
+    assert order.paid_at is not None
+
+
+def test_retour_restores_stock(user, variant, cart):
+    payload = checkout_payload(payment_method="cash_on_delivery")
+    order = services.place_order(user, payload)
+    assert stock_of(variant).quantity == 6
+
+    services.change_status(order, Order.Status.PROCESSING)
+    services.change_status(order, Order.Status.SHIPPED)
+    services.change_status(order, Order.Status.RETURNED)
+
+    order.refresh_from_db()
+    assert order.status == Order.Status.RETURNED
+    # Stock restored back on the shelf
+    assert stock_of(variant).quantity == 10
+
+
+def test_place_order_reserves_and_releases_voucher(user, cart):
+    voucher = Voucher.objects.create(code="REV10", value=Decimal("10"), max_uses=1, min_order_total=Decimal("500"))
+    payload = checkout_payload(voucher_code="REV10")
+    order = services.place_order(user, payload)
+
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 1
+    assert voucher.used_count == 0
+
+    services.cancel_order(order, note="Customer cancelled")
+    voucher.refresh_from_db()
+    assert voucher.reserved_count == 0
+    assert voucher.used_count == 0

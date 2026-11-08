@@ -9,21 +9,31 @@ from apps.core.models import TimeStampedModel
 class Order(TimeStampedModel):
     class Status(models.TextChoices):
         PENDING_PAYMENT = "pending_payment", "Pending payment"
+        CONFIRMED = "confirmed", "Confirmed"
         PAID = "paid", "Paid"
         PROCESSING = "processing", "Processing"
         SHIPPED = "shipped", "Shipped"
         READY_FOR_FITTING = "ready_for_fitting", "Ready for fitting"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
+        RETURNED = "returned", "Returned (retur)"
 
     class Delivery(models.TextChoices):
         COURIER = "courier", "Courier delivery"
         GARAGE_FITTING = "garage_fitting", "Fitting at partner garage"
 
+    class PaymentMethod(models.TextChoices):
+        CARD_ONLINE = "card_online", "Online card payment"
+        CASH_ON_DELIVERY = "cash_on_delivery", "Cash on delivery (ramburs)"
+        PAY_AT_GARAGE = "pay_at_garage", "Pay at partner garage"
+
     number = models.CharField(max_length=32, unique=True, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.PENDING_PAYMENT)
     delivery_method = models.CharField(max_length=20, choices=Delivery.choices)
+    payment_method = models.CharField(
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CARD_ONLINE
+    )
 
     # Contact + address snapshot (billing / delivery). Kept even if the user edits their profile.
     email = models.EmailField()

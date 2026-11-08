@@ -52,13 +52,41 @@ def set_quantity(item: CartItem, quantity: int) -> CartItem:
 
 @transaction.atomic
 def merge(cart: Cart, lines: Iterable[tuple[UUID, int]]) -> None:
-    """Merge a guest (browser) cart after login. Unknown or inactive variants are skipped."""
-    lines = list(lines)
-    variants = {v.pk: v for v in purchasable_variants().filter(pk__in=[pk for pk, _ in lines])}
+    """Merge a guest (browser) cart after login in bulk. Unknown or inactive variants are skipped."""
+    requested: dict[UUID, int] = {}
     for variant_id, quantity in lines:
-        variant = variants.get(variant_id)
-        if variant is not None:
-            add_item(cart, variant, quantity)
+        if quantity > 0:
+            requested[variant_id] = _cap(requested.get(variant_id, 0) + quantity)
+    if not requested:
+        return
+
+    from django.utils import timezone
+
+    valid_ids = set(purchasable_variants().filter(pk__in=requested.keys()).values_list("pk", flat=True))
+    if not valid_ids:
+        return
+
+    existing = {
+        item.variant_id: item
+        for item in CartItem.objects.select_for_update().filter(cart=cart, variant_id__in=valid_ids)
+    }
+    now = timezone.now()
+    to_create: list[CartItem] = []
+    to_update: list[CartItem] = []
+
+    for variant_id in valid_ids:
+        qty = requested[variant_id]
+        if item := existing.get(variant_id):
+            item.quantity = _cap(item.quantity + qty)
+            item.updated_at = now
+            to_update.append(item)
+        else:
+            to_create.append(CartItem(cart=cart, variant_id=variant_id, quantity=_cap(qty)))
+
+    if to_create:
+        CartItem.objects.bulk_create(to_create)
+    if to_update:
+        CartItem.objects.bulk_update(to_update, ["quantity", "updated_at"])
 
 
 def clear(cart: Cart) -> None:

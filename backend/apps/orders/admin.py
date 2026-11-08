@@ -32,8 +32,17 @@ class StatusChangeInline(TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
-    list_display = ("number", "created_at", "full_name", "status", "delivery_method", "total", "paid_at")
-    list_filter = ("status", "delivery_method", "created_at")
+    list_display = (
+        "number",
+        "created_at",
+        "full_name",
+        "status",
+        "delivery_method",
+        "payment_method",
+        "total",
+        "paid_at",
+    )
+    list_filter = ("status", "delivery_method", "payment_method", "created_at")
     search_fields = ("number", "email", "full_name", "phone", "items__sku")
     date_hierarchy = "created_at"
     inlines = (OrderItemInline, StatusChangeInline)
@@ -42,6 +51,7 @@ class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
         "user",
         "status",
         "delivery_method",
+        "payment_method",
         "subtotal",
         "discount",
         "shipping",
@@ -56,7 +66,7 @@ class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("number", "user", "status", "delivery_method", "paid_at", "reserved_until")},
+            {"fields": ("number", "user", "status", "delivery_method", "payment_method", "paid_at", "reserved_until")},
         ),
         (
             "Contact & address",
@@ -77,7 +87,14 @@ class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
             },
         ),
     )
-    actions = ("mark_processing", "mark_shipped", "mark_ready_for_fitting", "mark_completed", "cancel_orders")
+    actions = (
+        "mark_processing",
+        "mark_shipped",
+        "mark_ready_for_fitting",
+        "mark_completed",
+        "mark_returned",
+        "cancel_orders",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -110,6 +127,10 @@ class OrderAdmin(SimpleHistoryAdmin, ModelAdmin):
     @action(description="Mark as completed")
     def mark_completed(self, request, queryset):
         self._transition(request, queryset, Order.Status.COMPLETED)
+
+    @action(description="Mark as returned (retur - restore stock)")
+    def mark_returned(self, request, queryset):
+        self._transition(request, queryset, Order.Status.RETURNED)
 
     @action(description="Cancel (restock; refund manually in the payment dashboard)")
     def cancel_orders(self, request, queryset):

@@ -14,9 +14,10 @@ class VoucherAdmin(SimpleHistoryAdmin, ModelAdmin):
         "min_order_total",
         "valid_until",
         "used_count",
+        "reserved_count",
         "max_uses",
         "is_active",
     )
     list_filter = ("kind", "is_active")
     search_fields = ("code", "description")
-    readonly_fields = ("used_count",)
+    readonly_fields = ("used_count", "reserved_count")

@@ -27,6 +27,11 @@ class QuoteRequestSerializer(serializers.Serializer):
 
 
 class CheckoutSerializer(QuoteRequestSerializer):
+    payment_method = serializers.ChoiceField(
+        choices=Order.PaymentMethod.choices,
+        default=Order.PaymentMethod.CARD_ONLINE,
+        required=False,
+    )
     email = serializers.EmailField()
     full_name = serializers.CharField(max_length=150)
     phone = serializers.RegexField(r"^\+?[0-9 ]{9,16}$", max_length=32)
@@ -46,8 +51,18 @@ class CheckoutSerializer(QuoteRequestSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        if attrs["delivery_method"] == Order.Delivery.GARAGE_FITTING and not attrs.get("slot_start"):
+        delivery = attrs["delivery_method"]
+        payment = attrs.get("payment_method", Order.PaymentMethod.CARD_ONLINE)
+        if delivery == Order.Delivery.GARAGE_FITTING and not attrs.get("slot_start"):
             raise serializers.ValidationError({"slot_start": ["Choose a fitting time slot."]})
+        if delivery == Order.Delivery.COURIER and payment == Order.PaymentMethod.PAY_AT_GARAGE:
+            raise serializers.ValidationError(
+                {"payment_method": ["Payment at garage is only available for garage fitting."]}
+            )
+        if delivery == Order.Delivery.GARAGE_FITTING and payment == Order.PaymentMethod.CASH_ON_DELIVERY:
+            raise serializers.ValidationError(
+                {"payment_method": ["Cash on delivery is only available for courier delivery."]}
+            )
         return attrs
 
 
@@ -108,6 +123,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "number",
             "status",
             "delivery_method",
+            "payment_method",
             "total",
             "currency",
             "item_count",
@@ -127,7 +143,7 @@ class OrderSerializer(serializers.ModelSerializer):
         )
 
     def get_can_cancel(self, obj: Order) -> bool:
-        return obj.status == Order.Status.PENDING_PAYMENT
+        return obj.status in (Order.Status.PENDING_PAYMENT, Order.Status.CONFIRMED)
 
 
 class OrderDetailSerializer(OrderSerializer):
@@ -186,4 +202,4 @@ class OrderDetailSerializer(OrderSerializer):
 
 
 class CheckoutSessionSerializer(serializers.Serializer):
-    checkout_url = serializers.URLField()
+    checkout_url = serializers.CharField()
