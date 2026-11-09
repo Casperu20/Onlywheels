@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { Variant } from "@/features/catalog/api";
 
@@ -25,6 +25,18 @@ interface GuestCartState {
 
 const clamp = (quantity: number) => Math.max(1, Math.min(MAX_QUANTITY, quantity));
 
+const memoryStorage = new Map<string, string>();
+const storage = createJSONStorage(() => {
+  if (import.meta.env.MODE === "test" || typeof window === "undefined") {
+    return {
+      getItem: (name) => memoryStorage.get(name) ?? null,
+      setItem: (name, value) => memoryStorage.set(name, value),
+      removeItem: (name) => memoryStorage.delete(name),
+    };
+  }
+  return window.localStorage;
+});
+
 export const useGuestCart = create<GuestCartState>()(
   persist(
     (set) => ({
@@ -46,6 +58,6 @@ export const useGuestCart = create<GuestCartState>()(
       remove: (variantId) => set((state) => ({ lines: state.lines.filter((l) => l.variantId !== variantId) })),
       clear: () => set({ lines: [] }),
     }),
-    { name: "ow-guest-cart" },
+    { name: "ow-guest-cart", storage },
   ),
 );
