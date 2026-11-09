@@ -68,7 +68,19 @@ def _sync_makes() -> None:
     if cache.get("wheelsize:makes"):
         return
     for item in fetch("/makes/"):
-        VehicleMake.objects.update_or_create(slug=item["slug"], defaults={"name": item["name"]})
+        slug = item["slug"]
+        name = item["name"]
+        make = VehicleMake.objects.filter(slug=slug).first()
+        if make is None:
+            make = VehicleMake.objects.filter(name=name).first()
+        if make is None:
+            VehicleMake.objects.create(slug=slug, name=name)
+            continue
+        if make.slug != slug and not VehicleMake.objects.filter(slug=slug).exists():
+            make.slug = slug
+        if make.name != name:
+            make.name = name
+        make.save(update_fields=["slug", "name", "updated_at"])
     cache.set("wheelsize:makes", True, REFRESH_AFTER.total_seconds())
 
 

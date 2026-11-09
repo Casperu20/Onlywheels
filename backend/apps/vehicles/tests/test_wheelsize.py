@@ -51,6 +51,21 @@ def test_disabled_without_key(api_client, settings, monkeypatch):
     assert api_client.get(f"{BASE}/makes/").json() == []
 
 
+def test_make_slug_changes_are_reconciled_by_unique_name(api_client, provider, monkeypatch):
+    VehicleMake.objects.create(name="Mercedes-Benz", slug="mercedes-benz")
+    monkeypatch.setattr(
+        wheelsize,
+        "fetch",
+        lambda path, **params: [{"slug": "mercedes", "name": "Mercedes-Benz"}],
+    )
+
+    response = api_client.get(f"{BASE}/makes/")
+
+    assert response.status_code == 200
+    make = VehicleMake.objects.get(name="Mercedes-Benz")
+    assert make.slug == "mercedes"
+
+
 def test_lazy_import_cascade_is_fetched_once(api_client, provider):
     makes = api_client.get(f"{BASE}/makes/").json()
     assert [m["name"] for m in makes] == ["Dacia", "Volkswagen"]
