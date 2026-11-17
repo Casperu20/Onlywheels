@@ -3,6 +3,12 @@
 Everything below runs on the **development machine**. This repository only contains source and config;
 nothing has to be installed globally except the tools in step 1.
 
+**University demo scope:** this project will not have real customers. Seeded data, fake payments, console email,
+local uploads, and clearly labelled demo invoices/shipping are appropriate for the demonstration. Real provider
+accounts and production services are optional, not setup requirements. For a local web demo, start with tools,
+the database, backend, and frontend; GitHub/CI and hosted deployment are separate choices, not blockers.
+See [ROADMAP.md](ROADMAP.md) for the scope and [ANDROID.md](ANDROID.md) for Android debug-device setup.
+
 ## 0. Preparing a new laptop – the whole sequence
 
 Do the steps in this order; each links to the details. The order matters: lock files and migrations must exist
@@ -173,6 +179,118 @@ pnpm lint
 pnpm test
 pnpm build
 ```
+
+### Android debug app (Capacitor)
+
+Use this walkthrough when an Android development machine and a device/emulator are available. The app supports native
+email/password login and stores its JWT session in Android secure storage. The local `PAYMENT_PROVIDER=fake` flow
+stays in the app and returns through `onlywheels://checkout/success`; the success page fetches the order state from the
+backend. Native Google sign-in, FCM push, and Play Store release are not included. For a step-by-step checklist of
+what is left, see [ANDROID.md](./ANDROID.md).
+
+#### 1. Install Android tools and prepare a device
+
+Install Node.js 22+, Android Studio 2025.2.1+, and the Android SDK. Android Studio supplies the JDK used by Gradle.
+In Android Studio's SDK Manager, install Android SDK Platform 36 and Android SDK Platform-Tools. In Device Manager,
+create and start an emulator, or connect a phone with USB debugging enabled. Confirm the device is visible:
+
+```powershell
+adb devices
+```
+
+If `adb` is not on `PATH`, use `adb.exe` from the SDK's `platform-tools` folder or add that folder to `PATH`.
+
+#### 2. Make the backend reachable over HTTPS
+
+The Android WebView cannot use the developer computer's `localhost` as the backend. Use a staging/development API
+with a valid HTTPS certificate, or expose a local development backend through a trusted HTTPS tunnel. Do not disable
+TLS checks or use a self-signed certificate that the device does not trust.
+
+In `backend/.env`, keep `FRONTEND_URL` set to the normal web frontend URL. Set `PAYMENT_PROVIDER=fake` for local
+simulated-payment testing only; production rejects the fake provider. Allow the Capacitor WebView origin
+`https://localhost` and the normal web frontend origin in CORS, for example:
+
+```dotenv
+FRONTEND_URL=http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://localhost
+PAYMENT_PROVIDER=fake
+```
+
+If the backend is behind a tunnel or staging hostname, also allow its hostname (without scheme or port) in
+`DJANGO_ALLOWED_HOSTS`. Restart Django after changing its environment. Keep real credentials and `.env` files out of
+source control.
+
+#### 3. Configure the Android API URL
+
+From `frontend`, create the local environment file if needed, then edit it:
+
+```powershell
+if (-not (Test-Path .env.local)) { Copy-Item .env.example .env.local }
+notepad .env.local
+```
+
+Set `VITE_API_URL` to the HTTPS API origin reachable from the device, with no trailing API path, for example:
+
+```dotenv
+VITE_API_URL=https://api.dev.example.com
+```
+
+Replace the example with the actual backend URL. Do not use `localhost`, `127.0.0.1`, or `::1`; the Android preflight
+rejects missing, malformed, non-HTTPS, and loopback URLs. `.env.local` is machine-specific and must not be committed.
+
+#### 4. Build, install, and launch
+
+Run these commands from `frontend`:
+
+```powershell
+corepack pnpm install       # first setup or after dependency changes
+corepack pnpm android:sync  # validates VITE_API_URL, builds the web app, and syncs Android plugins/assets
+corepack pnpm android:run   # builds, installs, and launches on the connected emulator/device
+```
+
+To create a debug APK without installing it:
+
+```powershell
+corepack pnpm android:build
+```
+
+The APK is written to `frontend\android\app\build\outputs\apk\debug\app-debug.apk`. Run `android:sync` again after
+frontend or Android manifest changes so the native project contains the current assets and deep-link configuration.
+
+#### 5. Walk through the app
+
+Use the development/test backend and verify:
+
+1. The catalog loads on the device.
+2. Register with email/password, confirm the signed-in profile, log out, and sign in again.
+3. Add an item to the cart, place a test order, and reach the bundled fake-payment page.
+4. Complete the fake payment. Android should open the app at `onlywheels://checkout/success?order=<order-number>`.
+5. Confirm the success page reflects the order returned by the backend. Opening a link alone must not change payment
+   status.
+6. With the app closed and open, test a valid success link for an order belonging to the signed-in user. An unrelated
+   scheme/host/path must not navigate to the success page.
+7. Check the order in account order history after returning.
+
+For a manual link check, replace the example order number with an actual order owned by the signed-in user:
+
+```powershell
+adb shell am start -a android.intent.action.VIEW `
+  -d "onlywheels://checkout/success?order=OW260615-ABC123" ro.onlywheels.app
+```
+
+The order number above is only an example. The app fetches the order over the authenticated API and does not trust the
+link as payment confirmation.
+
+#### Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| Android preflight says `VITE_API_URL` is required | Confirm `frontend/.env.local` exists and has an absolute, device-reachable HTTPS API URL. |
+| Catalog/API calls fail on device | Check the device has network access to the API, the TLS certificate is trusted, the backend allows `https://localhost` in CORS, and the tunnel/staging hostname is allowed by the backend. |
+| `adb` is not recognized or no device is listed | Install Android SDK Platform-Tools in SDK Manager, restart the terminal, and confirm USB debugging or the emulator is running. |
+| Gradle cannot find the Android SDK | Open the generated `frontend\android` project in Android Studio and let it locate/install the SDK; then retry `corepack pnpm android:run`. |
+| Fake payment is unavailable | Confirm the development backend has `PAYMENT_PROVIDER=fake`; do not enable it in production. |
+| A valid return link does not open the app | Re-run `corepack pnpm android:sync`, confirm the app is installed, and check the URL uses `onlywheels://checkout/success?order=...`. |
 
 ### Generated API client
 

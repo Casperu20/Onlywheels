@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/http";
+import { clearNativeTokens, getNativeTokens, isNativePlatform, setNativeTokens } from "@/lib/native";
 
 // Hand-written until the orval client is generated; keep in sync with apps/accounts/serializers.py.
 export interface User {
@@ -40,12 +41,41 @@ export const authApi = {
   me: () => apiClient<User>({ url: `${AUTH}/me/`, method: "GET" }),
   updateMe: (data: Partial<Pick<User, "first_name" | "last_name" | "phone" | "preferred_language">>) =>
     apiClient<User>({ url: `${AUTH}/me/`, method: "PATCH", data }),
-  login: (data: LoginPayload) => apiClient<User>({ url: `${AUTH}/login/`, method: "POST", data }),
-  register: (data: RegisterPayload) =>
-    apiClient<User>({ url: `${AUTH}/register/`, method: "POST", data }),
+  login: async (data: LoginPayload) => {
+    if (!isNativePlatform()) return apiClient<User>({ url: `${AUTH}/login/`, method: "POST", data });
+    const response = await apiClient<{ user: User; access: string; refresh: string }>({
+      url: `${AUTH}/native/login/`,
+      method: "POST",
+      data,
+    });
+    await setNativeTokens({ access: response.access, refresh: response.refresh });
+    return response.user;
+  },
+  register: async (data: RegisterPayload) => {
+    if (!isNativePlatform()) return apiClient<User>({ url: `${AUTH}/register/`, method: "POST", data });
+    const response = await apiClient<{ user: User; access: string; refresh: string }>({
+      url: `${AUTH}/native/register/`,
+      method: "POST",
+      data,
+    });
+    await setNativeTokens({ access: response.access, refresh: response.refresh });
+    return response.user;
+  },
   google: (credential: string) =>
     apiClient<User>({ url: `${AUTH}/google/`, method: "POST", data: { credential } }),
-  logout: () => apiClient<void>({ url: `${AUTH}/logout/`, method: "POST" }),
+  logout: async () => {
+    if (!isNativePlatform()) return apiClient<void>({ url: `${AUTH}/logout/`, method: "POST" });
+    const tokens = await getNativeTokens();
+    try {
+      return await apiClient<void>({
+        url: `${AUTH}/native/logout/`,
+        method: "POST",
+        data: { refresh: tokens?.refresh },
+      });
+    } finally {
+      await clearNativeTokens();
+    }
+  },
   requestPasswordReset: (email: string) =>
     apiClient<void>({ url: `${AUTH}/password/reset/`, method: "POST", data: { email } }),
   confirmPasswordReset: (data: PasswordResetConfirmPayload) =>

@@ -15,7 +15,6 @@
     "noFallthroughCasesInSwitch": true,
     "useDefineForClassFields": true,
     "types": ["vite/client", "node", "vitest/globals"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
