@@ -37,3 +37,6 @@ frontend/coverage/
 # Android (Capacitor, phase 3)
 frontend/android/app/build/
 frontend/android/.gradle/
+
+# Personal local documentation
+docs/architecture/OnlyWheels_Architecture_Blueprint.*
