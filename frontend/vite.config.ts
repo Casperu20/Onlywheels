@@ -85,12 +85,17 @@ const pwa = VitePWA({
   },
 });
 
+export function isCapacitorBuild(mode: string, env: Record<string, string | undefined>): boolean {
+  return mode === "android" || env.CAPACITOR_BUILD === "1" || process.env.CAPACITOR_BUILD === "1";
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const backend = env.VITE_PROXY_TARGET || "http://127.0.0.1:8000";
+  const disablePwa = mode === "test" || isCapacitorBuild(mode, env);
 
   return {
-    plugins: [react(), tailwindcss(), dracoDecoder(), mode === "test" ? [] : pwa],
+    plugins: [react(), tailwindcss(), dracoDecoder(), disablePwa ? [] : pwa],
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },

@@ -15,6 +15,12 @@ initSentry();
 installStaleChunkReload();
 
 if (isNativePlatform()) {
+  if ("serviceWorker" in navigator) {
+    void navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((reg) => reg.unregister())))
+      .catch(() => undefined);
+  }
   void registerDeepLinkListener((path) => {
     void router.navigate(path, { replace: true }).catch((error: unknown) =>
       console.error("Could not navigate from a deep link.", error),
