@@ -145,3 +145,48 @@ def test_first_miss_works_when_celery_is_async_and_stale_refreshes_in_background
     models_stale = api_client.get(f"{BASE}/models/", {"make": str(vw.pk)}).json()
     assert len(models_stale) == 1
     assert dispatched == [str(vw.pk)]
+
+
+def test_sync_makes_uses_bulk_queries_and_only_updates_dirty_rows(
+    api_client, provider, monkeypatch, django_assert_max_num_queries
+):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    old_time = timezone.now() - timedelta(days=10)
+    unchanged = VehicleMake.objects.create(name="Dacia", slug="dacia")
+    VehicleMake.objects.filter(pk=unchanged.pk).update(updated_at=old_time)
+    renamed = VehicleMake.objects.create(name="mercedes-benz", slug="mercedes-benz")
+    VehicleMake.objects.filter(pk=renamed.pk).update(updated_at=old_time)
+
+    payload = [
+        {"slug": "dacia", "name": "Dacia"},
+        {"slug": "mercedes", "name": "Mercedes-Benz"},
+        *[{"slug": f"brand-{i}", "name": f"Brand {i}"} for i in range(40)],
+    ]
+    monkeypatch.setattr(wheelsize, "fetch", lambda path, **params: payload)
+
+    # 42 makes reconciled in O(1) queries (SELECT existing + bulk INSERT + dirty-only bulk UPDATE + final list SELECT)
+    with django_assert_max_num_queries(8):
+        response = api_client.get(f"{BASE}/makes/")
+
+    assert response.status_code == 200
+    assert VehicleMake.objects.count() == 42
+
+    unchanged.refresh_from_db()
+    assert unchanged.updated_at == old_time  # clean row was not rewritten
+
+    renamed.refresh_from_db()
+    assert renamed.slug == "mercedes"
+    assert renamed.name == "Mercedes-Benz"
+    assert renamed.updated_at > old_time
+
+    # force=True refreshes even while cache key `wheelsize:makes` is warm
+    monkeypatch.setattr(
+        wheelsize,
+        "fetch",
+        lambda path, **params: [*payload, {"slug": "porsche", "name": "Porsche"}],
+    )
+    wheelsize.ensure_makes(force=True)
+    assert VehicleMake.objects.filter(slug="porsche").exists()

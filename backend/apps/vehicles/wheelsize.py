@@ -64,23 +64,55 @@ def _safely(func, *args) -> None:
 # --- makes / models / generations -----------------------------------------
 
 
-def _sync_makes() -> None:
-    if cache.get("wheelsize:makes"):
+def _sync_makes(force: bool = False) -> None:
+    if not force and cache.get("wheelsize:makes"):
         return
-    for item in fetch("/makes/"):
-        slug = item["slug"]
-        name = item["name"]
-        make = VehicleMake.objects.filter(slug=slug).first()
-        if make is None:
-            make = VehicleMake.objects.filter(name=name).first()
-        if make is None:
-            VehicleMake.objects.create(slug=slug, name=name)
-            continue
-        if make.slug != slug and not VehicleMake.objects.filter(slug=slug).exists():
-            make.slug = slug
-        if make.name != name:
-            make.name = name
-        make.save(update_fields=["slug", "name", "updated_at"])
+    items = fetch("/makes/")
+    now = timezone.now()
+    with transaction.atomic():
+        existing = list(VehicleMake.objects.select_for_update().all())
+        by_slug: dict[str, VehicleMake] = {m.slug: m for m in existing}
+        by_name_exact: dict[str, VehicleMake] = {m.name: m for m in existing}
+        by_name_lower: dict[str, VehicleMake] = {m.name.lower(): m for m in existing}
+
+        to_create: list[VehicleMake] = []
+        dirty: dict[object, VehicleMake] = {}
+
+        for item in items:
+            slug = item["slug"]
+            name = item["name"]
+            make = by_slug.get(slug) or by_name_exact.get(name) or by_name_lower.get(name.lower())
+            if make is None:
+                created = VehicleMake(slug=slug, name=name)
+                to_create.append(created)
+                by_slug[slug] = created
+                by_name_exact[name] = created
+                by_name_lower[name.lower()] = created
+                continue
+
+            changed = False
+            if make.slug != slug and slug not in by_slug:
+                by_slug.pop(make.slug, None)
+                make.slug = slug
+                by_slug[slug] = make
+                changed = True
+            if make.name != name and (name not in by_name_exact or by_name_exact[name] is make):
+                by_name_exact.pop(make.name, None)
+                by_name_lower.pop(make.name.lower(), None)
+                make.name = name
+                by_name_exact[name] = make
+                by_name_lower[name.lower()] = make
+                changed = True
+
+            if changed and make.pk is not None:
+                make.updated_at = now
+                dirty[make.pk] = make
+
+        if to_create:
+            VehicleMake.objects.bulk_create(to_create)
+        if dirty:
+            VehicleMake.objects.bulk_update(dirty.values(), ["slug", "name", "updated_at"])
+
     cache.set("wheelsize:makes", True, REFRESH_AFTER.total_seconds())
 
 
@@ -119,7 +151,7 @@ def _sync_generations(model: VehicleModel) -> None:
 def ensure_makes(*, force: bool = False) -> None:
     if not enabled() or (not force and cache.get("wheelsize:makes")):
         return
-    _safely(_sync_makes)
+    _safely(_sync_makes, force)
 
 
 def ensure_models(make_id, *, force: bool = False) -> None:
