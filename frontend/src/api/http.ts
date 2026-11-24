@@ -33,23 +33,7 @@ function ensureCsrfToken(): Promise<void> {
   return csrfPromise;
 }
 
-http.interceptors.request.use(async (config) => {
-  config.headers.set("Accept-Language", i18n.language || "ro");
-  if (isNativePlatform()) {
-    const tokens = await getNativeTokens();
-    config.withCredentials = false;
-    config.withXSRFToken = false;
-    if (tokens) config.headers.set("Authorization", `Bearer ${tokens.access}`);
-    return config;
-  }
-  const method = (config.method ?? "get").toLowerCase();
-  if (!SAFE_METHODS.includes(method)) {
-    await ensureCsrfToken();
-  }
-  return config;
-});
-
-// Calls that must never trigger the "refresh and retry" logic below.
+// Calls that are public auth entrypoints and must never trigger "refresh and retry" or carry stale Bearer headers.
 const NO_RETRY = [
   "/auth/login/",
   "/auth/register/",
@@ -61,6 +45,25 @@ const NO_RETRY = [
   "/auth/native/refresh/",
   "/auth/native/logout/",
 ];
+
+http.interceptors.request.use(async (config) => {
+  config.headers.set("Accept-Language", i18n.language || "ro");
+  if (isNativePlatform()) {
+    config.withCredentials = false;
+    config.withXSRFToken = false;
+    const url = config.url ?? "";
+    if (!NO_RETRY.some((p) => url.includes(p))) {
+      const tokens = await getNativeTokens();
+      if (tokens) config.headers.set("Authorization", `Bearer ${tokens.access}`);
+    }
+    return config;
+  }
+  const method = (config.method ?? "get").toLowerCase();
+  if (!SAFE_METHODS.includes(method)) {
+    await ensureCsrfToken();
+  }
+  return config;
+});
 
 type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 

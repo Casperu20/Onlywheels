@@ -13,6 +13,7 @@ let storageReady: Promise<void> | null = null;
 let cachedTokens: AuthTokens | null = null;
 let isHydrated = false;
 let hydrationPromise: Promise<AuthTokens | null> | null = null;
+let mutationVersion = 0;
 
 export function isNativePlatform(): boolean {
   return Capacitor.isNativePlatform();
@@ -66,9 +67,13 @@ export async function getNativeTokens(): Promise<AuthTokens | null> {
     return await hydrationPromise;
   }
 
+  const versionAtStart = mutationVersion;
   hydrationPromise = (async () => {
     await ensureStorageReady();
     const value = await SecureStorage.getItem(TOKEN_KEY);
+    if (mutationVersion !== versionAtStart) {
+      return cachedTokens;
+    }
     if (value === null) {
       cachedTokens = null;
       isHydrated = true;
@@ -80,9 +85,11 @@ export async function getNativeTokens(): Promise<AuthTokens | null> {
       // Self-heal: stored data is corrupted or fails validation.
       // Evict the bad key so the app is not permanently bricked.
       await SecureStorage.removeItem(TOKEN_KEY).catch(() => undefined);
-      cachedTokens = null;
-      isHydrated = true;
-      return null;
+      if (mutationVersion === versionAtStart) {
+        cachedTokens = null;
+        isHydrated = true;
+      }
+      return cachedTokens;
     }
 
     cachedTokens = tokens;
@@ -105,6 +112,7 @@ export async function setNativeTokens(tokens: AuthTokens): Promise<void> {
   ) {
     throw new Error("Native authentication credentials must include access and refresh tokens.");
   }
+  mutationVersion += 1;
   await ensureStorageReady();
   await SecureStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
   cachedTokens = { access: tokens.access, refresh: tokens.refresh };
@@ -113,6 +121,7 @@ export async function setNativeTokens(tokens: AuthTokens): Promise<void> {
 
 export async function clearNativeTokens(): Promise<void> {
   assertNativePlatform();
+  mutationVersion += 1;
   await ensureStorageReady();
   try {
     await SecureStorage.removeItem(TOKEN_KEY);
@@ -123,6 +132,7 @@ export async function clearNativeTokens(): Promise<void> {
 }
 
 export function resetNativeTokenCacheForTests(): void {
+  mutationVersion += 1;
   cachedTokens = null;
   isHydrated = false;
   hydrationPromise = null;

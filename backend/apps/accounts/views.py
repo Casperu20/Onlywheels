@@ -16,7 +16,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import services
-from .models import Address
+from .models import Address, User
 from .serializers import (
     AddressSerializer,
     DeleteAccountSerializer,
@@ -95,6 +95,24 @@ class GoogleLoginView(PublicAuthView):
         return _logged_in(user)
 
 
+def _validate_active_refresh_token(raw_refresh: str | None) -> dict:
+    if not raw_refresh:
+        raise AuthenticationFailed("Not logged in.")
+    try:
+        token_obj = RefreshToken(raw_refresh)
+    except TokenError as exc:
+        raise InvalidToken(exc.args[0]) from exc
+    user_id = token_obj.payload.get(settings.SIMPLE_JWT.get("USER_ID_CLAIM", "user_id"))
+    if not user_id or not User.objects.filter(pk=user_id, is_active=True).exists():
+        raise AuthenticationFailed("User is inactive or deleted.")
+    serializer = TokenRefreshSerializer(data={"refresh": raw_refresh})
+    try:
+        serializer.is_valid(raise_exception=True)
+    except TokenError as exc:
+        raise InvalidToken(exc.args[0]) from exc
+    return serializer.validated_data
+
+
 @method_decorator(csrf_protect, name="dispatch")
 @extend_schema(tags=["auth"])
 class RefreshView(Unauthenticated401Mixin, APIView):
@@ -105,18 +123,9 @@ class RefreshView(Unauthenticated401Mixin, APIView):
 
     @extend_schema(request=None, responses={204: None})
     def post(self, request):
-        token = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH)
-        if not token:
-            raise AuthenticationFailed("Not logged in.")
-        serializer = TokenRefreshSerializer(data={"refresh": token})
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as exc:
-            raise InvalidToken(exc.args[0]) from exc
+        validated = _validate_active_refresh_token(request.COOKIES.get(settings.AUTH_COOKIE_REFRESH))
         response = Response(status=status.HTTP_204_NO_CONTENT)
-        return set_auth_cookies(
-            response, serializer.validated_data["access"], serializer.validated_data.get("refresh")
-        )
+        return set_auth_cookies(response, validated["access"], validated.get("refresh"))
 
 
 @method_decorator(csrf_protect, name="dispatch")
@@ -193,12 +202,10 @@ class NativeRefreshView(NativePublicAuthView):
 
     @extend_schema(request=NativeRefreshRequestSerializer, responses={200: NativeRefreshResponseSerializer})
     def post(self, request):
-        serializer = TokenRefreshSerializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as exc:
-            raise InvalidToken(exc.args[0]) from exc
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        req_serializer = NativeRefreshRequestSerializer(data=request.data)
+        req_serializer.is_valid(raise_exception=True)
+        validated = _validate_active_refresh_token(req_serializer.validated_data["refresh"])
+        return Response(validated, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["auth"])
@@ -234,7 +241,10 @@ class PasswordChangeView(APIView):
         serializer.is_valid(raise_exception=True)
         request.user.set_password(serializer.validated_data["new_password"])
         request.user.save(update_fields=["password"])
-        return login_response(Response(status=status.HTTP_204_NO_CONTENT), request.user)
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        if request.META.get("HTTP_AUTHORIZATION") and settings.AUTH_COOKIE_ACCESS not in request.COOKIES:
+            return response
+        return login_response(response, request.user)
 
 
 @extend_schema(tags=["auth"])

@@ -350,3 +350,40 @@ def test_native_auth_does_not_change_cookie_login_contract(api_client, user):
     )
     assert native_resp.status_code == 200
     assert "access" in native_resp.json()
+
+
+def test_native_refresh_rejects_deactivated_user(api_client, user):
+    login = api_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    ).json()
+
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+
+    response = api_client.post(
+        "/api/v1/auth/native/refresh/",
+        {"refresh": login["refresh"]},
+        format="json",
+    )
+    assert response.status_code == 401
+
+
+def test_bearer_password_change_does_not_set_auth_cookies(api_client, user):
+    login = api_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    ).json()
+
+    response = api_client.post(
+        "/api/v1/auth/password/change/",
+        {"current_password": PASSWORD, "new_password": "An0ther-Str0ng!"},
+        format="json",
+        HTTP_AUTHORIZATION=f"Bearer {login['access']}",
+    )
+
+    assert response.status_code == 204
+    assert ACCESS not in response.cookies
+    assert REFRESH not in response.cookies

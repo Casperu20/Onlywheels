@@ -317,4 +317,47 @@ describe("native authentication sessions", () => {
     expect(mocks.removeItem).not.toHaveBeenCalled();
     expect(storedTokens).not.toBeNull();
   });
+
+  it("does not overwrite newer setNativeTokens credentials with a slower in-flight hydration read", async () => {
+    let resolveInitialRead: ((val: string | null) => void) | undefined;
+    mocks.getItem.mockImplementationOnce(
+      () =>
+        new Promise<string | null>((resolve) => {
+          resolveInitialRead = resolve;
+        }),
+    );
+
+    const requests: InternalAxiosRequestConfig[] = [];
+    useAdapter(async (config) => {
+      requests.push(config);
+      if (config.url === "/api/v1/auth/native/login/") {
+        return response(config, {
+          user: {
+            id: "customer-1",
+            email: "customer@example.com",
+            first_name: "Ana",
+            last_name: "Pop",
+            phone: "",
+            preferred_language: "ro",
+            date_joined: "2026-01-01T00:00:00Z",
+            has_password: true,
+          },
+          access: "access-fresh",
+          refresh: "refresh-fresh",
+        });
+      }
+      return response(config, { ok: true });
+    });
+
+    const initialCatalogPromise = http.get("/api/v1/catalog/products/");
+    await vi.waitFor(() => expect(resolveInitialRead).toBeDefined());
+
+    await authApi.login({ email: "customer@example.com", password: "safe-test-password" });
+    resolveInitialRead?.(null);
+    await initialCatalogPromise;
+
+    await http.get("/api/v1/auth/me/");
+    const meRequest = requests.find((r) => r.url === "/api/v1/auth/me/");
+    expect(meRequest?.headers.get("Authorization")).toBe("Bearer access-fresh");
+  });
 });
