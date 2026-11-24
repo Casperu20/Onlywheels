@@ -61,8 +61,12 @@ export const authApi = {
     await setNativeTokens({ access: response.access, refresh: response.refresh });
     return response.user;
   },
-  google: (credential: string) =>
-    apiClient<User>({ url: `${AUTH}/google/`, method: "POST", data: { credential } }),
+  google: (credential: string) => {
+    if (isNativePlatform()) {
+      return Promise.reject(new Error("Google sign-in is not available in the Android app."));
+    }
+    return apiClient<User>({ url: `${AUTH}/google/`, method: "POST", data: { credential } });
+  },
   logout: async () => {
     if (!isNativePlatform()) return apiClient<void>({ url: `${AUTH}/logout/`, method: "POST" });
     const tokens = await getNativeTokens();
@@ -81,6 +85,11 @@ export const authApi = {
   confirmPasswordReset: (data: PasswordResetConfirmPayload) =>
     apiClient<void>({ url: `${AUTH}/password/reset/confirm/`, method: "POST", data }),
   exportData: () => apiClient<Record<string, unknown>>({ url: `${AUTH}/me/export/`, method: "GET" }),
-  deleteAccount: (data: DeleteAccountPayload) =>
-    apiClient<void>({ url: `${AUTH}/me/delete/`, method: "POST", data }),
+  deleteAccount: async (data: DeleteAccountPayload) => {
+    const response = await apiClient<void>({ url: `${AUTH}/me/delete/`, method: "POST", data });
+    if (isNativePlatform()) {
+      await clearNativeTokens();
+    }
+    return response;
+  },
 };

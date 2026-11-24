@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { http } from "@/api/http";
 import { authApi } from "@/features/auth/api";
+import { resetNativeTokenCacheForTests } from "@/lib/native/auth-storage";
 
 const mocks = vi.hoisted(() => ({
   isNativePlatform: vi.fn(),
@@ -61,6 +62,7 @@ function useAdapter(adapter: AxiosAdapter): void {
 
 describe("native authentication sessions", () => {
   beforeEach(() => {
+    resetNativeTokenCacheForTests();
     vi.clearAllMocks();
     mocks.isNativePlatform.mockReturnValue(true);
     mocks.setKeyPrefix.mockResolvedValue(undefined);
@@ -240,5 +242,79 @@ describe("native authentication sessions", () => {
     expect(document.cookie).toContain("csrftoken=web-csrf-token");
     expect(SecureStorage.getItem).not.toHaveBeenCalled();
     expect(SecureStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("evicts corrupted token storage without throwing and treats session as logged out", async () => {
+    storedTokens = "{ malformed json content";
+    const requests: InternalAxiosRequestConfig[] = [];
+    useAdapter(async (config) => {
+      requests.push(config);
+      return response(config, { ok: true });
+    });
+
+    await expect(http.get("/api/v1/catalog/wheels/")).resolves.toMatchObject({ data: { ok: true } });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].headers.get("Authorization")).toBeUndefined();
+    expect(mocks.removeItem).toHaveBeenCalledWith("auth_tokens");
+    expect(storedTokens).toBeNull();
+  });
+
+  it("evicts invalid token schema without throwing", async () => {
+    storedTokens = JSON.stringify({ access: "", refresh: "valid-refresh" });
+    const requests: InternalAxiosRequestConfig[] = [];
+    useAdapter(async (config) => {
+      requests.push(config);
+      return response(config, { ok: true });
+    });
+
+    await expect(http.get("/api/v1/catalog/wheels/")).resolves.toMatchObject({ data: { ok: true } });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].headers.get("Authorization")).toBeUndefined();
+    expect(mocks.removeItem).toHaveBeenCalledWith("auth_tokens");
+    expect(storedTokens).toBeNull();
+  });
+
+  it("serves subsequent requests from in-memory cache without repeating SecureStorage.getItem", async () => {
+    useAdapter(async (config) => response(config, { ok: true }));
+
+    expect(mocks.getItem).not.toHaveBeenCalled();
+
+    await http.get("/api/v1/catalog/1");
+    expect(mocks.getItem).toHaveBeenCalledTimes(1);
+
+    await Promise.all([
+      http.get("/api/v1/catalog/2"),
+      http.get("/api/v1/catalog/3"),
+      http.get("/api/v1/catalog/4"),
+    ]);
+
+    expect(mocks.getItem).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears native credentials from SecureStorage on account deletion", async () => {
+    const requests: InternalAxiosRequestConfig[] = [];
+    useAdapter(async (config) => {
+      requests.push(config);
+      return response(config, {}, 204);
+    });
+
+    await authApi.deleteAccount({ password: "my-password" });
+
+    expect(requests.map(({ url }) => url)).toEqual(["/api/v1/auth/me/delete/"]);
+    expect(mocks.removeItem).toHaveBeenCalledWith("auth_tokens");
+    expect(storedTokens).toBeNull();
+  });
+
+  it("does not clear native credentials if account deletion fails", async () => {
+    useAdapter(async (config) => rejected(config, 400));
+
+    await expect(authApi.deleteAccount({ password: "wrong-password" })).rejects.toMatchObject({
+      response: { status: 400 },
+    });
+
+    expect(mocks.removeItem).not.toHaveBeenCalled();
+    expect(storedTokens).not.toBeNull();
   });
 });
