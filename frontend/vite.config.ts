@@ -33,7 +33,15 @@ function dracoDecoder(): Plugin {
 // Installable PWA: app shell precached, catalog API network-first (offline fallback), media cache-first.
 const pwa = VitePWA({
   registerType: "autoUpdate",
-  includeAssets: ["onlywheels-logo.svg", "apple-touch-icon.png"],
+  includeAssets: [
+    "favicon.png",
+    "favicon.ico",
+    "apple-touch-icon.png",
+    "onlywheels-logo.webp",
+    "onlywheels-logo.png",
+    "onlywheels-mark.webp",
+    "onlywheels-mark.png",
+  ],
   manifest: {
     name: "OnlyWheels",
     short_name: "OnlyWheels",

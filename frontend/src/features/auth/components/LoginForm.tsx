@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { applyFieldErrors, getErrorMessage } from "@/api/errors";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
+import { isNativePlatform } from "@/lib/native";
 
 import { useGoogleLogin, useLogin } from "../hooks";
 import { loginSchema } from "../schemas";
@@ -91,7 +92,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
 export function OrDivider() {
   const { t } = useTranslation();
-  if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return null;
+  if (!import.meta.env.VITE_GOOGLE_CLIENT_ID || isNativePlatform()) return null;
   return (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="h-px flex-1 bg-border" />

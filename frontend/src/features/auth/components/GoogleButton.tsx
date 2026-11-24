@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { isNativePlatform } from "@/lib/native";
+
 const GSI_SRC = "https://accounts.google.com/gsi/client";
 let scriptPromise: Promise<void> | null = null;
 
@@ -23,19 +25,20 @@ interface GoogleButtonProps {
   onCredential: (credential: string) => void;
 }
 
-/** Renders the official "Continue with Google" button. Hidden if VITE_GOOGLE_CLIENT_ID is not set. */
+/** Renders the official "Continue with Google" button. Hidden on native or if VITE_GOOGLE_CLIENT_ID is not set. */
 export function GoogleButton({ onCredential }: GoogleButtonProps) {
   const { i18n } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   const callback = useRef(onCredential);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const enabled = Boolean(clientId) && !isNativePlatform();
 
   useEffect(() => {
     callback.current = onCredential;
   }, [onCredential]);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!enabled || !clientId) return;
     let cancelled = false;
 
     loadGoogleScript()
@@ -61,8 +64,8 @@ export function GoogleButton({ onCredential }: GoogleButtonProps) {
     return () => {
       cancelled = true;
     };
-  }, [clientId, i18n.language]);
+  }, [clientId, enabled, i18n.language]);
 
-  if (!clientId) return null;
+  if (!enabled) return null;
   return <div ref={container} className="flex min-h-11 justify-center" />;
 }
