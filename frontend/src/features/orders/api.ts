@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 import type {
   AppointmentStatusEnum,
@@ -9,6 +10,7 @@ import type {
 } from "@/api/generated/model";
 import { apiClient } from "@/api/http";
 import type { Paginated } from "@/features/catalog/api";
+import { startCheckoutNavigation } from "@/lib/native";
 
 // Canonical types derived from the OpenAPI schema (src/api/generated/model).
 export type OrderStatus = OrderStatusEnum;
@@ -129,11 +131,15 @@ export function useOrder(number: string, { pollWhilePending = false } = {}) {
   });
 }
 
-/** Starts the online payment and sends the browser to the payment page. */
+/** Starts the online payment and routes to the payment page (in-app or external on native). */
 export function usePayOrder() {
+  const navigate = useNavigate();
   return useMutation({
-    mutationFn: ordersApi.pay,
-    onSuccess: ({ checkout_url }) => window.location.assign(checkout_url),
+    mutationFn: async (orderNumber: string) => {
+      const response = await ordersApi.pay(orderNumber);
+      await startCheckoutNavigation(response.checkout_url, orderNumber, navigate);
+      return response;
+    },
   });
 }
 

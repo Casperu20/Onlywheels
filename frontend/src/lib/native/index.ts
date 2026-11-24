@@ -4,6 +4,7 @@ export {
   clearNativeTokens,
   getNativeTokens,
   isNativePlatform,
+  resetNativeTokenCacheForTests,
   setNativeTokens,
   type AuthTokens,
 } from "./auth-storage";
@@ -14,6 +15,7 @@ export {
   openNativeCheckout,
   parseCheckoutSuccessUrl,
   registerDeepLinkListener,
+  startCheckoutNavigation,
 } from "./deep-links";
 export { requestPushPermission } from "./push";
 export { share } from "./share";

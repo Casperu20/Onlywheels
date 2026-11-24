@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CircleX, Clock, CreditCard, MapPin, Truck } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -10,6 +12,7 @@ import { GarageCard, useGarages } from "@/features/garages";
 import {
   OrderStatusBadge,
   TotalsTable,
+  orderKeys,
   ordersApi,
   useCancelOrder,
   useDownloadInvoice,
@@ -18,6 +21,7 @@ import {
   usePayOrder,
 } from "@/features/orders";
 import { formatPrice } from "@/lib/format";
+import { isNativePlatform, openCheckoutSuccessLink } from "@/lib/native";
 import { useLocale } from "@/lib/useLocale";
 import { NotFoundPage } from "@/routes/ErrorPages";
 
@@ -274,20 +278,40 @@ export function FakePayPage() {
   const { t } = useTranslation();
   const locale = useLocale();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [params] = useSearchParams();
   const number = params.get("order") ?? "";
   const { data: order, isPending } = useOrder(number);
+  const [submitting, setSubmitting] = useState(false);
 
   if (isPending) return <PageLoader />;
   if (!order) return <NotFoundPage />;
 
   const complete = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     try {
       await ordersApi.fakeComplete(order.number);
-      navigate(`/checkout/success?order=${order.number}`, { replace: true });
     } catch (error) {
       toast.error(getErrorMessage(error, t("auth.genericError")));
+      setSubmitting(false);
+      return;
     }
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(order.number) }),
+      queryClient.invalidateQueries({ queryKey: ["orders", "list"] }),
+    ]);
+
+    const successPath = `/checkout/success?order=${encodeURIComponent(order.number)}`;
+    if (isNativePlatform()) {
+      try {
+        await openCheckoutSuccessLink(order.number);
+      } catch {
+        // Fall back to in-app navigation if the OS suppresses or rejects self-intent dispatch.
+      }
+    }
+    navigate(successPath, { replace: true });
   };
 
   return (
@@ -299,10 +323,14 @@ export function FakePayPage() {
         <p className="mt-6 text-3xl font-extrabold">{formatPrice(order.total, locale)}</p>
         <p className="text-xs text-muted-foreground">{order.number}</p>
         <div className="mt-8 flex flex-col gap-3">
-          <Button onClick={complete}>
+          <Button disabled={submitting} onClick={complete}>
             <CheckCircle2 aria-hidden /> {t("fakePay.success")}
           </Button>
-          <Button variant="secondary" onClick={() => navigate(`/account/orders/${order.number}?payment=cancelled`)}>
+          <Button
+            variant="secondary"
+            disabled={submitting}
+            onClick={() => navigate(`/account/orders/${order.number}?payment=cancelled`)}
+          >
             <CircleX aria-hidden /> {t("fakePay.cancel")}
           </Button>
         </div>

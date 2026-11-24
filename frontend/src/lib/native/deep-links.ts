@@ -60,7 +60,8 @@ export function getNativeFakePaymentPath(checkoutUrl: string, orderNumber: strin
   if (!ORDER_NUMBER_PATTERN.test(orderNumber)) {
     throw new Error("The checkout response contains an invalid order number.");
   }
-  const url = new URL(checkoutUrl);
+  const isRelativePath = checkoutUrl.startsWith("/") && !checkoutUrl.startsWith("//");
+  const url = isRelativePath ? new URL(checkoutUrl, "https://localhost") : new URL(checkoutUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {
     throw new Error("The checkout response contains an invalid payment URL.");
   }
@@ -90,4 +91,26 @@ export async function openCheckoutSuccessLink(orderNumber: string): Promise<void
   await AppLauncher.openUrl({
     url: `${SUCCESS_SCHEME}//${SUCCESS_HOST}/success?order=${encodeURIComponent(orderNumber)}`,
   });
+}
+
+export type CheckoutNavigationResult = "web" | "fake" | "external";
+
+export async function startCheckoutNavigation(
+  checkoutUrl: string,
+  orderNumber: string,
+  navigate: (path: string, options?: { replace?: boolean }) => void,
+): Promise<CheckoutNavigationResult> {
+  if (!isNativePlatform()) {
+    window.location.assign(checkoutUrl);
+    return "web";
+  }
+
+  const fakePath = getNativeFakePaymentPath(checkoutUrl, orderNumber);
+  if (fakePath) {
+    navigate(fakePath, { replace: true });
+    return "fake";
+  }
+
+  await openNativeCheckout(checkoutUrl);
+  return "external";
 }

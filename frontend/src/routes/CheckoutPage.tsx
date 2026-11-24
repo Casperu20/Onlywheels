@@ -19,6 +19,7 @@ import { checkoutApi, checkoutSchema, useAddresses, useQuote, type CheckoutValue
 import { GaragePicker, isoDate, type GarageSelection } from "@/features/garages";
 import { TotalsTable, ordersApi } from "@/features/orders";
 import { formatPrice } from "@/lib/format";
+import { startCheckoutNavigation } from "@/lib/native";
 import { useLocale } from "@/lib/useLocale";
 import { cn } from "@/lib/utils";
 
@@ -144,7 +145,10 @@ export function CheckoutPage() {
       }
       if ((values.payment_method ?? "card_online") === "card_online") {
         const { checkout_url } = await ordersApi.pay(order.number);
-        window.location.assign(checkout_url);
+        const target = await startCheckoutNavigation(checkout_url, order.number, navigate);
+        if (target === "external") {
+          navigate(`/account/orders/${order.number}`, { replace: true });
+        }
       } else {
         navigate(`/checkout/success?order=${order.number}`, { replace: true });
       }
