@@ -23,6 +23,8 @@ import {
 } from '../../model';
 import type {
   AuthMeExportRetrieve200,
+  NativeAuthResponse,
+  NativeRefreshResponse,
   User
 } from '../../model';
 
@@ -38,6 +40,12 @@ export const getAuthMePartialUpdateResponseMock = (overrideResponse: Partial< Us
 export const getAuthMeExportRetrieveResponseMock = (): AuthMeExportRetrieve200 => ({
         [faker.string.alphanumeric(5)]: {}
       })
+
+export const getAuthNativeLoginCreateResponseMock = (overrideResponse: Partial< NativeAuthResponse > = {}): NativeAuthResponse => ({user: {id: faker.string.uuid(), email: faker.internet.email(), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), phone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 32}}), undefined]), preferred_language: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(PreferredLanguageEnum)), undefined]), date_joined: `${faker.date.past().toISOString().split('.')[0]}Z`, has_password: faker.datatype.boolean()}, access: faker.string.alpha({length: {min: 10, max: 20}}), refresh: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getAuthNativeRefreshCreateResponseMock = (overrideResponse: Partial< NativeRefreshResponse > = {}): NativeRefreshResponse => ({access: faker.string.alpha({length: {min: 10, max: 20}}), refresh: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+
+export const getAuthNativeRegisterCreateResponseMock = (overrideResponse: Partial< NativeAuthResponse > = {}): NativeAuthResponse => ({user: {id: faker.string.uuid(), email: faker.internet.email(), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), phone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 32}}), undefined]), preferred_language: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(PreferredLanguageEnum)), undefined]), date_joined: `${faker.date.past().toISOString().split('.')[0]}Z`, has_password: faker.datatype.boolean()}, access: faker.string.alpha({length: {min: 10, max: 20}}), refresh: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
 export const getAuthRegisterCreateResponseMock = (overrideResponse: Partial< User > = {}): User => ({id: faker.string.uuid(), email: faker.internet.email(), first_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), last_name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 150}}), undefined]), phone: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 32}}), undefined]), preferred_language: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(PreferredLanguageEnum)), undefined]), date_joined: `${faker.date.past().toISOString().split('.')[0]}Z`, has_password: faker.datatype.boolean(), ...overrideResponse})
 
@@ -122,6 +130,52 @@ export const getAuthMeExportRetrieveMockHandler = (overrideResponse?: AuthMeExpo
   }, options)
 }
 
+export const getAuthNativeLoginCreateMockHandler = (overrideResponse?: NativeAuthResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<NativeAuthResponse> | NativeAuthResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/native/login/', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAuthNativeLoginCreateResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAuthNativeLogoutCreateMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/native/logout/', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  }, options)
+}
+
+export const getAuthNativeRefreshCreateMockHandler = (overrideResponse?: NativeRefreshResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<NativeRefreshResponse> | NativeRefreshResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/native/refresh/', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAuthNativeRefreshCreateResponseMock()),
+      { status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
+export const getAuthNativeRegisterCreateMockHandler = (overrideResponse?: NativeAuthResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<NativeAuthResponse> | NativeAuthResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/api/v1/auth/native/register/', async (info) => {await delay(1000);
+  
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAuthNativeRegisterCreateResponseMock()),
+      { status: 201,
+        headers: { 'Content-Type': 'application/json' }
+      })
+  }, options)
+}
+
 export const getAuthPasswordChangeCreateMockHandler = (overrideResponse?: void | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
   return http.post('*/api/v1/auth/password/change/', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
@@ -181,6 +235,10 @@ export const getAuthMock = () => [
   getAuthMePartialUpdateMockHandler(),
   getAuthMeDeleteCreateMockHandler(),
   getAuthMeExportRetrieveMockHandler(),
+  getAuthNativeLoginCreateMockHandler(),
+  getAuthNativeLogoutCreateMockHandler(),
+  getAuthNativeRefreshCreateMockHandler(),
+  getAuthNativeRegisterCreateMockHandler(),
   getAuthPasswordChangeCreateMockHandler(),
   getAuthPasswordResetCreateMockHandler(),
   getAuthPasswordResetConfirmCreateMockHandler(),

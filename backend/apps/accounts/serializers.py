@@ -125,3 +125,22 @@ class AddressSerializer(serializers.ModelSerializer):
             "is_default",
         )
         read_only_fields = ("id",)
+
+
+class NativeAuthResponseSerializer(serializers.Serializer):
+    user = UserSerializer()
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+
+class NativeRefreshRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
+class NativeRefreshResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+
+class NativeLogoutRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=False, allow_blank=True, allow_null=True)

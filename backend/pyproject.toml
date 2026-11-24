@@ -47,7 +47,8 @@ package = false
 DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
 testpaths = ["apps", "tests"]
-addopts = "--reuse-db -ra"
+norecursedirs = [".venv", "node_modules", "staticfiles", "media"]
+addopts = "--reuse-db -ra --ignore=.venv"
 
 [tool.ruff]
 line-length = 120

@@ -18,23 +18,23 @@ export interface FitmentSpec {
    */
   center_bore_mm: string;
   /**
-   * @minimum -32768
-   * @maximum 32767
+   * @minimum -9223372036854776000
+   * @maximum 9223372036854776000
    */
   et_min: number;
   /**
-   * @minimum -32768
-   * @maximum 32767
+   * @minimum -9223372036854776000
+   * @maximum 9223372036854776000
    */
   et_max: number;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    */
   diameter_min: number;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    */
   diameter_max: number;
   /** @pattern ^-?\d{0,2}(?:\.\d{0,1})?$ */

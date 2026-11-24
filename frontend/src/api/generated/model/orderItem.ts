@@ -22,7 +22,7 @@ export interface OrderItem {
   unit_price: string;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    */
   quantity: number;
   /** @pattern ^-?\d{0,10}(?:\.\d{0,2})?$ */

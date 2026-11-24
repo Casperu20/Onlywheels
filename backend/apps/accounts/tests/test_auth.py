@@ -215,3 +215,138 @@ def test_login_is_rate_limited(api_client, user):
         "/api/v1/auth/login/", {"email": user.email, "password": "x"}, format="json"
     )
     assert response.status_code == 429
+
+
+def test_native_login_returns_user_and_token_pair(api_client, user):
+    response = api_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user"]["email"] == user.email
+    assert "access" in data and "refresh" in data
+    assert ACCESS not in response.cookies
+    assert REFRESH not in response.cookies
+
+    # Access token works as Bearer token without cookies or CSRF
+    me = api_client.get(
+        "/api/v1/auth/me/",
+        HTTP_AUTHORIZATION=f"Bearer {data['access']}",
+    )
+    assert me.status_code == 200
+    assert me.json()["email"] == user.email
+
+
+def test_native_register_returns_token_pair_and_creates_session(api_client):
+    response = api_client.post(
+        "/api/v1/auth/native/register/",
+        {"email": "native@example.com", "password": PASSWORD, "first_name": "Radu"},
+        format="json",
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["user"]["email"] == "native@example.com"
+    assert data["user"]["first_name"] == "Radu"
+    assert "access" in data and "refresh" in data
+    assert ACCESS not in response.cookies
+    assert REFRESH not in response.cookies
+
+    me = api_client.get(
+        "/api/v1/auth/me/",
+        HTTP_AUTHORIZATION=f"Bearer {data['access']}",
+    )
+    assert me.status_code == 200
+    assert me.json()["email"] == "native@example.com"
+
+
+def test_native_refresh_rotates_and_rejects_reuse(api_client, user):
+    login = api_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    ).json()
+
+    old_refresh = login["refresh"]
+    response = api_client.post(
+        "/api/v1/auth/native/refresh/",
+        {"refresh": old_refresh},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    new_tokens = response.json()
+    assert "access" in new_tokens and "refresh" in new_tokens
+    assert new_tokens["refresh"] != old_refresh
+
+    # New access token works
+    me = api_client.get(
+        "/api/v1/auth/me/",
+        HTTP_AUTHORIZATION=f"Bearer {new_tokens['access']}",
+    )
+    assert me.status_code == 200
+
+    # Old refresh token is blacklisted and cannot be reused
+    reuse = api_client.post(
+        "/api/v1/auth/native/refresh/",
+        {"refresh": old_refresh},
+        format="json",
+    )
+    assert reuse.status_code == 401
+
+
+def test_native_logout_blacklists_refresh(api_client, user):
+    login = api_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    ).json()
+
+    refresh = login["refresh"]
+    response = api_client.post(
+        "/api/v1/auth/native/logout/",
+        {"refresh": refresh},
+        format="json",
+    )
+    assert response.status_code == 204
+
+    # Refreshing with blacklisted token fails
+    after_logout = api_client.post(
+        "/api/v1/auth/native/refresh/",
+        {"refresh": refresh},
+        format="json",
+    )
+    assert after_logout.status_code == 401
+
+
+def test_native_auth_does_not_change_cookie_login_contract(api_client, user):
+    from rest_framework.test import APIClient
+
+    # Web login requires CSRF and sets httpOnly cookies
+    client = APIClient(enforce_csrf_checks=True)
+    client.get("/api/v1/csrf/")
+    response = client.post(
+        "/api/v1/auth/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+        HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access" not in data
+    assert "refresh" not in data
+    assert response.cookies[ACCESS]["httponly"]
+    assert response.cookies[REFRESH]["httponly"]
+
+    # Native login does NOT require CSRF token
+    native_client = APIClient(enforce_csrf_checks=True)
+    native_resp = native_client.post(
+        "/api/v1/auth/native/login/",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+    )
+    assert native_resp.status_code == 200
+    assert "access" in native_resp.json()

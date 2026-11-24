@@ -42,7 +42,7 @@ export interface ProductDetail {
   rating_avg?: string;
   /**
    * @minimum 0
-   * @maximum 2147483647
+   * @maximum 9223372036854776000
    */
   rating_count?: number;
   /** @pattern ^-?\d{0,8}(?:\.\d{0,2})?$ */

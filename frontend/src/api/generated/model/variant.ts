@@ -31,7 +31,7 @@ export interface Variant {
   finish?: typeof VariantFinish[keyof typeof VariantFinish] ;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    * @nullable
    */
   diameter_in?: number | null;
@@ -41,8 +41,8 @@ export interface Variant {
    */
   width_in?: string | null;
   /**
-   * @minimum -32768
-   * @maximum 32767
+   * @minimum -9223372036854776000
+   * @maximum 9223372036854776000
    * @nullable
    */
   et_mm?: number | null;
@@ -56,19 +56,19 @@ export interface Variant {
   readonly tire_size: string;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    * @nullable
    */
   tire_width_mm?: number | null;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    * @nullable
    */
   tire_aspect?: number | null;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    * @nullable
    */
   load_index?: number | null;

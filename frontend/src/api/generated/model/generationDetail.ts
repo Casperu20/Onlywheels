@@ -18,13 +18,13 @@ export interface GenerationDetail {
   name: string;
   /**
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    */
   year_from: number;
   /**
    * Empty = still produced
    * @minimum 0
-   * @maximum 32767
+   * @maximum 9223372036854776000
    * @nullable
    */
   year_to?: number | null;

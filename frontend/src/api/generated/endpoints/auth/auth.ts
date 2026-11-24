@@ -29,6 +29,10 @@ import type {
   DeleteAccountRequest,
   GoogleLoginRequest,
   LoginRequest,
+  NativeAuthResponse,
+  NativeLogoutRequestRequest,
+  NativeRefreshRequestRequest,
+  NativeRefreshResponse,
   PasswordChangeRequest,
   PasswordResetConfirmRequest,
   PasswordResetRequestRequest,
@@ -516,7 +520,251 @@ export function useAuthMeExportRetrieve<TData = Awaited<ReturnType<typeof authMe
 
 
 
-export const authPasswordChangeCreate = (
+/**
+ * Native mobile endpoints: no auth, no cookie CSRF, rate limited.
+ */
+export const authNativeLoginCreate = (
+    loginRequest: BodyType<LoginRequest>,
+ options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
+) => {
+      
+      
+      return apiClient<NativeAuthResponse>(
+      {url: `/api/v1/auth/native/login/`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthNativeLoginCreateMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeLoginCreate>>, TError,{data: BodyType<LoginRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof authNativeLoginCreate>>, TError,{data: BodyType<LoginRequest>}, TContext> => {
+
+const mutationKey = ['authNativeLoginCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authNativeLoginCreate>>, {data: BodyType<LoginRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authNativeLoginCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthNativeLoginCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authNativeLoginCreate>>>
+    export type AuthNativeLoginCreateMutationBody = BodyType<LoginRequest>
+    export type AuthNativeLoginCreateMutationError = ErrorType<unknown>
+
+    export const useAuthNativeLoginCreate = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeLoginCreate>>, TError,{data: BodyType<LoginRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authNativeLoginCreate>>,
+        TError,
+        {data: BodyType<LoginRequest>},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthNativeLoginCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Native mobile endpoints: no auth, no cookie CSRF, rate limited.
+ */
+export const authNativeLogoutCreate = (
+    nativeLogoutRequestRequest: BodyType<NativeLogoutRequestRequest>,
+ options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
+) => {
+      
+      
+      return apiClient<void>(
+      {url: `/api/v1/auth/native/logout/`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: nativeLogoutRequestRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthNativeLogoutCreateMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeLogoutCreate>>, TError,{data: BodyType<NativeLogoutRequestRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof authNativeLogoutCreate>>, TError,{data: BodyType<NativeLogoutRequestRequest>}, TContext> => {
+
+const mutationKey = ['authNativeLogoutCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authNativeLogoutCreate>>, {data: BodyType<NativeLogoutRequestRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authNativeLogoutCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthNativeLogoutCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authNativeLogoutCreate>>>
+    export type AuthNativeLogoutCreateMutationBody = BodyType<NativeLogoutRequestRequest>
+    export type AuthNativeLogoutCreateMutationError = ErrorType<unknown>
+
+    export const useAuthNativeLogoutCreate = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeLogoutCreate>>, TError,{data: BodyType<NativeLogoutRequestRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authNativeLogoutCreate>>,
+        TError,
+        {data: BodyType<NativeLogoutRequestRequest>},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthNativeLogoutCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Rotates the native refresh token and returns a new access/refresh pair.
+ */
+export const authNativeRefreshCreate = (
+    nativeRefreshRequestRequest: BodyType<NativeRefreshRequestRequest>,
+ options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
+) => {
+      
+      
+      return apiClient<NativeRefreshResponse>(
+      {url: `/api/v1/auth/native/refresh/`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: nativeRefreshRequestRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthNativeRefreshCreateMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeRefreshCreate>>, TError,{data: BodyType<NativeRefreshRequestRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof authNativeRefreshCreate>>, TError,{data: BodyType<NativeRefreshRequestRequest>}, TContext> => {
+
+const mutationKey = ['authNativeRefreshCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authNativeRefreshCreate>>, {data: BodyType<NativeRefreshRequestRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authNativeRefreshCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthNativeRefreshCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authNativeRefreshCreate>>>
+    export type AuthNativeRefreshCreateMutationBody = BodyType<NativeRefreshRequestRequest>
+    export type AuthNativeRefreshCreateMutationError = ErrorType<unknown>
+
+    export const useAuthNativeRefreshCreate = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeRefreshCreate>>, TError,{data: BodyType<NativeRefreshRequestRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authNativeRefreshCreate>>,
+        TError,
+        {data: BodyType<NativeRefreshRequestRequest>},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthNativeRefreshCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Native mobile endpoints: no auth, no cookie CSRF, rate limited.
+ */
+export const authNativeRegisterCreate = (
+    registerRequest: BodyType<RegisterRequest>,
+ options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
+) => {
+      
+      
+      return apiClient<NativeAuthResponse>(
+      {url: `/api/v1/auth/native/register/`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: registerRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthNativeRegisterCreateMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeRegisterCreate>>, TError,{data: BodyType<RegisterRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof authNativeRegisterCreate>>, TError,{data: BodyType<RegisterRequest>}, TContext> => {
+
+const mutationKey = ['authNativeRegisterCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authNativeRegisterCreate>>, {data: BodyType<RegisterRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authNativeRegisterCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthNativeRegisterCreateMutationResult = NonNullable<Awaited<ReturnType<typeof authNativeRegisterCreate>>>
+    export type AuthNativeRegisterCreateMutationBody = BodyType<RegisterRequest>
+    export type AuthNativeRegisterCreateMutationError = ErrorType<unknown>
+
+    export const useAuthNativeRegisterCreate = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authNativeRegisterCreate>>, TError,{data: BodyType<RegisterRequest>}, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authNativeRegisterCreate>>,
+        TError,
+        {data: BodyType<RegisterRequest>},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthNativeRegisterCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    export const authPasswordChangeCreate = (
     passwordChangeRequest: BodyType<PasswordChangeRequest>,
  options?: SecondParameter<typeof apiClient>,signal?: AbortSignal
 ) => {

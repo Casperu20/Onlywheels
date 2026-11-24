@@ -22,6 +22,10 @@ from .serializers import (
     DeleteAccountSerializer,
     GoogleLoginSerializer,
     LoginSerializer,
+    NativeAuthResponseSerializer,
+    NativeLogoutRequestSerializer,
+    NativeRefreshRequestSerializer,
+    NativeRefreshResponseSerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
@@ -130,6 +134,84 @@ class LogoutView(APIView):
             except TokenError:
                 pass
         return clear_auth_cookies(Response(status=status.HTTP_204_NO_CONTENT))
+
+
+class NativePublicAuthView(Unauthenticated401Mixin, APIView):
+    """Native mobile endpoints: no auth, no cookie CSRF, rate limited."""
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = "auth"
+
+
+def _native_token_pair(user) -> tuple[str, str]:
+    refresh = RefreshToken.for_user(user)
+    return str(refresh.access_token), str(refresh)
+
+
+def _native_auth_response(user, response_status=status.HTTP_200_OK) -> Response:
+    update_last_login(None, user)
+    access, refresh = _native_token_pair(user)
+    data = {
+        "user": UserSerializer(user).data,
+        "access": access,
+        "refresh": refresh,
+    }
+    return Response(data, status=response_status)
+
+
+@extend_schema(tags=["auth"])
+class NativeRegisterView(NativePublicAuthView):
+    @extend_schema(request=RegisterSerializer, responses={201: NativeAuthResponseSerializer})
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = services.register_user(**serializer.validated_data)
+        return _native_auth_response(user, status.HTTP_201_CREATED)
+
+
+@extend_schema(tags=["auth"])
+class NativeLoginView(NativePublicAuthView):
+    @extend_schema(request=LoginSerializer, responses={200: NativeAuthResponseSerializer})
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = authenticate(
+            request,
+            username=serializer.validated_data["email"],
+            password=serializer.validated_data["password"],
+        )
+        if user is None:
+            raise AuthenticationFailed("Invalid email or password.")
+        return _native_auth_response(user)
+
+
+@extend_schema(tags=["auth"])
+class NativeRefreshView(NativePublicAuthView):
+    """Rotates the native refresh token and returns a new access/refresh pair."""
+
+    @extend_schema(request=NativeRefreshRequestSerializer, responses={200: NativeRefreshResponseSerializer})
+    def post(self, request):
+        serializer = TokenRefreshSerializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as exc:
+            raise InvalidToken(exc.args[0]) from exc
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=["auth"])
+class NativeLogoutView(NativePublicAuthView):
+    @extend_schema(request=NativeLogoutRequestSerializer, responses={204: None})
+    def post(self, request):
+        token = request.data.get("refresh") if isinstance(request.data, dict) else None
+        if token:
+            try:
+                RefreshToken(token).blacklist()
+            except TokenError:
+                pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @extend_schema(tags=["auth"])
