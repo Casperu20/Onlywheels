@@ -11,6 +11,11 @@ See [ROADMAP.md](ROADMAP.md) for the scope and [ANDROID.md](ANDROID.md) for Andr
 
 ## 0. Preparing a new laptop – the whole sequence
 
+> **Note:** The repository is already initialized on GitHub with committed migrations, `backend/uv.lock`,
+> `frontend/pnpm-lock.yaml`, and `frontend/src/api/generated/`. **Anyone cloning the repo today should start directly
+> at [§0.1 Joining the existing repository](#01-second-developer--joining-the-existing-repository)** (or
+> [QUICKSTART.md](../QUICKSTART.md) once set up). The full initial-bootstrap table below is kept for reference.
+
 Do the steps in this order; each links to the details. The order matters: lock files and migrations must exist
 before the first push, otherwise the first CI run fails.
 
@@ -135,8 +140,7 @@ docker compose -f infra/docker-compose.yml up -d
 cd backend
 Copy-Item .env.example .env          # then edit DATABASE_URL and DJANGO_SECRET_KEY
 uv sync                              # creates .venv and installs dependencies
-uv run python manage.py makemigrations   # first time only (creates migrations for all apps), then commit
-uv run python manage.py migrate
+uv run python manage.py migrate      # applies committed migrations (run makemigrations only after editing models)
 uv run python manage.py seed_demo    # demo cars + fitment, products + photos + stock, garages, vouchers (safe to re-run)
 uv run python manage.py createsuperuser
 uv run python manage.py runserver
@@ -244,11 +248,11 @@ Run these commands from `frontend`:
 
 ```powershell
 corepack pnpm install       # first setup or after dependency changes
-corepack pnpm android:sync  # validates VITE_API_URL, builds the web app, and syncs Android plugins/assets
+corepack pnpm android:sync  # validates VITE_API_URL, builds web assets without Service Worker (CAPACITOR_BUILD=1), and syncs Android
 corepack pnpm android:run   # builds, installs, and launches on the connected emulator/device
 ```
 
-To create a debug APK without installing it:
+To create a debug APK without installing it (uses `scripts/android-build.mjs` to invoke `gradlew.bat` on Windows or `./gradlew` on macOS/Linux):
 
 ```powershell
 corepack pnpm android:build
@@ -294,10 +298,10 @@ link as payment confirmation.
 
 ### Generated API client
 
-With Django running:
+With Django running (or offline by exporting `schema.yml` and setting `$env:OPENAPI_URL="../backend/schema.yml"`):
 
 ```powershell
-pnpm api:generate        # writes src/api/generated/ (typed hooks + MSW mocks)
+pnpm api:generate        # writes src/api/generated/ (typed models, hooks + MSW mocks)
 ```
 
 Re-run after every backend API change and commit the result, so the frontend developer
@@ -320,7 +324,7 @@ pnpm dlx shadcn@latest add dialog select tabs sheet
    - `backend/.env` → `GOOGLE_OAUTH_CLIENT_ID=...`
    - `frontend/.env.local` → `VITE_GOOGLE_CLIENT_ID=...`
 
-The “Continue with Google” button only appears when `VITE_GOOGLE_CLIENT_ID` is set.
+The “Continue with Google” button only appears on the web when `VITE_GOOGLE_CLIENT_ID` is set (it is automatically hidden inside the Capacitor Android app, which uses native email/password sessions).
 
 ### Real car database – all European cars (optional)
 
@@ -340,6 +344,10 @@ Imported data is visible (and editable) in the admin under Vehicles.
 > The Sandbox licence is for development/testing only – a public shop needs a paid plan.
 
 ## 6. Payments
+
+Orders support three payment methods at checkout: **Online card** (`card_online`), **Cash on delivery / ramburs**
+(`cash_on_delivery`, courier orders only), and **Pay at partner garage** (`pay_at_garage`, garage-fitting orders only).
+Non-card orders become `confirmed` immediately; `card_online` uses whichever gateway `PAYMENT_PROVIDER` selects below.
 
 ### Without any account (default)
 

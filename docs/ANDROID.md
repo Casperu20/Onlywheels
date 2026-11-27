@@ -3,10 +3,12 @@
 **University demo scope:** the target is an installable debug app with test accounts, demo data, and simulated
 payments, not a commercial release. Real merchant accounts and Play Store publication are not required.
 
-The implemented scope covers the Capacitor shell, native email/password sessions stored in secure storage, and
-simulated checkout returning through `onlywheels://checkout/success`. Android build, installation, and device
-acceptance are still unverified. They need a reachable backend, Android tools, and a device/emulator; a commercial
-hosting setup is not required, although the current Android preflight still requires an HTTPS backend URL.
+The implemented scope covers the Capacitor shell, native email/password sessions stored in Android Keystore
+(`@aparajita/capacitor-secure-storage` with an in-memory write-through cache and self-healing corruption recovery),
+simulated in-app checkout returning through `onlywheels://checkout/success`, hiding web Google Sign-In on native,
+disabling the Workbox Service Worker during Capacitor builds (`CAPACITOR_BUILD=1`), and cross-platform Gradle
+orchestration (`scripts/android-build.mjs`). Physical Android installation and device acceptance are the remaining
+hands-on steps; they need a reachable HTTPS backend, Android Studio SDK tools, and a device/emulator.
 
 Work through the sections in order and tick the boxes as you go. The detailed reference is in
 [SETUP.md – Android debug app](./SETUP.md#android-debug-app-capacitor); the implementation plan is in
@@ -17,9 +19,10 @@ Work through the sections in order and tick the boxes as you go. The detailed re
 | Area | Status |
 |---|---|
 | Capacitor project (`frontend/android`, app id `ro.onlywheels.app`) | Done |
-| Native JWT endpoints (`/api/v1/auth/native/...`) | Done, tested |
-| Secure token storage, bearer auth, refresh | Done, tested |
-| Deep link `onlywheels://checkout/success?order=...` | Done, tested |
+| Native JWT endpoints (`/api/v1/auth/native/...` + active-user refresh check) | Done, tested |
+| Keystore token cache, self-healing parse, bearer auth, refresh | Done, tested |
+| In-app fake checkout + deep link `onlywheels://checkout/success?order=...` | Done, tested |
+| Web Google Sign-In hidden on native & PWA Service Worker excluded (`CAPACITOR_BUILD=1`) | Done, tested |
 | Android tools installed | **To do** – step 1 |
 | HTTPS backend reachable from the phone | **To do** – step 2 |
 | `VITE_API_URL` configured | **To do** – step 3 |

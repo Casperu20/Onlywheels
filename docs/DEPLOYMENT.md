@@ -4,9 +4,9 @@ How the code gets from a laptop to production: environments, Docker images, the 
 pipeline and (not yet automated) deployment. Target: a small, cheap setup for the project demo on a real domain,
 e.g. `onlywheels.ro`.
 
-> **Status:** the Docker images, the production compose file and the CI workflow are written but **were never
-> executed** (no Docker or GitHub runner was available while building the project). Expect small fixes on the
-> first run. Deployment itself is manual (§7).
+> **Status:** the CI workflow (`.github/workflows/ci.yml`) and local PostgreSQL Docker setup are active; the
+> production compose stack (`infra/docker-compose.prod.yml`) is prepared and ready for first VPS/cloud deployment
+> (manual step, §7).
 
 ## 0. How it fits together
 
