@@ -13,18 +13,19 @@ Agreed between frontend and backend. Every new endpoint follows these rules.
 
 | Client | How |
 |---|---|
-| Web (React) | httpOnly cookies `ow_access` (15 min) + `ow_refresh` (7 days, rotated). JavaScript never sees the tokens. |
-| Android / other | `Authorization: Bearer <access>` header. |
+| Web (React) | httpOnly cookies `ow_access` (15 min) + `ow_refresh` (7 days, rotated & blacklisted). JavaScript never sees the tokens. |
+| Android (Capacitor) / other | `Authorization: Bearer <access>` header; tokens stored in Android Keystore via `@aparajita/capacitor-secure-storage` with an in-memory write-through cache. |
 
 - Every unsafe request (`POST`, `PUT`, `PATCH`, `DELETE`) from the web sends the `X-CSRFToken` header
-  (value of the `csrftoken` cookie, obtained from `GET /api/v1/csrf/`). The axios client does this automatically.
-- On `401`, the client calls `POST /api/v1/auth/refresh/` once and retries the request.
+  (value of the `csrftoken` cookie, obtained once via deduplicated `GET /api/v1/csrf/`). Native Bearer requests omit cookies and CSRF.
+- On `401`, the client coalesces concurrent failures into a single refresh (`POST /api/v1/auth/refresh/` on web,
+  `POST /api/v1/auth/native/refresh/` on Android), verifies the user is still active, persists rotated tokens, and retries once.
 - Endpoints are **private by default**; public ones explicitly use `AllowAny`.
 
-Auth endpoints (`/api/v1/auth/`): `register/`, `login/`, `google/`, `refresh/`, `logout/`, `me/`,
-`password/change/`, `password/reset/`, `password/reset/confirm/`, and GDPR: `me/export/` (GET, JSON with all
-personal data) and `me/delete/` (POST `{"password"}`, or `{"confirm_email"}` for Google-only accounts –
-`has_password` in `me/` tells which; anonymises the user, keeps orders, clears the cookies, `204`).
+Auth endpoints (`/api/v1/auth/`):
+- **Web (cookie + CSRF):** `register/`, `login/`, `google/`, `refresh/`, `logout/`
+- **Native mobile (Bearer JSON, rate-limited, no cookies/CSRF):** `native/register/`, `native/login/` → `{ user, access, refresh }`, `native/refresh/` → `{ access, refresh }`, `native/logout/` (`204`, blacklists refresh token)
+- **Shared account & GDPR:** `me/`, `password/change/`, `password/reset/`, `password/reset/confirm/`, `me/export/` (GET, JSON with all personal data) and `me/delete/` (POST `{"password"}`, or `{"confirm_email"}` for Google-only accounts – `has_password` in `me/` tells which; blacklists tokens, anonymises the user, keeps orders, `204`).
 
 ## Main endpoints
 
@@ -32,14 +33,16 @@ personal data) and `me/delete/` (POST `{"password"}`, or `{"confirm_email"}` for
 |---|---|
 | Vehicles (public) | `GET vehicles/makes/`, `GET vehicles/models/?make=<id>`, `GET vehicles/generations/?model=<id>`, `GET vehicles/generations/<id>/` (includes `fitment`) |
 | My garage (auth) | `GET/POST vehicles/my/`, `PATCH/DELETE vehicles/my/<id>/` |
-| Catalog (public) | `GET catalog/brands/`, `GET catalog/categories/`, `GET catalog/products/`, `GET catalog/products/<slug>/?vehicle=<generation id>` |
+| Catalog & 3D showroom (public) | `GET catalog/brands/`, `GET catalog/categories/`, `GET catalog/products/`, `GET catalog/products/<slug>/?vehicle=<generation id>`, `GET catalog/car-models/` |
 | Favorites (auth) | `GET favorites/`, `PUT/DELETE favorites/<product id>/` |
 | Reviews | `GET reviews/?product=<slug>` (public, approved only), `POST reviews/`, `GET reviews/mine/?product=<slug>` |
-| Cart (auth) | `GET/DELETE cart/`, `POST cart/items/`, `PATCH/DELETE cart/items/<id>/`, `POST cart/merge/` (guest cart after login) |
+| Cart (auth) | `GET/DELETE cart/`, `POST cart/items/`, `PATCH/DELETE cart/items/<id>/`, `POST cart/merge/` (bulk guest-cart merge after login) |
 | Garages (public) | `GET garages/`, `GET garages/<slug>/`, `GET garages/<slug>/slots/?date=YYYY-MM-DD` |
-| Checkout (auth) | `POST checkout/preview/` (totals), `POST orders/` (place order) |
-| Orders (auth) | `GET orders/`, `GET orders/<number>/`, `POST orders/<number>/pay/` → `{checkout_url}`, `POST orders/<number>/cancel/` |
-| Payments | `POST payments/webhook/stripe/` (Stripe only, signed), `POST payments/fake/complete/` (dev only) |
+| Checkout (auth) | `POST checkout/preview/` (totals), `POST orders/` (place order; `payment_method`: `card_online`, `cash_on_delivery`, `pay_at_garage`) |
+| Orders (auth) | `GET orders/`, `GET orders/<number>/` (includes `invoice` & `shipment`), `POST orders/<number>/pay/` → `{checkout_url}`, `POST orders/<number>/cancel/` |
+| Invoices (auth: owner/staff) | `GET invoices/<number>/`, `GET invoices/<number>/pdf/` (streams private SmartBill or `DEMO` PDF) |
+| Payments | `POST payments/webhook/stripe/` (signed), `POST payments/webhook/netopia/` (JWT + SHA-512 verified), `POST payments/fake/complete/` (dev only) |
+| AI Photo Studio (auth) | `GET ai/studio/`, `GET/POST ai/generations/`, `GET/DELETE ai/generations/<id>/`, `POST ai/generations/<id>/retry/`, `GET ai/generations/<id>/input/`, `GET ai/generations/<id>/result/` (private `no-store` stream) |
 
 Business errors: `out_of_stock` (409) when stock changed since the cart was filled;
 voucher and slot problems are `validation_error` on `voucher_code` / `slot_start`.
@@ -95,9 +98,9 @@ List endpoints are paginated:
 | Type | Format |
 |---|---|
 | IDs | UUID strings |
-| Money | decimal **string** in RON, 2 decimals: `"1890.00"` (never floats) |
+| Money | decimal **string** in RON, 2 decimals: `"1890.00"` (never floats; frontend uses integer `bani` math, `1 RON = 100 bani`) |
 | Dates / times | ISO 8601 with timezone: `"2026-10-24T14:30:00+03:00"` |
-| Enums | lowercase strings: `"pending_payment"`, `"wheel"` |
+| Enums | lowercase strings: `"pending_payment"`, `"confirmed"`, `"returned"`, `"wheel"` |
 | Images / files | absolute URLs |
 
 ## OpenAPI

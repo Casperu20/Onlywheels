@@ -11,9 +11,9 @@ and an explanation of partner fitting. All products, prices and stock are demons
 No backend, fitment checks, real 3D rendering, AI generation, authentication, bookings or payments
 are connected. The standalone HTML is a visual reference, not the React/PWA implementation.
 
-> **Implementation status:** the MVP (phases 0–2 without 3D/AI) is implemented in `backend/` and `frontend/`.
-> Where the implementation differs from the original plan below, the rows are marked **As built**;
-> the full list of changes is in [§13 Implementation status](#13-implementation-status-as-built).
+> **Implementation status:** phases 0–3 (MVP shop, Phase-2 experience features and the Capacitor Android shell) are
+> implemented in `backend/` and `frontend/`. Where the implementation differs from the original plan below, the rows
+> are marked **As built**; the full list of changes is in [§13 Implementation status](#13-implementation-status-as-built).
 > Next steps: [ROADMAP.md](../ROADMAP.md).
 
 ---
@@ -94,15 +94,15 @@ flowchart LR
 | Framework | **React 19 + TypeScript** |
 | Build tool | **Vite** |
 | Routing | **As built:** **React Router 7** (data router) – chosen over TanStack Router for familiarity |
-| Server state / data fetching | **TanStack Query** + client generated from Django's OpenAPI schema (**orval**). **As built:** `orval.config.ts` is ready; until it is run, each feature has a hand-written `api.ts` mirroring the serializers |
+| Server state / data fetching | **TanStack Query** + client generated from Django's OpenAPI schema (**orval**). **As built:** `src/api/generated/` is committed; domain types (`catalog`, `orders`, `checkout`) derive from the generated models, while feature hooks call the shared `apiClient` mutator |
 | Client state | **Zustand** (cart, configurator selections, UI) |
 | Styling / UI kit | **Tailwind CSS** + **shadcn/ui** (Radix primitives) |
 | Forms & validation | **React Hook Form** + **Zod** (Zod schemas can be generated from OpenAPI by orval) |
 | 3D showroom | **Three.js** via **react-three-fiber** + **@react-three/drei**; models in **glTF/GLB** (Draco + KTX2 compressed) |
 | AR (later) | WebXR on web; **ARCore** via Capacitor plugin on Android |
 | i18n | **i18next** (ro default, en) |
-| PWA | **vite-plugin-pwa** (Workbox) – installable, offline catalog cache. **As built:** manifest + icons, precached app shell, catalog API network-first, media cache-first, auto-update |
-| Native wrapper | **Capacitor** (Android; iOS possible later) + plugins: Camera, Push Notifications, Share, Filesystem, Preferences |
+| PWA | **vite-plugin-pwa** (Workbox) – installable, offline catalog cache. **As built:** manifest + icons, precached app shell, catalog API network-first, media cache-first, auto-update; disabled for Capacitor Android builds (`CAPACITOR_BUILD=1`) so the APK always serves its bundled assets |
+| Native wrapper | **Capacitor** (Android; iOS possible later) + plugins: Camera, Push Notifications, Share, Filesystem, Preferences. **As built:** Capacitor 8 project in `frontend/android/` (`ro.onlywheels.app`) with `@capacitor/app`, `@capacitor/app-launcher` and `@aparajita/capacitor-secure-storage` |
 | Analytics | **PostHog** (product analytics, feature flags). **As built:** not added |
 | Errors | **Sentry**. **As built:** `@sentry/react`, loaded on demand only when `VITE_SENTRY_DSN` is set |
 
@@ -128,7 +128,7 @@ flowchart LR
 | ORM / migrations | Django ORM + built-in migrations (`django.contrib.postgres` for JSONB, arrays, full-text) |
 | Filtering / pagination | **django-filter** + DRF **page-number** pagination (**As built:** chosen over cursor pagination so the UI can show "page X of Y") |
 | Auth | **As built:** **djangorestframework-simplejwt** with our own endpoints (register, login, refresh, logout, me, password change/reset) – no django-allauth/dj-rest-auth (version conflicts). Google login = Google Identity Services ID token verified with `google-auth`. Access 15 min + rotating, blacklisted refresh (7 days); **argon2** hashing; login endpoints rate-limited |
-| Token storage | httpOnly secure cookie on web (+ CSRF token header), `Authorization: Bearer` + `@capacitor/preferences`/secure storage on Android |
+| Token storage | httpOnly secure cookie on web (+ CSRF token header). **As built (Android):** dedicated `/api/v1/auth/native/{login,register,refresh,logout}/` endpoints return JWTs as JSON; the app stores them in the Android Keystore (`@aparajita/capacitor-secure-storage`) behind an in-memory cache and sends `Authorization: Bearer`. Refresh rejects deactivated users on both web and native |
 | Authorization | Groups/permissions: `customer`, `garage_partner`, `staff`, `admin` + DRF permission classes |
 | Background jobs | **Celery** (workers) + **Celery Beat** (scheduled jobs) with **Redis** broker. **As built:** in development Celery runs tasks inline (`CELERY_TASK_ALWAYS_EAGER`), so Redis is not needed yet |
 | Realtime updates | Polling for MVP → **Django Channels** (WebSocket) later for AI-job progress & order status |
@@ -226,11 +226,11 @@ backend/
     ├── cart/                # cart, sets of 4, fitting add-on
     ├── orders/              # checkout, orders, status history, VAT
     ├── payments/            # Stripe / Netopia, webhooks, installments
-    ├── shipping/            # AWB generation, tracking               (phase 2: structure only)
-    ├── invoicing/           # SmartBill, e-Factura                   (phase 2: structure only)
+    ├── shipping/            # AWB generation, tracking (demo, Sameday, FAN Courier)
+    ├── invoicing/           # SmartBill + demo PDF invoices, e-Factura status (manual)
     ├── garages/             # partner garages, services, availability
     ├── appointments/        # fitting bookings
-    ├── ai_studio/           # generations, gallery, quotas, providers/ (phase 2: structure only)
+    ├── ai_studio/           # generations, gallery, quotas, providers/ (Replicate, fal)
     ├── reviews/             # ratings & reviews, favorites
     ├── notifications/       # email (built), push (phase 3 stub)
     └── core/                # base models (UUID, timestamps), utils, permissions
@@ -289,13 +289,13 @@ Key fields:
 | `Product` | `type (wheel/tire/set/accessory), brand, category, name, slug, style, description, badge, is_featured, rating_avg, rating_count` |
 | `ProductVariant` | `sku, price, old_price, finish, diameter_in, width_in, et_mm, pcd, center_bore_mm, tire_width_mm, tire_aspect, load_index, speed_rating, season, tire_size (computed), thread_size, label` |
 | `StockItem` | `variant (1:1), quantity, reserved` |
-| `Model3D` | `glb_file, thumbnail, finish_materials (JSONField)` – **As built:** model + admin inline + `model_3d` in the product API; the 3D viewer itself is phase 2 |
-| `Order` | `number, status, delivery_method (courier/garage_fitting), contact + address snapshot, subtotal, discount, voucher, shipping, fitting, total, vat, reserved_until, paid_at` (installments: later) |
-| `Payment` | `order, provider (fake/stripe), session_id, amount, status, payment_reference` |
+| `Model3D` | `glb_file, thumbnail, finish_materials (JSONField)` – **As built:** wheel GLBs used by the `/showroom` viewer (procedural fallback when missing); `CarModel3D` stores car GLBs with length, nose direction, attribution and detected/manual `wheel_anchors` |
+| `Order` | `number, status (pending_payment/confirmed/paid/processing/shipped/ready_for_fitting/completed/cancelled/returned), delivery_method (courier/garage_fitting), payment_method (card_online/cash_on_delivery/pay_at_garage), contact + address snapshot, subtotal, discount, voucher, shipping, fitting, total, vat, reserved_until, paid_at` |
+| `Payment` | `order, provider (fake/stripe/netopia), session_id, amount, status, payment_reference, installments` |
 | `Appointment` | `garage, order (1:1), slot_start, slot_end, status (held/booked/confirmed/completed/cancelled)` |
-| `Voucher` | `code, kind (percent/fixed), value, min_order_total, valid_from/until, max_uses, used_count` |
+| `Voucher` | `code, kind (percent/fixed), value, min_order_total, valid_from/until, max_uses, reserved_count, used_count` |
 | `Review` | `product, user, rating 1–5, title, body, status (pending/approved/rejected), is_verified_purchase` |
-| `AIGeneration` | `user, provider, source (3d_render/user_photo), scene, angle, style, status, result_image, cost` (model only) |
+| `AIGeneration` | `user, provider, variant, scene, style, status, input_image, result_image, cost, deleted_at` |
 
 Conventions: money as `DecimalField(max_digits=10, decimal_places=2)` in RON; `DateTimeField` with `USE_TZ=True`;
 primary keys as **UUID**; custom `User` model from day one.
@@ -325,29 +325,36 @@ sequenceDiagram
   participant Q as Redis (Celery)
   participant W as Celery worker
   participant P as AI provider API
-  participant S as S3
-  C->>A: POST /api/ai/generations/ (scene, angle, variant, image?)
-  A->>A: check quota, create AIGeneration (queued)
-  A->>Q: generate_image.delay(id)
+  participant S as Private Storage
+  C->>A: POST /api/v1/ai/generations/ (scene, style, variant?, image)
+  A->>A: strip EXIF, check user quota + daily USD budget, create AIGeneration (queued)
+  A->>Q: generate_image_task.delay(id)
   A-->>C: 202 {id}
   Q->>W: task
-  W->>P: prompt + ControlNet / inpaint request
+  W->>P: Flux Kontext / provider request
   P-->>W: generated image
-  W->>S: upload result
-  W->>A: status = done (DB)
-  C->>A: GET /api/ai/generations/{id}/ (polling)
-  A-->>C: done, result_url
+  W->>S: store private result image
+  W->>A: status = succeeded (DB)
+  C->>A: GET /api/v1/ai/generations/{id}/ (polling)
+  A-->>C: succeeded, GET /api/v1/ai/generations/{id}/result/ (authenticated stream)
 ```
 
 ### 7.4 Checkout & payment
-1. Cart → checkout (address, shipping or **fitting at partner garage** + slot).
-2. Order is created as `pending_payment`, stock is **reserved** and the garage slot **held** for **30 min**
-   (**As built:** 30 instead of 15 because a Stripe Checkout session lasts at least 30 min). Expired orders are
-   cancelled by Celery Beat every 5 min and also whenever a new order is placed.
-3. Redirect to the payment page: **Stripe Checkout** (test mode) or, in development, a **simulated payment page**
-   (`PAYMENT_PROVIDER=fake`, refused in production). Netopia + installments: phase 2.
+1. Cart → checkout (address, shipping or **fitting at partner garage** + slot) and payment method:
+   `card_online`, `cash_on_delivery` (courier only) or `pay_at_garage` (garage fitting only).
+2. **Card orders** are created as `pending_payment`: stock is **reserved**, the garage slot **held** and the voucher
+   **reserved** for **30 min** (**As built:** 30 instead of 15 because a Stripe Checkout session lasts at least 30 min;
+   `start_checkout()` extends `reserved_until` and Stripe's `expires_at` uses the same deadline). Expired orders are
+   cancelled by Celery Beat every 5 min and lazily when a new order is placed – **scoped** to orders that share the
+   requested variants, garage or voucher. **COD / pay-at-garage** orders become `confirmed` immediately (stock deducted,
+   slot booked, voucher used).
+3. Redirect to the payment page: **Stripe Checkout**, **NETOPIA** hosted checkout, or in development a **simulated
+   payment page** (`PAYMENT_PROVIDER=fake`, refused in production). On Android the fake page stays inside the app and
+   returns via `onlywheels://checkout/success`; external gateways open through `AppLauncher`.
 4. Payment **webhook** (signature-checked, idempotent, amount-checked) → `paid` → stock deducted, slot booked,
-   voucher counted, confirmation email + garage email. Invoice (SmartBill), AWB (courier) and push: phase 2/3.
+   voucher counted, confirmation email + garage email, invoice task queued (SmartBill or demo PDF). A payment that
+   arrives after expiry re-books the slot only if garage capacity allows and logs stock/slot conflicts for staff.
+   Courier AWBs are created when staff move the order to `processing`.
 
 ---
 
@@ -429,7 +436,7 @@ flowchart LR
 | Frontend hosting | **Cloudflare Pages** / Vercel (static SPA + PWA) |
 | Static files (admin) | **WhiteNoise** or S3. **As built:** WhiteNoise (compressed, hashed) |
 | CDN / WAF / DNS | **Cloudflare** |
-| CI/CD | **GitHub Actions**: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → `migrate` → deploy; Android build with Gradle → Play Console (internal track). **As built:** `.github/workflows/ci.yml` – ruff, migrations check, OpenAPI check, pytest on PostgreSQL; tsc, eslint, vitest, build; Docker image build. No mypy, no deploy job yet |
+| CI/CD | **GitHub Actions**: ruff + mypy + pytest (backend), eslint + tsc + vitest (frontend) → build images → `migrate` → deploy; Android build with Gradle → Play Console (internal track). **As built:** `.github/workflows/ci.yml` – ruff, migrations check, OpenAPI check, pytest on PostgreSQL; tsc, eslint, vitest, build; Docker image build. No mypy, deploy job or Android Gradle job yet (Android builds locally via `pnpm android:build`) |
 | Secrets | GitHub Environments + cloud secret manager; never in repo |
 | Backups | Daily PostgreSQL dumps + PITR (managed DB), S3 versioning |
 | Monitoring | **Sentry** (React + Django + Celery), **Flower** (Celery dashboard), Grafana/Loki or Better Stack, uptime checks |
@@ -442,9 +449,12 @@ Environments: `local` → `staging` → `production`.
 
 1. Build a **responsive, mobile-first PWA** (bottom tab nav like the demo: Home, Catalog, Showroom 3D, AI Studio, Cart).
 2. Keep native-dependent code behind small adapters (`camera`, `share`, `push`, `storage`) so the web version uses Web APIs and Android uses Capacitor plugins.
-3. `npx cap add android` → configure deep links, splash/icons, FCM, ARCore plugin.
-4. Use JWT storage via `@capacitor/preferences` / secure-storage instead of cookies on native; Django API is unchanged.
+3. `npx cap add android` → configure deep links, splash/icons, FCM, ARCore plugin. **As built:** done – custom
+   scheme `onlywheels://checkout/success` registered in `AndroidManifest.xml`; FCM/ARCore not added.
+4. Use JWT storage in Android secure storage instead of cookies on native. **As built:** separate native JWT endpoints
+   (`/api/v1/auth/native/*`) and Keystore storage; the web cookie + CSRF flow is unchanged.
 5. Publish via the Play Console. A **TWA** (Bubblewrap) is a lighter alternative if no native features are needed.
+   **As built:** debug APK only (university demo scope).
 
 ---
 
@@ -462,19 +472,20 @@ Environments: `local` → `staging` → `production`.
 
 ## 13. Implementation status (as built)
 
-State of the code in the repository. Tested in an isolated environment (SQLite, 147 backend + 34 frontend
-tests, browser end-to-end flow); first run on PostgreSQL happens on the development machine – see [SETUP.md](../SETUP.md).
+State of the code in the repository. Verified locally on PostgreSQL 16 and in Vitest/pytest (**366 backend tests** +
+**19 Vitest suites / 128 frontend tests** passing, strict OpenAPI validation, production Vite + PWA and Capacitor
+Android web builds); see [SETUP.md](../SETUP.md) and [ANDROID.md](../ANDROID.md).
 
 | Roadmap item | Status |
 |---|---|
-| Phase 0 – Foundation | ✅ Django project, custom User, JWT cookie auth, Google login, password reset, React shell + design system, i18n ro/en, Dockerfiles + production compose, GitHub Actions CI (both written, not yet executed) |
-| Phase 1 – MVP shop | ✅ Fitment search, catalog + filters, product page, cart (guest + account), checkout, vouchers, orders, admin, emails. Stripe test mode + simulated payment. GDPR data export + account deletion. ❌ Netopia |
-| Phase 2 – Experience | ✅ Reviews (moderated), favorites, partner garages + appointment slots, PWA (installable, offline catalog), `Model3D` data model. 🧱 Structure only: AI studio, SmartBill, courier AWB. ❌ 3D viewer page |
-| Phase 3 – Android | 🧱 Native adapters (`frontend/src/lib/native/`), Bearer-token auth and `capacitor.config.json` ready. ❌ Android project (`npx cap add android`) |
+| Phase 0 – Foundation | ✅ Django project, custom User, web cookie JWT + native Bearer JWT auth, Google login, password reset, React shell + design system, i18n ro/en, Dockerfiles + production compose, GitHub Actions CI |
+| Phase 1 – MVP shop | ✅ Declarative fitment engine, catalog + deterministic pagination + mobile filter sheet, product page, cart (guest + account bulk merge, integer `bani` math), checkout (`card_online`, `cash_on_delivery`, `pay_at_garage`), vouchers (`reserved_count` + rollback), orders (scoped reservation expiry + late-payment conflict guards), admin, emails, Stripe + NETOPIA + simulated payment, GDPR data export + account deletion |
+| Phase 2 – Experience | ✅ 3D wheel & car showroom (`/showroom` with procedural fallback + `Model3D`/`CarModel3D` GLBs and wheel-anchor detection), AI photo studio (`/ai-studio`, Replicate/fal adapters, EXIF stripping, quotas + daily USD budget, private streaming), SmartBill + demo PDF invoicing, Sameday/FAN Courier + demo AWB shipping, moderated reviews, favorites, partner garages + appointment slots, installable web PWA |
+| Phase 3 – Android | ✅ Capacitor 8 Android project (`frontend/android/`, `ro.onlywheels.app`), `/api/v1/auth/native/*` JWT endpoints, Keystore token cache (`@aparajita/capacitor-secure-storage`) with self-healing corruption recovery, in-app fake checkout + `onlywheels://checkout/success` deep-link return, web Google Sign-In hidden on native, PWA Service Worker excluded on Capacitor builds (`CAPACITOR_BUILD=1`), cross-platform `scripts/android-build.mjs`. ⏳ Physical device/emulator demo run ([ANDROID.md](../ANDROID.md)); optional FCM push / Play Store deferred |
 | Phase 4 – Scale | 🧱 Meilisearch plan (`catalog/search_index.py`). ❌ rest |
 | Operations | ✅ Sentry (Django, Celery, React), structlog JSON logs, CSP, WhiteNoise, R2/S3 storage, Redis cache, Resend email – each switched on by environment variables ([SETUP.md §9](../SETUP.md)) |
 
-✅ implemented · 🧱 models/interfaces + design notes in code, raises `NotImplementedError` · ❌ not started
+✅ implemented · ⏳ ready for device/external-account verification · 🧱 design notes / stub in code · ❌ not started
 
 Not prepared at all (only described in this document): Apple login, maps for the garage list,
 Django Channels (realtime), PostHog analytics, Flower, mypy.
@@ -483,20 +494,23 @@ Django Channels (realtime), PostHog analytics, Flower, mypy.
 
 | Topic | Plan | As built | Why |
 |---|---|---|---|
-| Login | django-allauth + simplejwt | simplejwt + own endpoints, Google ID token via `google-auth` | allauth/dj-rest-auth API churn; fewer moving parts |
+| Login | django-allauth + simplejwt | simplejwt + own web cookie endpoints + `/api/v1/auth/native/*` Bearer endpoints, Google ID token via `google-auth` | allauth/dj-rest-auth API churn; clean split between stateful cookie+CSRF web auth and stateless mobile Bearer auth |
+| Mobile token storage | `@capacitor/preferences` | `@aparajita/capacitor-secure-storage` (Android Keystore) + in-memory write-through cache | Never store JWTs in unencrypted SharedPreferences/localStorage; memory cache eliminates per-request Keystore IPC |
 | Routing | TanStack Router or React Router | React Router 7 | Team familiarity, more tutorials |
-| Pagination | Cursor | Page number | UI shows "page X of Y" |
-| Stock reservation | 15 min | 30 min | Minimum Stripe Checkout session length |
-| Payments in dev | Stripe test | Simulated provider by default + Stripe test | Demo without any account; production refuses `fake` |
-| Background jobs (dev) | Celery + Redis | Celery in eager mode | No Docker/Redis on dev machines yet |
-| Fitment data | Wheel-Size API, synced by Celery Beat | Wheel-Size API fetched **on first use** and stored (`vehicles/wheelsize.py`); 13 demo generations when no key is set | Free Sandbox key = 300 requests/day, enough when every make/model/generation is fetched once; a full sync would not fit |
-| Fitment storage | `oem_sizes` ArrayField | `tire_sizes` JSONField + diameter/width ranges | Simpler admin editing, range checks |
+| Pagination | Cursor | Page number with deterministic tie-breakers (`name`, `pk`) | UI shows "page X of Y" without duplicate/skipped items on equal prices |
+| Stock & voucher reservation | 15 min, stock only | 30 min across stock, fitting slot and `Voucher.reserved_count`, with scoped lazy expiry | Matches Stripe Checkout's 30-min minimum session and prevents voucher over-redemption |
+| Payments | Card online only | `card_online` (`fake`, Stripe, NETOPIA), `cash_on_delivery` (ramburs), and `pay_at_garage` | Matches standard Romanian e-commerce + partner-garage workflows; production refuses `fake` |
+| Client currency math | Floating-point numbers | Integer minor-unit (`bani`, `1 RON = 100 bani`) helpers (`toBani`, `fromBani`, `multiplyPrice`) | Eliminates IEEE-754 drift and matches backend `Decimal("0.01")` + Stripe minor units |
+| Background jobs (dev) | Celery + Redis | Celery in eager mode (`CELERY_TASK_ALWAYS_EAGER=True`) | Zero Redis dependency on developer laptops; production compose runs Redis + worker + beat |
+| Fitment data | Wheel-Size API, synced by Celery Beat | Read-through on first miss + stale-while-revalidate Celery refresh (`vehicles/wheelsize.py`, `tasks.py`) + atomic bulk make reconciliation; 13 demo generations without key | Fits inside the 300 req/day free Sandbox quota while keeping cold misses synchronous and warm refreshes non-blocking |
+| Fitment storage & rules | `oem_sizes` ArrayField | `tire_sizes` JSONField + declarative `FitmentRule` engine (`fitment/services.py`) | Single rule source drives both per-variant Python explanations and catalog SQL `Q()` filtering |
 | Search | PostgreSQL full-text + trigram | `icontains` on name/brand + exact SKU | Enough for the demo catalog |
-| API client | orval-generated | Hand-written `api.ts` per feature, orval config ready | Client can only be generated with the backend running |
-| Guest cart | Server cart | Browser cart for guests, merged into the server cart on login | No anonymous sessions in the API |
+| API client | orval-generated | `src/api/generated/` committed via Orval; domain `api.ts` modules import generated enums/models and call the shared `apiClient` mutator | Keeps TypeScript contracts synced with Django serializers while allowing custom query-key ergonomics |
+| PWA on Android | Same `dist/` everywhere | Workbox PWA enabled on web, disabled on Capacitor Android builds (`CAPACITOR_BUILD=1`) + legacy SW unregistration | Prevents Android WebView (`https://localhost`) from serving stale cached JS after APK updates |
+| Guest cart | Server cart | Browser `localStorage` cart for guests, bulk-merged (`bulk_create`/`bulk_update`) into server cart on login | No anonymous DB sessions needed |
 | Garage partner portal | Later React portal | Django Admin restricted to the partner's garages | Covers FR9 with no extra UI |
 | App server | Gunicorn + Uvicorn workers (ASGI) | Gunicorn sync workers (WSGI) | No async views or WebSockets yet |
 | Production hosting | Coolify / Render | Two documented options: Docker Compose on one server, or Cloudflare Pages + hosted API | Cheapest for a demo; no extra platform to learn |
-| GDPR erasure | — | Anonymise the user, keep orders | Romanian accounting law requires keeping invoices/orders |
+| GDPR erasure | — | Blacklist all tokens, purge AI photos, anonymise the user, keep orders | Romanian accounting law requires keeping invoices/orders |
 
-Future steps, known limitations and the first-run checklist: [ROADMAP.md](../ROADMAP.md).
+Future steps, known limitations and walkthroughs: [ROADMAP.md](../ROADMAP.md).

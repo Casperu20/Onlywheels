@@ -12,11 +12,11 @@
 
 ## 0. Current repository (as built)
 
-### 0.1 Frontend (`frontend/src/`)
+### 0.1 Frontend (`frontend/`)
 
 ```
 src/
-├── main.tsx                       # Mounts providers + router, starts Sentry (only if VITE_SENTRY_DSN)
+├── main.tsx                       # Mounts providers + router, Sentry, stale-chunk reload, native SW cleanup + deep links
 ├── app/
 │   ├── router.tsx                 # All routes (React Router 7), pages lazy-loaded, protected routes under <RequireAuth>
 │   ├── providers.tsx              # TanStack Query, toasts (sonner), devtools (dev only, lazy)
@@ -27,62 +27,70 @@ src/
 │                                  # (garage, favorites, profile & addresses), InfoPages (legal: terms, privacy,
 │                                  # cookies; contact), AIStudioPage, ErrorPages
 ├── features/                      # Each: api.ts (types + calls), hooks, components/, index.ts
-│   ├── auth/                      # Login/register/reset forms, Google button, RequireAuth, useMe,
-│                                  # PrivacySection (GDPR export + delete account)
-│   ├── vehicle/                   # Make→model→generation selector, active vehicle store, garage hooks
-│   ├── catalog/                   # Filters (URL <-> API), product card/grid, badges, WheelVisual (SVG product
-│   │                              # artwork from spoke style + finish, used until photos are uploaded), fitment badge
+│   ├── auth/                      # Web cookie + native Bearer auth API, Login/Register/Reset forms, GoogleButton
+│   │                              # (hidden on native), RequireAuth, useMe, PrivacySection (GDPR export + delete)
+│   ├── vehicle/                   # Make→model→generation selector, FindWheelsPanel, ActiveVehicleBar, garage hooks
+│   ├── catalog/                   # Filters (URL <-> API, mobile filter sheet), ProductCard/Grid/Photo, WheelVisual,
+│   │                              # FitmentBadge, OpenAPI-derived catalog types
 │   ├── favorites/                 # Heart button, favorites hooks
-│   ├── cart/                      # Guest store (browser), server cart hooks, merge after login
-│   ├── checkout/                  # Quote (preview), create order, zod schema, saved addresses
+│   ├── cart/                      # Guest store (localStorage / test memory fallback), server cart hooks, integer
+│   │                              # minor-unit (`bani`) totals, bulk merge after login
+│   ├── checkout/                  # Quote (preview), create order (card / COD / pay-at-garage), zod schema, addresses
 │   ├── garages/                   # Garage cards, garage + date + slot picker
-│   ├── orders/                    # Orders API, status badge, totals table
+│   ├── orders/                    # Orders API (invoice PDF + AWB tracking), status badges, totals table
 │   ├── reviews/                   # Reviews list + form, stars
-│   ├── showroom3d/                # Wheel/car API, car geometry, wheel-only and lazy R3F car scenes
-│   └── ai-studio/                 # AI studio API + hooks (jobs, polling, private image blobs)
-├── api/                           # http.ts (axios: CSRF, token refresh, language), errors.ts,
-│                                  # queryClient.ts, generated/ (empty until `pnpm api:generate`)
-├── components/                    # FormField, PageLoader, ui/ (button, input, label, native-select)
-├── lib/                           # format.ts (RON), useLocale.ts, utils.ts (cn), sentry.ts, native/ (camera,
-│                                  # share, push, storage adapters for Capacitor later)
+│   ├── showroom3d/                # Wheel/car API, procedural fallback wheel, car geometry, lazy R3F + Draco scenes
+│   └── ai-studio/                 # AI studio API + hooks (jobs, polling, retry, private image blobs)
+├── api/                           # http.ts (axios: single-flight CSRF, cookie/Bearer auth, coalesced 401 refresh),
+│                                  # errors.ts, queryClient.ts, generated/ (Orval OpenAPI models, hooks & MSW mocks)
+├── components/                    # FormField, PageLoader, ui/ (button, input, label, native-select, skeleton)
+├── lib/                           # format.ts (RON + integer `bani` math), chunkReload.ts, useLocale.ts, utils.ts,
+│                                  # sentry.ts, native/ (auth-storage.ts Keystore cache, deep-links.ts checkout routing,
+│                                  # camera, share, push, storage)
 ├── i18n/                          # i18next setup + locales/ro|en/common.json
 ├── styles/globals.css             # Tailwind 4 + brand tokens from the prototype
 └── types/google.d.ts              # Google Identity Services typings
-tests/unit/                        # Vitest: auth schemas, catalog filters/format, cart, checkout schema, Header,
-                                   # PrivacySection
-public/                            # Logo, PWA icons (pwa-192/512, maskable, apple-touch-icon),
-                                   # _redirects + _headers (Cloudflare Pages: SPA routing, CSP)
-capacitor.config.json              # Android shell config (phase 3: `npx cap add android`)
-vite.config.ts                     # React, Tailwind, vite-plugin-pwa (manifest, Workbox caching), /api proxy
+scripts/                           # check-android-env.mjs (VITE_API_URL HTTPS preflight), android-build.mjs (Capacitor
+                                   # web build without Service Worker + cross-platform Gradle wrapper)
+android/                           # Capacitor 8 Android project (`ro.onlywheels.app`, splash/icons, deep-link manifest)
+tests/unit/                        # 19 Vitest suites (128 tests): auth, native-auth, native-deep-links, GoogleButton,
+                                   # android-config, catalog, cart, checkout, orders (invoice/shipment), showroom3d,
+                                   # WheelViewer, AIStudioPage, Header, PrivacySection, chunkReload
+public/                            # Brand logos/marks (.webp/.png), favicons, PWA icons (pwa-192/512, maskable,
+                                   # apple-touch-icon), _redirects + _headers (Cloudflare Pages: SPA routing, CSP)
+capacitor.config.json              # Capacitor 8 Android config (`ro.onlywheels.app`, HTTPS scheme, no mixed content)
+vite.config.ts                     # React, Tailwind, Draco decoder, vite-plugin-pwa (disabled on CAPACITOR_BUILD=1)
 ```
 
 ### 0.2 Backend (`backend/`)
 
 ```
 config/                # settings/{base,dev,prod,test}.py (base: logging, Sentry, CSP, storage switches;
-                       # prod: security headers, WhiteNoise), urls.py, celery.py (Beat: expire orders)
+                       # prod: security headers, WhiteNoise), urls.py, celery.py (Beat: expire orders, tracking, AI cleanup)
 apps/
 ├── core/              # TimeStampedModel (UUID), error format, pagination, health + csrf, seed_demo
-├── accounts/          # User (email), Address, cookie JWT auth, Google login, password reset,
-│                      # GDPR export (me/export) + account deletion (me/delete)
-├── vehicles/          # Make/Model/Generation, UserVehicle (garage), seed_vehicles, wheelsize.py
-├── fitment/           # FitmentSpec, normalize.py, services.py (fit check + DB filter)
+├── accounts/          # User (email), Address, web cookie JWT + native Bearer JWT (`/auth/native/*`), active-user
+│                      # refresh validation, Google login, password reset, GDPR export (me/export) + delete (me/delete)
+├── vehicles/          # Make/Model/Generation, UserVehicle, seed_vehicles, wheelsize.py + tasks.py (read-through +
+│                      # stale-while-revalidate Celery sync, atomic bulk make reconciliation)
+├── fitment/           # FitmentSpec, normalize.py, declarative FitmentRule engine in services.py (Python + SQL Q)
 ├── catalog/           # Brand, Category, Product, ProductVariant, Model3D and CarModel3D (showroom GLBs),
-│                      # wheel-anchor detection, filters, selectors, seed_catalog, search_index.py (Meilisearch plan)
+│                      # wheel-anchor detection, deterministic filters, selectors, seed_catalog, search_index.py
 ├── inventory/         # StockItem (quantity, reserved), CSV import in admin
-├── pricing/           # Voucher + validation/discount, seed_vouchers
-├── cart/              # Cart, CartItem, merge
+├── pricing/           # Voucher (`reserved_count` + `used_count` lifecycle), validation/discount, seed_vouchers
+├── cart/              # Cart, CartItem, atomic bulk merge
 ├── garages/           # Garage (hours, capacity, fitting price, partner users), slots API, seed_garages
-├── appointments/      # Appointment, slot calculation/holding, partner-restricted admin
-├── orders/            # Order, OrderItem, OrderStatusChange, services.py (lifecycle), expire_orders
+├── appointments/      # Appointment, slot calculation/holding, late-payment capacity guard, partner-restricted admin
+├── orders/            # Order (`card_online`, `cash_on_delivery`, `pay_at_garage`), OrderItem, OrderStatusChange,
+│                      # services.py (lifecycle + scoped reservation expiry), expire_orders
 ├── payments/          # Payment, WebhookEvent, providers/ (fake, stripe, netopia), payment webhooks
 ├── notifications/     # Email tasks (order paid/status, garage booking), push.py stub
 ├── reviews/           # Favorite, Review (moderation), urls/{favorites,reviews}.py
-├── shipping/          # Shipment, AWB/label/tracking tasks, carrier providers (Sameday, FAN Courier)
-├── invoicing/         # Invoice, SmartBill provider, private PDFs
-└── ai_studio/         # AIGeneration, quota + daily budget, private storage, providers (Replicate, fal)
+├── shipping/          # Shipment, AWB/label/tracking tasks, carrier providers (demo, Sameday, FAN Courier)
+├── invoicing/         # Invoice, SmartBill + demo PDF providers, private PDF streaming
+└── ai_studio/         # AIGeneration, quota + daily budget, EXIF-stripping private storage, providers (Replicate, fal)
 templates/emails/      # password_reset, order_confirmation, order_status, garage_booking (.txt, ro + en)
-tests/                 # factories.py, test_health.py, test_seed.py (+ tests/ inside each app)
+tests/                 # factories.py, test_health.py, test_seed.py (+ tests/ inside each app – 366 tests total)
 conftest.py            # api_client, user, auth_client fixtures
 .dockerignore
 ```
@@ -100,16 +108,15 @@ infra/
 .github/workflows/ci.yml        # Backend (PostgreSQL service), frontend, Docker build
 ```
 
-`docs/` (architecture, prototype, [SETUP](SETUP.md), [API conventions](api/CONVENTIONS.md),
+`docs/` (architecture, prototype, [SETUP](SETUP.md), [ANDROID](ANDROID.md), [API conventions](api/CONVENTIONS.md),
 [DEPLOYMENT](DEPLOYMENT.md), [ROADMAP](ROADMAP.md)), `.gitignore`, `.dockerignore`, `.editorconfig`,
-`.gitattributes`, `README.md`.
+`.gitattributes`, `QUICKSTART.md`, `README.md`.
 
 ### 0.3 Target items not created yet
 
 | Item | When |
 |---|---|
-| `scripts/`, Redis/MinIO/Mailpit in the development compose file | When the team develops with Docker |
-| `frontend/android/` | Phase 3 (`npx cap add android`) |
+| Top-level `scripts/`, Redis/MinIO/Mailpit in the development compose file | When the team develops with full Docker services (`frontend/scripts/` exists for Android builds) |
 | `features/home`, `features/fitting`, `features/account` as separate folders | Not needed: home/fitting/account are pages in `routes/` |
 | Separate `search/` app | Replaced by `catalog/search_index.py` |
 | `lib/analytics.ts` (PostHog), `tests/e2e/` (Playwright) | Before going live |
@@ -153,9 +160,9 @@ components, hooks and state. Shared building blocks live outside `features/`.
 ```
 frontend/
 ├── public/
-│   ├── icons/                   # PWA icons, favicon, onlywheels-logo.svg
-│   ├── models/                  # Small local 3D placeholders (real GLB files come from the CDN)
-│   └── manifest.webmanifest     # Generated/extended by vite-plugin-pwa
+│   ├── favicon.png / favicon.ico  # Brand favicons, apple-touch-icon, pwa-192/512, onlywheels-logo.webp/.png
+│   ├── models/                    # Optional local 3D placeholders (real GLB files come from media/CDN)
+│   └── manifest.webmanifest       # Generated/extended by vite-plugin-pwa (web builds only)
 ├── src/
 │   ├── main.tsx                 # Entry point: mounts <App/>, providers (Query, Router, i18n)
 │   ├── app/
@@ -206,10 +213,12 @@ frontend/
 │   │   └── Icon.tsx             # SVG sprite icons (car, cart, cube, spark, tool, pin …)
 │   ├── lib/
 │   │   ├── native/              # Platform adapters – Web API on browser, Capacitor plugin on Android
+│   │   │   ├── auth-storage.ts  # Keystore JWT storage (@aparajita/capacitor-secure-storage) + memory cache
+│   │   │   ├── deep-links.ts    # Custom-scheme `onlywheels://checkout/success` + native checkout routing
 │   │   │   ├── camera.ts
 │   │   │   ├── share.ts
 │   │   │   ├── push.ts
-│   │   │   └── storage.ts       # Token storage: httpOnly cookie (web) / Preferences (Android)
+│   │   │   └── storage.ts       # Non-sensitive preferences adapter (never used for auth tokens)
 │   │   ├── analytics.ts         # PostHog wrapper
 │   │   ├── sentry.ts            # Error tracking init
 │   │   └── utils.ts             # cn(), formatters, small helpers
@@ -225,8 +234,9 @@ frontend/
 ├── tests/
 │   ├── unit/                    # Vitest + Testing Library (components, hooks, stores)
 │   └── e2e/                     # Playwright (search → cart → checkout happy path)
-├── android/                     # Generated by `npx cap add android` (phase 3) – native project
-├── capacitor.config.ts          # App id, name, plugins, server URL for dev
+├── android/                     # Capacitor 8 Android native project (`ro.onlywheels.app`)
+├── scripts/                     # check-android-env.mjs + android-build.mjs (Capacitor web + Gradle wrapper)
+├── capacitor.config.json        # App id, name, HTTPS Android scheme, mixed content disabled
 ├── orval.config.ts              # Points to backend /api/schema/ → writes src/api/generated
 ├── vite.config.ts               # React plugin, vite-plugin-pwa, path aliases
 ├── tailwind.config.ts
@@ -365,14 +375,17 @@ infra/
 docs/
 ├── architecture/
 │   ├── ARCHITECTURE.md          # System architecture (+ §13 as-built status and changed decisions)
-│   └── ARCHITECTURE.html
+│   ├── ARCHITECTURE.html
+│   └── ARCHITECTURE.pdf
 ├── prototype/
 │   ├── index.html               # Homepage concept (static HTML)
 │   └── app_concept.html
+├── superpowers/                 # Feature design specs and step-by-step implementation plans
 ├── api/CONVENTIONS.md           # API conventions, endpoints, error format
+├── ANDROID.md                   # Step-by-step Capacitor Android debug build & device acceptance checklist
 ├── SETUP.md                     # Development setup on a new machine
 ├── DEPLOYMENT.md                # Environments, Docker images, production stack, CI pipeline, CD options
-├── ROADMAP.md                   # First-run checklist, known limitations, next steps, task split
+├── ROADMAP.md                   # Current build status, manual walkthrough, known limitations, next steps
 └── PROJECT_STRUCTURE.md         # This file
 ```
 
